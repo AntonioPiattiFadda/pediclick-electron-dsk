@@ -5,6 +5,7 @@ import ScaleFetcher from "./components/scales/ScaleFetcher";
 import { signIn } from "./service/auth";
 import { getAllProducts } from "./service/products";
 import PrinterFetcher from "./components/printers/PrinterFetcher";
+import "./App.css";
 
 // ---- API súper mínima de ejemplo ----
 type LoginInput = { email: string; password: string };
@@ -42,42 +43,32 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        className="w-screen h-screen flex items-center justify-center bg-red-200"
-        style={{
-          padding: 24,
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "850px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "20px",
-            marginBottom: "auto",
-            marginTop: "15rem",
-          }}
-        >
+      <div>
+        <header className="app-header">
           <div>
+            <h1 className="app-title">Panel de control del dispositivo</h1>
+            <div className="app-subtitle">Básculas, lectores de códigos de barras e impresoras</div>
+          </div>
+        </header>
+
+        <section className="card-grid">
+          <div className="card">
+            <h3>Básculas</h3>
             <ScaleFetcher />
           </div>
-          <div>
+
+          <div className="card">
+            <h3>Lectores de códigos de barras</h3>
             <BarcodeFetcher />
           </div>
-          <div>
+
+          <div className="card">
+            <h3>Impresora</h3>
             <PrinterFetcher />
           </div>
-        </div>
-        {/* {!session ? (
-          <Login onSuccess={setSession} />
-        ) : (
-          <Products token={session.token} onLogout={() => setSession(null)} />
-        )} */}
+        </section>
+
+        {/* Future: Auth + Products */}
       </div>
     </QueryClientProvider>
   );

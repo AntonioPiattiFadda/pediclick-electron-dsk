@@ -18,7 +18,7 @@ const BarcodeFetcher = () => {
     }, 2000);
   }, []);
 
-  const [barcodeData, setBarcodeData] = useState("");
+  const [barcodeData] = useState("");
 
   return (
     <>
@@ -30,12 +30,16 @@ const BarcodeFetcher = () => {
         disabled={false}
       />
 
-      <input
-        type="text"
-        value={barcodeData}
-        placeholder="Insertar lo que lee el codigo de barras aquí"
-        className="border rounded-md px-3 py-2"
-      />
+      <div className="field" style={{ marginTop: 8 }}>
+        <label className="muted">Data</label>
+        <input
+          type="text"
+          value={barcodeData}
+          placeholder="Lectura del código de barras"
+          className="input"
+          readOnly
+        />
+      </div>
     </>
   );
 };

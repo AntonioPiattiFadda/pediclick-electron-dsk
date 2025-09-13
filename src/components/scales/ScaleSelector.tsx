@@ -41,26 +41,26 @@ const ScaleSelector = ({
   }, [status]);
 
   return (
-    <div className="flex flex-col gap-2 w-[250px]">
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, width: 250 }}>
       {status === "loading" ? (
-        <div className="text-sm text-gray-600">Buscando balanzas...</div>
+        <div className="muted">Buscando balanzas...</div>
       ) : (
-        <div className="flex items-center gap-2">
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <select
             value={selectedScale ?? ""}
             onChange={(e) => setSelectedScale(e.target.value || null)}
             disabled={disabled || status === "error"}
-            className={`border rounded-md px-3 py-2 flex-1 ${borderClass}`}
+            className={`select ${borderClass}`}
           >
             <option value="" disabled>
-              Seleccionar Xcale
+              Seleccionar balanza
             </option>
             {availableScales.map((scale) => (
               <option
-                key={scale.id ?? scale.value ?? scale}
-                value={scale.id ?? scale.value ?? scale}
+                key={(scale as any).id ?? (scale as any).value ?? scale}
+                value={(scale as any).id ?? (scale as any).value ?? scale}
               >
-                {scale.label ?? scale.name ?? String(scale)}
+                {(scale as any).label ?? (scale as any).name ?? String(scale)}
               </option>
             ))}
           </select>
@@ -69,7 +69,7 @@ const ScaleSelector = ({
       )}
 
       {status === "error" && (
-        <p className="text-sm text-red-500">Error al conectar la balanza</p>
+        <p className="muted" style={{ color: "#ef4444" }}>Error al conectar la balanza</p>
       )}
     </div>
   );

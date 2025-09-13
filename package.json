@@ -5,12 +5,19 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && electron-builder",
+    "build": "tsc && vite build",
+    "build:electron": "tsc && vite build && electron-builder --publish=never",
     "build:linux": "tsc && vite build && electron-builder --linux AppImage",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "start:electron": "electron .",
+    "rebuild": "electron-rebuild -f -w serialport"
   },
   "dependencies": {
+    "@serialport/parser-readline": "^13.0.0",
     "@supabase/supabase-js": "^2.57.2",
     "@tanstack/react-query": "^5.87.0",
     "react": "^18.2.0",
@@ -18,13 +25,15 @@
     "serialport": "^13.0.0"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.8.3",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
     "@vitejs/plugin-react": "^4.2.1",
-    "electron": "^30.0.1",
-    "electron-builder": "^24.13.3",
+    "electron": "^30.5.1",
+    "electron-builder": "^26.0.12",
+    "electron-rebuild": "^3.2.9",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",

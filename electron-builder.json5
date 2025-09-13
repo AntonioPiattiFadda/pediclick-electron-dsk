@@ -8,6 +8,8 @@
     output: "release/${version}",
   },
   files: ["dist", "dist-electron"],
+  buildDependenciesFromSource: false,
+  nodeGypRebuild: false,
   mac: {
     target: ["dmg"],
     artifactName: "${productName}-Mac-${version}-Installer.${ext}",

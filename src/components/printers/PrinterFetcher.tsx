@@ -45,13 +45,15 @@ const PrinterFetcher = () => {
         disabled={false}
       />
 
-      <button
-        type="button"
-        onClick={handlePrintTicker}
-        className="border rounded-md px-3 py-2"
-      >
-        Imprimir
-      </button>
+      <div style={{ marginTop: 8 }}>
+        <button
+          type="button"
+          onClick={handlePrintTicker}
+          className="button"
+        >
+          Imprimir ticket
+        </button>
+      </div>
     </>
   );
 };
