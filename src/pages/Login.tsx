@@ -7,8 +7,8 @@ const Login = ({
 }: {
   onSuccess: (data: { token: string; name: string }) => void;
 }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("antonio.piattifadda@gmail.com");
+  const [password, setPassword] = useState("Admin12345*");
 
   const { mutate, isPending, error } = useMutation({
     mutationFn: api.login,

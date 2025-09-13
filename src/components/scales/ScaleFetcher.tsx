@@ -25,7 +25,9 @@ const ScaleFetcher = () => {
     fetchScales();
   }, []);
 
-  const [scaleWeightData, setscaleWeightData] = useState("");
+  const [scaleWeightData, setScaleWeightData] = useState("");
+
+  console.log("Selected Scale:", setScaleWeightData);
 
   return (
     <>

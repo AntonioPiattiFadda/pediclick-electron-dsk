@@ -19,6 +19,7 @@ const BarcodeFetcher = () => {
   }, []);
 
   const [barcodeData, setBarcodeData] = useState("");
+  console.log("Selected Barcode:", setBarcodeData);
 
   return (
     <>

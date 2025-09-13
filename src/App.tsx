@@ -1,10 +1,17 @@
 // src/App.tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useState } from "react";
 import BarcodeFetcher from "./components/barcodeReaders/BarcodeReaderFetcher";
+import PrinterFetcher from "./components/printers/PrinterFetcher";
+import ProductsFetcher from "./components/products/productsFetcher";
 import ScaleFetcher from "./components/scales/ScaleFetcher";
+import Login from "./pages/Login";
 import { signIn } from "./service/auth";
 import { getAllProducts } from "./service/products";
-import PrinterFetcher from "./components/printers/PrinterFetcher";
+import { OrderProvider } from "./context/OrderContext";
+import Order from "./components/orders/order";
+import CheckoutOrder from "./components/checkoutOrder/CheckoutOrder";
+import CurrentOrderItem from "./components/currentOrderItem/CurrentOrderItem";
 
 // ---- API súper mínima de ejemplo ----
 type LoginInput = { email: string; password: string };
@@ -38,47 +45,68 @@ export const api = {
 const queryClient = new QueryClient();
 
 function App() {
-  // const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div
-        className="w-screen h-screen flex items-center justify-center bg-red-200"
-        style={{
-          padding: 24,
-          width: "100vw",
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <OrderProvider>
         <div
+          className="w-screen h-screen flex items-center justify-center bg-red-200"
           style={{
-            width: "850px",
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: "20px",
-            marginBottom: "auto",
-            marginTop: "15rem",
+            padding: 24,
+            width: "100vw",
+            height: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <div>
-            <ScaleFetcher />
-          </div>
-          <div>
-            <BarcodeFetcher />
-          </div>
-          <div>
-            <PrinterFetcher />
-          </div>
+          {!session ? (
+            <Login onSuccess={setSession} />
+          ) : (
+            <div
+              style={{
+                width: "850px",
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr 1fr",
+                gap: "20px",
+                marginBottom: "auto",
+                marginTop: "15rem",
+              }}
+            >
+              <div>
+                <ScaleFetcher />
+              </div>
+              <div>
+                <BarcodeFetcher />
+              </div>
+              <div>
+                <PrinterFetcher />
+              </div>
+
+              <div>
+                <ProductsFetcher />
+              </div>
+
+              <div>
+                <CurrentOrderItem />
+              </div>
+
+              <div>
+                <Order />
+              </div>
+
+              <div>
+                <CheckoutOrder />
+              </div>
+
+              {/* <div>
+            <Hotspot />
+          </div> */}
+            </div>
+          )}
         </div>
-        {/* {!session ? (
-          <Login onSuccess={setSession} />
-        ) : (
-          <Products token={session.token} onLogout={() => setSession(null)} />
-        )} */}
-      </div>
+      </OrderProvider>
     </QueryClientProvider>
   );
 }

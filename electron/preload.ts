@@ -28,3 +28,18 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 contextBridge.exposeInMainWorld("serial", {
   list: () => ipcRenderer.invoke("serial:list"),
 });
+
+contextBridge.exposeInMainWorld("hotspot", {
+  // NUEVAS FUNCIONES HOTSPOT
+  createHotspot: (options: {
+    ssid?: string;
+    password?: string;
+    interface?: string;
+  }) => {
+    return ipcRenderer.invoke("create-hotspot", options);
+  },
+
+  stopHotspot: () => {
+    return ipcRenderer.invoke("stop-hotspot");
+  },
+});
