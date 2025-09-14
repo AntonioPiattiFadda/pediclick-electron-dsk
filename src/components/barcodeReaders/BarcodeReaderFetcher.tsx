@@ -11,15 +11,15 @@ const BarcodeFetcher = () => {
   useEffect(() => {
     // Simula la búsqueda de lectores de código de barras
     setStatus("loading");
-    setTimeout(() => {
-      // Simula éxito
-      setAvailableBarcodes(["Barcode Reader 1", "Barcode Reader 2"]);
+     window.usb.list().then((list) => {
+      console.log("list", list);
+      setAvailableBarcodes((list as string[]) ?? []);
       setStatus("connected");
-    }, 2000);
+    });
   }, []);
 
   const [barcodeData, setBarcodeData] = useState("");
-
+  console.log("barcodeData", setBarcodeData);
   return (
     <>
       <BarcodeSelector

@@ -15,7 +15,7 @@ export default defineConfig({
           build: {
             rollupOptions: {
               // Externalize deps that shouldn't be bundled into your main process.
-              external: ["serialport"],
+              external: ["serialport", "usb"],
             },
           },
         },

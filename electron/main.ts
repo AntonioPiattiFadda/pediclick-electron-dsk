@@ -1,7 +1,9 @@
 // main.ts
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { SerialPort } from "serialport";
+import { usb } from "usb";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +20,24 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null = null;
+
+const listSerialPorts = async () => {
+  try {
+    const ports = await SerialPort.list();
+    console.log("Available Serial Ports:", ports);
+  } catch (error) {
+    console.error("Error listing serial ports:", error);
+  }
+};
+
+const listUsbDevices = () => {
+  try {
+    const devices = usb.getDeviceList();
+    console.log("Available USB Devices:", devices);
+  } catch (error) {
+    console.error("Error listing USB devices:", error);
+  }
+};
 
 function createWindow() {
   win = new BrowserWindow({
@@ -38,6 +58,16 @@ function createWindow() {
   }
 }
 
+ipcMain.handle("list-serial-ports", async () => {
+  const ports = await SerialPort.list();
+  return ports;
+});
+
+ipcMain.handle("list-usb-devices", async () => {
+  const devices = usb.getDeviceList();
+  return devices;
+});
+
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
@@ -49,4 +79,8 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  listUsbDevices();
+  listSerialPorts();
+});

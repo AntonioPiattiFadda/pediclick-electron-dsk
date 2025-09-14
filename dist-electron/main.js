@@ -1,42 +1,51 @@
-import { app, BrowserWindow } from "electron";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-process.env.APP_ROOT = path.join(__dirname, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win = null;
-function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+import { ipcMain as i, app as r, BrowserWindow as n } from "electron";
+import s from "node:path";
+import { fileURLToPath as l } from "node:url";
+import { SerialPort as c } from "serialport";
+import { usb as a } from "usb";
+const m = l(import.meta.url), v = s.dirname(m);
+process.env.APP_ROOT = s.join(v, "..");
+const t = process.env.VITE_DEV_SERVER_URL, h = s.join(process.env.APP_ROOT, "dist-electron"), p = s.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = t ? s.join(process.env.APP_ROOT, "public") : p;
+let o = null;
+const _ = async () => {
+  try {
+    const e = await c.list();
+    console.log("Available Serial Ports:", e);
+  } catch (e) {
+    console.error("Error listing serial ports:", e);
+  }
+}, R = () => {
+  try {
+    const e = a.getDeviceList();
+    console.log("Available USB Devices:", e);
+  } catch (e) {
+    console.error("Error listing USB devices:", e);
+  }
+};
+function d() {
+  o = new n({
+    icon: s.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: fileURLToPath(new URL("./preload.mjs", import.meta.url))
+      preload: l(new URL("./preload.mjs", import.meta.url))
     }
-  });
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
+  }), o.webContents.on("did-finish-load", () => {
+    o == null || o.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
+  }), t ? o.loadURL(t) : o.loadFile(s.join(p, "index.html"));
 }
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app.quit();
-    win = null;
-  }
+i.handle("list-serial-ports", async () => await c.list());
+i.handle("list-usb-devices", async () => a.getDeviceList());
+r.on("window-all-closed", () => {
+  process.platform !== "darwin" && (r.quit(), o = null);
 });
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0) createWindow();
+r.on("activate", () => {
+  n.getAllWindows().length === 0 && d();
 });
-app.whenReady().then(createWindow);
+r.whenReady().then(() => {
+  d(), R(), _();
+});
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  h as MAIN_DIST,
+  p as RENDERER_DIST,
+  t as VITE_DEV_SERVER_URL
 };
