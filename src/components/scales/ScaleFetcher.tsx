@@ -12,10 +12,10 @@ const ScaleFetcher = () => {
       setStatus("loading");
       try {
         // Simula la búsqueda de balanzas
-         window.serial.list().then((list) => {
+        window.serial.list().then((list) => {
           console.log("list", list);
-      setAvailableScales((list as string[]) ?? []);
-    });
+          setAvailableScales((list as string[]) ?? []);
+        });
         // Aquí debería implementarse la lógica real para detectar balanzas
         const scales = ["Balaza A", "Balaza B", "Balaza C"];
         setAvailableScales(scales);

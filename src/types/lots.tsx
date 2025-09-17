@@ -1,5 +1,7 @@
 //Crear tabla intermedia entre producto y lote
 
+import { Stock } from "./stocks";
+
 export type BaseLot = {
   lot_id?: number;
   load_order_id: number | null;
@@ -36,6 +38,8 @@ export type BaseLot = {
   providers?: {
     provider_name: string;
   };
+
+  stock?: Stock[];
 };
 
 export type LotWithControl = BaseLot & {

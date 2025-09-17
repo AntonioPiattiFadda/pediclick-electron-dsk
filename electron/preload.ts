@@ -32,3 +32,18 @@ contextBridge.exposeInMainWorld("serial", {
 contextBridge.exposeInMainWorld("usb", {
   list: () => ipcRenderer.invoke("list-usb-devices"),
 });
+
+contextBridge.exposeInMainWorld("hotspot", {
+  // NUEVAS FUNCIONES HOTSPOT
+  createHotspot: (options: {
+    ssid?: string;
+    password?: string;
+    interface?: string;
+  }) => {
+    return ipcRenderer.invoke("create-hotspot", options);
+  },
+
+  stopHotspot: () => {
+    return ipcRenderer.invoke("stop-hotspot");
+  },
+});

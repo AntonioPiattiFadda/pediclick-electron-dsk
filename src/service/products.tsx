@@ -5,6 +5,7 @@ import { getBusinessOwnerIdByRole } from "./profiles";
 
 export const getAllProducts = async (userRole: string) => {
   const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
+  //TODO traer los productos de este local
   const { data: dbProducts, error } = await supabase
     .from("products")
     .select(
@@ -14,11 +15,15 @@ export const getAllProducts = async (userRole: string) => {
     categories(category_name),
     sub_categories(sub_category_name),
     brands(brand_name),
-    providers(provider_name)
+    providers(provider_name),
+    lots(*,
+      stock(*))
       `
     )
     .eq("business_owner_id", businessOwnerId)
     .is("deleted_at", null);
+
+  console.log("getAllProducts", { dbProducts, error });
 
   if (error) {
     throw new Error(error.message);
@@ -28,6 +33,8 @@ export const getAllProducts = async (userRole: string) => {
 
   return { products, error };
 };
+
+
 
 export const getProduct = async (productId: number) => {
   const { data: dbProduct, error } = await supabase

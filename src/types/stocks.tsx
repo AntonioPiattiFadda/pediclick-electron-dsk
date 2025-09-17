@@ -1,6 +1,7 @@
 export type Stock = {
   stock_id?: number;
-  location_id: number;
+  store_id: number | null;
+  stock_room_id: number | null;
   current_quantity: number;
   lot_id: number;
   min_notification: number;

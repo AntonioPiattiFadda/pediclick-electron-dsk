@@ -22,6 +22,7 @@ export const adaptProductForDb = (product: any): Product => {
       minor: Number(product.equivalence_minor_mayor_selling?.minor) || null,
       mayor: Number(product.equivalence_minor_mayor_selling?.mayor) || null,
     },
+    lots: product.lots || null,
   };
 };
 
@@ -45,6 +46,7 @@ export const adaptProductsForClient = (products: any): Product[] => {
     sub_categories: product.sub_categories,
     brands: product.brands,
     sale_units: product.sale_units,
+    lots: product.lots || null,
     // public_images?: {
     //   public_image_src: string;
     // };

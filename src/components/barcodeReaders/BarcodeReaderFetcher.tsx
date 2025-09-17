@@ -11,7 +11,7 @@ const BarcodeFetcher = () => {
   useEffect(() => {
     // Simula la búsqueda de lectores de código de barras
     setStatus("loading");
-     window.usb.list().then((list) => {
+    window.usb.list().then((list) => {
       console.log("list", list);
       setAvailableBarcodes((list as string[]) ?? []);
       setStatus("connected");
