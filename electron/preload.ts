@@ -26,5 +26,9 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 });
 
 contextBridge.exposeInMainWorld("serial", {
-  list: () => ipcRenderer.invoke("serial:list"),
+  list: () => ipcRenderer.invoke("list-serial-ports"),
+});
+
+contextBridge.exposeInMainWorld("usb", {
+  list: () => ipcRenderer.invoke("list-usb-devices"),
 });

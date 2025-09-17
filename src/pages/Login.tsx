@@ -1,19 +1,14 @@
-import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
-import { api } from "../App";
 
 const Login = ({
   onSuccess,
 }: {
   onSuccess: (data: { token: string; name: string }) => void;
 }) => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("antonio.piattifadda@gmail.com");
+  const [password, setPassword] = useState("Admin12345*");
 
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: api.login,
-    onSuccess,
-  });
+
   return (
     <div style={{ display: "grid", gap: 8, maxWidth: 280 }}>
       <h2>Login</h2>
@@ -28,12 +23,15 @@ const Login = ({
         value={password}
         onChange={(e) => setPassword(e.target.value)}
       />
-      <button onClick={() => mutate({ email, password })} disabled={isPending}>
+      <button onClick={() => onSuccess({ token: "123", name: "Antonio" })}>
+        Entrar
+      </button>
+      {/* <button onClick={() => mutate({ email, password })} disabled={isPending}>
         {isPending ? "Ingresando..." : "Entrar"}
       </button>
       {error instanceof Error && (
         <small style={{ color: "crimson" }}>{error.message}</small>
-      )}
+      )} */}
     </div>
   );
 };

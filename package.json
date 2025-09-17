@@ -15,7 +15,9 @@
     "@tanstack/react-query": "^5.87.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "serialport": "^13.0.0"
+    "react-router-dom": "^7.9.1",
+    "serialport": "^13.0.0",
+    "usb": "^2.16.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.64",
