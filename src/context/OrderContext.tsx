@@ -17,6 +17,9 @@ const OrderContext = createContext<{
   setCurrentOrderItem: React.Dispatch<React.SetStateAction<OrderItem>>;
   selectedProduct: Product;
   setSelectedProduct: React.Dispatch<React.SetStateAction<Product>>;
+  // Unit price selected to calculate totals (per kg for WEIGHT, per unit for QUANTITY)
+  selectedPrice: number;
+  setSelectedPrice: React.Dispatch<React.SetStateAction<number>>;
 }>({
   order: {} as Order,
   setOrder: () => { },
@@ -26,12 +29,13 @@ const OrderContext = createContext<{
   setCurrentOrderItem: () => { },
   selectedProduct: {} as Product,
   setSelectedProduct: () => { },
+  selectedPrice: 0,
+  setSelectedPrice: () => { },
 });
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [order, setOrder] = useState<Order>({} as Order);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-
   const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(
     {} as OrderItem
   );
@@ -39,6 +43,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [selectedProduct, setSelectedProduct] = useState<Product>(
     {} as Product
   );
+  const [selectedPrice, setSelectedPrice] = useState<number>(0);
+  console.log(orderItems, order, currentOrderItem, selectedProduct, selectedPrice);
 
   return (
     <OrderContext.Provider
@@ -51,6 +57,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setCurrentOrderItem,
         selectedProduct,
         setSelectedProduct,
+        selectedPrice,
+        setSelectedPrice,
       }}
     >
       {children}

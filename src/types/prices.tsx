@@ -1,13 +1,17 @@
-export type PriceLogicType = "QUANTITY_DISCOUNT" | "SPECIAL";
+export type PriceLogicType = "QUANTITY_DISCOUNT" | "SPECIAL" | "LIMITED_OFFER";
 
 export type Price = {
   price_id?: number;
   lot_id: number;
-  price_number: string;
-  price_quantity: string;
+  price_number: number;
+
+  unit_price: number;
+  units_per_price: number;
+  profit_percentage: number;
+
   price_type: "MINOR" | "MAYOR";
-  quantity_discount: number;
   logic_type: PriceLogicType;
+  observations: string | null;
 
   is_limited_offer: boolean;
   is_active: boolean;

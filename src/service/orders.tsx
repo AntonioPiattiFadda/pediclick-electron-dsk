@@ -1,10 +1,27 @@
 import { supabase } from ".";
 import { getBusinessOwnerIdByRole } from "./profiles";
 
-export const createOrder = async (payload: any, userRole: string) => {
+type ServiceOrderItem = {
+  product_id: number;
+  lot_id?: number;
+  quantity: number;
+  unit_price: number;
+};
+
+export interface CreateOrderPayload {
+  provider_id: number | null;
+  notes?: string;
+  order_items: ServiceOrderItem[];
+}
+
+export interface CreateOrderResponse {
+  success: boolean;
+  order_id: number;
+}
+
+export const createOrder = async (payload: CreateOrderPayload, userRole: string) => {
   const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
 
-  console.log("createOrder payload", { ...payload, businessOwnerId });
 
   const { data: newOrder, error: orderError } = await supabase
     .from("orders")
@@ -15,7 +32,6 @@ export const createOrder = async (payload: any, userRole: string) => {
     .select()
     .single();
 
-  console.log("newOrder", newOrder, orderError);
 
   if (orderError) {
     console.error("orderError", orderError);
@@ -23,6 +39,9 @@ export const createOrder = async (payload: any, userRole: string) => {
   }
 
   return {
-    ...newOrder,
+    data: {
+      success: true,
+      order_id: newOrder?.order_id as number,
+    },
   };
 };

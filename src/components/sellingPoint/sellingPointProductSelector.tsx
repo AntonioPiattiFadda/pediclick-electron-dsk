@@ -3,7 +3,6 @@ import { useOrderContext } from "@/context/OrderContext"
 
 const SellingPointProductSelector = () => {
     const { selectedProduct, setSelectedProduct } = useOrderContext()
-    console.log(setSelectedProduct)
     return (
         <div>
             Selecciona producto:

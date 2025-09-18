@@ -25,7 +25,6 @@ export const getAllProducts = async (userRole: string) => {
     .eq("business_owner_id", businessOwnerId)
     .is("deleted_at", null);
 
-  console.log("getAllProducts", { dbProducts, error });
 
   if (error) {
     throw new Error(error.message);
@@ -58,14 +57,11 @@ export const getProduct = async (productId: number) => {
     .single();
 
   if (error) {
-    console.log("getProduct error", error);
     throw new Error(error.message);
   }
-  console.log("XAtaptar");
 
   const product = adaptProductsForClient([dbProduct])[0];
 
-  console.log("adaptedProductSingle", product);
 
   return { product, error };
 };
@@ -137,7 +133,6 @@ export const getProductsByShortCode = async (
 
   // .ilike("short_code", `%${shortCode}%`);
 
-  console.log(dbProducts, error);
 
   if (error) throw new Error(error.message);
 

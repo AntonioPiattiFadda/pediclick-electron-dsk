@@ -12,14 +12,12 @@ const BarcodeFetcher = () => {
     // Simula la búsqueda de lectores de código de barras
     setStatus("loading");
     window.usb.list().then((list) => {
-      console.log("list", list);
       setAvailableBarcodes((list as string[]) ?? []);
       setStatus("connected");
     });
   }, []);
 
   const [barcodeData, setBarcodeData] = useState("");
-  console.log("barcodeData", setBarcodeData);
   return (
     <>
       <BarcodeSelector
@@ -33,6 +31,7 @@ const BarcodeFetcher = () => {
       <input
         type="text"
         value={barcodeData}
+        onChange={(e) => setBarcodeData(e.target.value)}
         placeholder="Insertar lo que lee el codigo de barras aquí"
         className="border rounded-md px-3 py-2"
       />

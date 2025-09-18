@@ -40,7 +40,7 @@ export const adaptProductsForClient = (products: any): Product[] => {
     store_id: product.store_id,
     allow_stock_control: product.allow_stock_control,
     lot_control: product.lot_control,
-
+    sell_measurement_mode: product.sell_measurement_mode,
     public_images: product.public_images,
     categories: product.categories,
     sub_categories: product.sub_categories,

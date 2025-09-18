@@ -31,7 +31,7 @@ export function useCreateOrder() {
       return res.data;
     },
     onSuccess: (data) => {
-      console.log("Orden creada:", data.order_id);
+      if (import.meta.env.DEV) console.log("Orden creada:", data.order_id);
 
       // ⚡ Opcional: invalidar queries relacionadas (lista de órdenes, balances, etc.)
       queryClient.invalidateQueries({ queryKey: ["orders"] });

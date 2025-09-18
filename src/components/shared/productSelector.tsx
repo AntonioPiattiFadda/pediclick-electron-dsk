@@ -44,7 +44,6 @@ const ProductSelector = ({
             )
           })
         );
-        console.log("Filtered Products by Store:", filteredProductByStore);
         setOptions(filteredProductByStore);
       } catch (err) {
         console.error("Error fetching products:", err);

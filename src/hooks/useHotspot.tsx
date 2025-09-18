@@ -49,7 +49,7 @@ export function useHotspot(): UseHotspotReturn {
 
     try {
       const result: HotspotResult = await window.hotspot.createHotspot(config);
-      console.log("Hotspot result:", result);
+      if (import.meta.env.DEV) console.log("Hotspot result:", result);
 
       if (result.success) {
         setStatus("active");

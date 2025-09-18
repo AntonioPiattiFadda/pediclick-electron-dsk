@@ -13,7 +13,6 @@ const ScaleFetcher = () => {
       try {
         // Simula la búsqueda de balanzas
         window.serial.list().then((list) => {
-          console.log("list", list);
           setAvailableScales((list as string[]) ?? []);
         });
         // Aquí debería implementarse la lógica real para detectar balanzas
@@ -29,7 +28,6 @@ const ScaleFetcher = () => {
   }, []);
 
   const [scaleWeightData, setscaleWeightData] = useState("");
-  console.log("scaleWeightData", setscaleWeightData);
 
   return (
     <>
@@ -44,6 +42,7 @@ const ScaleFetcher = () => {
       <input
         type="text"
         value={scaleWeightData}
+        onChange={(e) => setscaleWeightData(e.target.value)}
         placeholder="Insertar peso de la balanza aquí"
         className="border rounded-md px-3 py-2"
       />

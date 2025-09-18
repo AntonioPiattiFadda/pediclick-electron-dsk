@@ -14,19 +14,16 @@ export const Layout = ({ children }: LayoutProps) => {
 
   if (isInPublicRoute) {
     return (
-      <main className="flex h-screen w-screen items-center justify-center bg-gray-100">
-        <div>{children}</div>
+      <main className="flex min-h-screen w-full items-center justify-center bg-background">
+        <div className="w-full max-w-7xl px-4 py-6">{children}</div>
       </main>
-
     );
   }
 
   return (
-
-    <main className="flex h-screen w-screen flex-col items-center bg-gray-100">
+    <main className="flex min-h-screen w-full flex-col bg-background">
       <Header />
-      <div >{children}</div>
+      <div className="container mx-auto w-full max-w-7xl px-4 py-6">{children}</div>
     </main>
-
   );
 };

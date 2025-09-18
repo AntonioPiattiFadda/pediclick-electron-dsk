@@ -4,22 +4,16 @@ import ScaleFetcher from "../scales/ScaleFetcher"
 
 const Header = () => {
     return (
-        <header className="w-screen bg-white shadow flex justify-between">
-            <div className="mx-auto max-w-7xl px-4 py-2">
-                <h1 className="text-lg font-semibold">My App</h1>
-            </div>
-            <div className="ml-auto flex gap-2">
-                <div>
-                    <ScaleFetcher />
+        <header className="w-full bg-card border-b">
+            <div className="mx-auto max-w-7xl px-4">
+                <div className="flex h-14 items-center justify-between">
+                    <h1 className="text-base font-semibold text-foreground">My App</h1>
+                    <div className="flex items-center gap-2">
+                        <ScaleFetcher />
+                        <BarcodeFetcher />
+                        <PrinterFetcher />
+                    </div>
                 </div>
-                <div>
-                    <BarcodeFetcher />
-                </div>
-                <div>
-                    <PrinterFetcher />
-                </div>
-
-
             </div>
         </header>
     )
