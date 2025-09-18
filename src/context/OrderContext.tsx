@@ -6,6 +6,7 @@ import React, {
 } from "react";
 import { Order } from "../types/orders";
 import { OrderItem } from "../types/orderItems";
+import { Product } from "@/types/products";
 
 const OrderContext = createContext<{
   order: Order;
@@ -14,13 +15,17 @@ const OrderContext = createContext<{
   setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>;
   currentOrderItem: OrderItem;
   setCurrentOrderItem: React.Dispatch<React.SetStateAction<OrderItem>>;
+  selectedProduct: Product;
+  setSelectedProduct: React.Dispatch<React.SetStateAction<Product>>;
 }>({
   order: {} as Order,
-  setOrder: () => {},
+  setOrder: () => { },
   orderItems: [],
-  setOrderItems: () => {},
+  setOrderItems: () => { },
   currentOrderItem: {} as OrderItem,
-  setCurrentOrderItem: () => {},
+  setCurrentOrderItem: () => { },
+  selectedProduct: {} as Product,
+  setSelectedProduct: () => { },
 });
 
 export const OrderProvider = ({ children }: { children: ReactNode }) => {
@@ -29,6 +34,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(
     {} as OrderItem
+  );
+
+  const [selectedProduct, setSelectedProduct] = useState<Product>(
+    {} as Product
   );
 
   return (
@@ -40,6 +49,8 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setOrderItems,
         currentOrderItem,
         setCurrentOrderItem,
+        selectedProduct,
+        setSelectedProduct,
       }}
     >
       {children}

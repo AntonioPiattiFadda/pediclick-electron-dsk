@@ -1,6 +1,8 @@
 import SellingPointProductSelector from "@/components/sellingPointProductSelector/sellingPointProductSelector"
 
+
 const Selling = () => {
+
     return (
         <div className="grid grid-cols-3">
             <SellingPointProductSelector />

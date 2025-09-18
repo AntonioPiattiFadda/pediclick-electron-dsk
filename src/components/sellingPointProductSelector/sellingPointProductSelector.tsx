@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import ProductSelector from '../shared/productSelector'
-import { Product } from '@/types/products'
-
+import { useOrderContext } from "@/context/OrderContext"
 
 const SellingPointProductSelector = () => {
-    const [selectedProduct, setSelectedProduct] = useState<Product>({} as Product)
+    const { selectedProduct, setSelectedProduct } = useOrderContext()
+    console.log(setSelectedProduct)
     return (
         <div>
             Selecciona producto:

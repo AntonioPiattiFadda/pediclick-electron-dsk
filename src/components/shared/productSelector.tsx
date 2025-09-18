@@ -1,21 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { adaptProductForDb } from "@/adapters/products";
 import { useAppSelector } from "@/hooks/useUserData";
-import { createProduct, getProductsByName } from "@/service/products";
+import { getAllProducts } from "@/service/products";
 import type { Product } from "@/types/products";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { debounce } from "lodash";
 import { Check, ChevronDown, Loader2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type SetStateAction,
 } from "react";
-import { toast } from "sonner";
-import { emptyProduct } from "./emptyFormData";
 
 const ProductSelector = ({
   value,
@@ -28,29 +22,33 @@ const ProductSelector = ({
   const [inputValue, setInputValue] = useState(value.product_name || "");
   const [options, setOptions] = useState<Product[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const comboboxRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const { role } = useAppSelector((state) => state.user);
 
-  const fetchProducts = useCallback(
-    async (searchValue: string) => {
-      if (!searchValue) {
-        setOptions([]);
-        return;
-      }
+  const storeId = localStorage.getItem("selectedStore") || "";
 
+  const fetchAllProducts = useCallback(
+    async () => {
       setIsSearching(true);
-      setError(null);
 
       try {
-        const data = await getProductsByName(searchValue, role);
-
-        setOptions(data.products);
+        const data = await getAllProducts(role);
+        setAllProducts(data.products);
+        const filteredProductByStore = data?.products?.filter((product) =>
+          product?.lots?.filter((lot) => {
+            return lot.stock?.some(
+              (s) => s.stock_type === "STORE" && s.store_id === Number(storeId)
+            )
+          })
+        );
+        console.log("Filtered Products by Store:", filteredProductByStore);
+        setOptions(filteredProductByStore);
       } catch (err) {
         console.error("Error fetching products:", err);
-        // setError(err.message || "Failed to fetch products.");
+        setAllProducts([]);
         setOptions([]);
       } finally {
         setIsSearching(false);
@@ -59,18 +57,9 @@ const ProductSelector = ({
     [role]
   );
 
-  const debouncedFetchMicroOrganisms = useMemo(
-    () => debounce(fetchProducts, 300),
-    [fetchProducts]
-  );
-
   useEffect(() => {
-    if (inputValue) {
-      debouncedFetchMicroOrganisms(inputValue);
-    } else {
-      setOptions([]);
-    }
-  }, [inputValue, debouncedFetchMicroOrganisms]);
+    fetchAllProducts();
+  }, [fetchAllProducts]);
 
   useEffect(() => {
     const handleClickOutside = (event: { target: any }) => {
@@ -84,6 +73,25 @@ const ProductSelector = ({
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (inputValue) {
+      const isNumeric = /^\d+$/.test(inputValue.trim());
+      let filtered: Product[] = [];
+
+      if (isNumeric) {
+        const numValue = parseInt(inputValue.trim());
+        filtered = allProducts.filter(p => p.short_code === numValue);
+      } else {
+        filtered = allProducts.filter(p =>
+          p.product_name.toLowerCase().includes(inputValue.toLowerCase())
+        );
+      }
+      setOptions(filtered);
+    } else {
+      setOptions(allProducts);
+    }
+  }, [inputValue, allProducts]);
 
   const handleInputChange = (e: {
     target: { value: SetStateAction<string> };
@@ -102,63 +110,11 @@ const ProductSelector = ({
     }
   };
 
-  const queryClient = useQueryClient();
-
-  const handleSelectProduct = (newProduct: Product) => {
-    onChange(newProduct);
-    setIsOpen(false);
-    setInputValue("");
-  };
-
-  const createProductMutation = useMutation({
-    mutationFn: async (data: { completedInformation: any }) => {
-      console.log("Creating product with data:", data);
-      return await createProduct(data.completedInformation, role);
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-      console.log(data);
-      handleSelectProduct(data);
-      // setIsModalOpen(false);
-      // toast("Producto creado exitosamente", {
-      //   description: "El producto ha sido creado correctamente.",
-      //   action: {
-      //     label: "Undo",
-      //     onClick: () => console.log("Undo"),
-      //   },
-      // });
-      // setFormData(emptyProduct);
-    },
-    onError: () => {
-      toast("Error al crear el producto", {
-        description: "Intentá nuevamente más tarde.",
-        action: {
-          label: "Undo",
-          onClick: () => console.log("Undo"),
-        },
-      });
-    },
-  });
-
-  const handleCreateProduct = (productName: string) => {
-    const completedInformation = adaptProductForDb({
-      ...emptyProduct,
-      lot_control: true,
-      product_name: productName,
-    });
-
-    createProductMutation.mutate({
-      completedInformation,
-    });
-  };
-
-  const isSearchValueNumeric = /^\d+$/.test(inputValue.trim());
 
   return (
     <div className="relative w-full  inline-flex" ref={comboboxRef}>
       <button
         onClick={handleComboboxToggle}
-        disabled={createProductMutation.isLoading}
         className={`flex items-center justify-between border-none w-full h-10 px-3 py-2 text-sm text-left border-2 border-newDsBorder  text-newDsForeground rounded-md shadow-sm hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-input transition-colors duration-200   `}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
@@ -174,7 +130,6 @@ const ProductSelector = ({
           <div className="p-2">
             <input
               ref={inputRef}
-              disabled={createProductMutation.isPending}
               type="text"
               className="w-full px-3 py-2 text-sm bg-muted text-muted-foreground border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-input"
               placeholder="Buscar por codigo o por nombre..."
@@ -187,10 +142,6 @@ const ProductSelector = ({
               <li className="relative px-3 py-2 text-muted-foreground cursor-default select-none flex items-center hover:bg-muted focus:bg-muted">
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 Buscando...
-              </li>
-            ) : error ? (
-              <li className="relative px-3 py-2 text-destructive cursor-default select-none hover:bg-muted focus:bg-muted">
-                {error}
               </li>
             ) : options.length === 0 ? (
               <>

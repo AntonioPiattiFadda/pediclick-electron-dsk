@@ -17,7 +17,9 @@ export const getAllProducts = async (userRole: string) => {
     brands(brand_name),
     providers(provider_name),
     lots(*,
-      stock(*))
+      stock(*),
+      prices(*)
+      )
       `
     )
     .eq("business_owner_id", businessOwnerId)
