@@ -43,6 +43,13 @@ export type BaseLot = {
   };
   stock?: Stock[];
   prices?: Price[];
+
+
+  current_stock_quantity?: number;
+
+
+  download_total_cost: number | null;
+  has_transport_cost_divided: boolean;
 };
 
 export type LotWithControl = BaseLot & {

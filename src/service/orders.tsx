@@ -1,47 +1,20 @@
+import { OrderItem } from "@/types/orderItems";
+import { OrderPayment } from "@/types/orderPayments";
+import { Order } from "@/types/orders";
 import { supabase } from ".";
-import { getBusinessOwnerIdByRole } from "./profiles";
 
-type ServiceOrderItem = {
-  product_id: number;
-  lot_id?: number;
-  quantity: number;
-  unit_price: number;
-};
+export async function createOrder(order: Order, orderItems: OrderItem[], orderPayments: OrderPayment[]) {
+  const { data, error } = await supabase.rpc("register_order", {
+    p_order: order,
+    p_order_items: orderItems,
+    p_order_payments: orderPayments,
+  });
 
-export interface CreateOrderPayload {
-  provider_id: number | null;
-  notes?: string;
-  order_items: ServiceOrderItem[];
-}
-
-export interface CreateOrderResponse {
-  success: boolean;
-  order_id: number;
-}
-
-export const createOrder = async (payload: CreateOrderPayload, userRole: string) => {
-  const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
-
-
-  const { data: newOrder, error: orderError } = await supabase
-    .from("orders")
-    .insert({
-      business_owner_id: businessOwnerId,
-      ...payload,
-    })
-    .select()
-    .single();
-
-
-  if (orderError) {
-    console.error("orderError", orderError);
-    throw new Error("Error al crear la orden");
+  if (error) {
+    console.error("Error creando la orden:", error);
+    throw error;
   }
 
-  return {
-    data: {
-      success: true,
-      order_id: newOrder?.order_id as number,
-    },
-  };
-};
+  console.log("Orden creada con ID:", data);
+  return data;
+}

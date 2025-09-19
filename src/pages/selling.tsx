@@ -3,14 +3,42 @@ import SellingPointProductSelector from "@/components/sellingPoint/sellingPointP
 import { ScaleProvider } from "@/context/ScaleContext"
 import { useOrderContext } from "@/context/OrderContext"
 import CheckoutOrder from "@/components/checkoutOrder/CheckoutOrder"
-import { useCreateOrder } from "@/hooks/useCreateOrder"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { createOrder } from "@/service/orders"
+import { useAppSelector } from "@/hooks/useUserData"
 
 const Selling = () => {
-    const { orderItems } = useOrderContext()
-    const createOrder = useCreateOrder()
+    const { orderItems, order } = useOrderContext()
     console.log(orderItems)
     const orderTotal = orderItems.reduce((sum, it) => sum + Number(it.total_price || it.subtotal || 0), 0)
 
+    const queryClient = useQueryClient();
+
+    type CreateOrderPayload = { order: typeof order; orderItems: typeof orderItems };
+
+    const { role } = useAppSelector((state) => state.user);
+
+    const createOrderMutation = useMutation({
+        mutationFn: async (payload: CreateOrderPayload) => {
+            const res = await createOrder(payload, role)
+            return res.data
+        },
+        onSuccess: (data) => {
+            if (import.meta.env.DEV) console.log("Orden creada:", data.order_id)
+            queryClient.invalidateQueries({ queryKey: ["orders"] })
+        },
+        onError: (e) => {
+            console.error("Error al crear la orden", e)
+        },
+    })
+
+    const handleCreateOrder = async () => {
+        try {
+            await createOrderMutation.mutateAsync({ order, orderItems })
+        } catch (e) {
+            console.error("Error al crear la orden", e)
+        }
+    }
 
 
     return (
@@ -38,29 +66,14 @@ const Selling = () => {
 
                     <div className="mt-3 flex justify-end">
                         <CheckoutOrder
-                            onConfirm={async (payload) => {
-                                const order_items = payload.items.map((it) => ({
-                                    product_id: it.product_id,
-                                    quantity: it.quantity,
-                                    unit_price: it.unit_price,
-                                }))
-                                try {
-                                    await createOrder.mutateAsync({
-                                        provider_id: null,
-                                        notes: `Cliente: ${payload.client_name ?? ""} (${payload.client_id ?? "-"}) | Fecha: ${payload.date}${payload.notes ? " | Notas: " + payload.notes : ""}`,
-                                        order_items,
-                                    })
-                                    // TODO: integrar servicio de ticket en src/service cuando lo agregues.
-                                } catch (e) {
-                                    console.error("Error al crear la orden", e)
-                                }
-                            }}
+                            onConfirm={handleCreateOrder}
+                            isLoading={createOrderMutation.isPending}
                         />
                     </div>
                 </div>
                 <ScaleDataDisplay />
             </div>
-        </ScaleProvider>
+        </ScaleProvider >
     )
 }
 

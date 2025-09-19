@@ -12,21 +12,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import CheckBoxesSelector from "../shared/checkBoxesSelector";
+import { ClientSelector } from "../shared/clientSelector";
+import { ClientType } from "@/types/orders";
 
-type CheckoutPayload = {
-  date: string; // ISO yyyy-mm-dd
-  client_id: number | null;
-  client_name?: string;
-  notes?: string;
-  items: Array<{
-    product_id: number;
-    product_name: string;
-    quantity: number;
-    unit_price: number;
-    total: number;
-  }>;
-  totals: { subtotal: number; total: number; itemCount: number };
-};
+
+const clientTypeOptions: {
+  label: string;
+  value: ClientType;
+}[] = [
+    { label: "Consumidor final", value: "FINAL" },
+    { label: "Registrado", value: "REGISTERED" }
+  ];
+
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(
@@ -35,16 +33,14 @@ const formatCurrency = (n: number) =>
 
 export default function CheckoutOrder({
   onConfirm,
+  isLoading
 }: {
-  onConfirm?: (payload: CheckoutPayload) => void | Promise<void>;
+  onConfirm?: () => void | Promise<void>;
+  isLoading: boolean;
 }) {
-  const { orderItems } = useOrderContext();
+  const { orderItems, setOrder, order } = useOrderContext();
 
   const [open, setOpen] = useState(false);
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [clientId, setClientId] = useState<string>("");
-  const [clientName, setClientName] = useState<string>("");
-  const [notes, setNotes] = useState<string>("");
 
   const items = useMemo(
     () =>
@@ -64,29 +60,24 @@ export default function CheckoutOrder({
   }, [items]);
 
   const handleConfirm = async () => {
-    const payload: CheckoutPayload = {
-      date,
-      client_id: clientId ? Number(clientId) : null,
-      client_name: clientName || undefined,
-      notes: notes || undefined,
-      items,
-      totals,
-    };
+
 
     try {
       if (onConfirm) {
-        await onConfirm(payload);
+        await onConfirm();
       } else {
         // Placeholder hasta que agregues la función real en /src/service
         // Reemplaza este console.log por tu función futura (por ejemplo: services.purchase.checkout(payload))
         // sin romper el build actual.
-        console.log("Checkout payload -> ", payload);
       }
       setOpen(false);
     } catch (err) {
       console.error("Error al confirmar checkout", err);
     }
   };
+
+
+
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -102,6 +93,21 @@ export default function CheckoutOrder({
           </DialogDescription>
         </DialogHeader>
 
+        <CheckBoxesSelector
+          options={clientTypeOptions}
+          selectedOption={order.client_type || null}
+          onSelectOption={v => setOrder({ ...order, client_type: v as typeof order.client_type })}
+          disabled={false}
+        />
+
+        {order.client_type === "REGISTERED" && (
+          <ClientSelector
+            value={order.client_id ?? null}
+            onChange={v => setOrder({ ...order, client_id: v ? Number(v) : null })}
+            disabled={false}
+          />
+        )}
+
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -109,41 +115,12 @@ export default function CheckoutOrder({
               <Input
                 id="date"
                 type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
+                value={order.created_at}
+                onChange={(e) => setOrder({ ...order, created_at: e.target.value })}
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="clientId">Cliente (ID opcional)</Label>
-              <Input
-                id="clientId"
-                type="number"
-                placeholder="Ej: 123"
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-              />
-            </div>
 
-            <div className="space-y-1.5 col-span-2">
-              <Label htmlFor="clientName">Cliente (nombre)</Label>
-              <Input
-                id="clientName"
-                placeholder="Nombre del cliente"
-                value={clientName}
-                onChange={(e) => setClientName(e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5 col-span-2">
-              <Label htmlFor="notes">Notas</Label>
-              <Input
-                id="notes"
-                placeholder="Observaciones"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
           </div>
 
           <div className="border rounded-md">
@@ -187,11 +164,11 @@ export default function CheckoutOrder({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isLoading}>
             Volver
           </Button>
-          <Button onClick={handleConfirm} disabled={items.length === 0}>
-            Generar orden y ticket
+          <Button onClick={handleConfirm} disabled={items.length === 0 || isLoading}>
+            {isLoading ? "Generando..." : "Generar orden y ticket"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -13,8 +13,11 @@ export interface Client {
   tax_ident?: string;
   credit_limit?: number;
   current_balance: number;
+
   is_active: boolean;
   created_at: string; // ISO date string
   updated_at?: string;
   deleted_at?: string;
+
+  last_transaction_date?: string; // ISO date string
 }
