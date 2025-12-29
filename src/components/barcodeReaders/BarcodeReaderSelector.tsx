@@ -1,10 +1,11 @@
+import { USBDeviceType } from "@/types/devices";
 import { useMemo } from "react";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type BarcodeSelectorProps = {
-  availableBarcodes: any[];
-  selectedBarcode: string | null;
-  setSelectedBarcode: (barcode: string | null) => void;
+  availableBarcodes: USBDeviceType[];
+  selectedBarcode: USBDeviceType | null;
+  setSelectedBarcode: (barcode: USBDeviceType | null) => void;
   disabled?: boolean;
   status: "idle" | "loading" | "error" | "connected";
 };
@@ -20,8 +21,8 @@ const StatusIndicator = ({
     status === "error"
       ? "bg-red-500"
       : status === "connected"
-      ? "bg-green-500"
-      : "bg-gray-400";
+        ? "bg-green-500"
+        : "bg-gray-400";
 
   return <span className={`inline-block w-3 h-3 rounded-full ${color}`} />;
 };
@@ -48,8 +49,11 @@ const BarcodeSelector = ({
       ) : (
         <div className="flex items-center gap-2">
           <select
-            value={selectedBarcode ?? ""}
-            onChange={(e) => setSelectedBarcode(e.target.value || null)}
+            value={String(selectedBarcode?.busNumber ?? "")}
+            onChange={(e) => {
+              const busNumber = Number(e.target.value);
+              setSelectedBarcode(availableBarcodes.find(barcode => barcode.busNumber === busNumber) || null);
+            }}
             disabled={disabled || status === "error"}
             className={`border rounded-md px-3 py-2 flex-1 ${borderClass}`}
           >
@@ -58,10 +62,10 @@ const BarcodeSelector = ({
             </option>
             {availableBarcodes.map((barcode) => (
               <option
-                key={barcode.id ?? barcode.value ?? barcode}
-                value={barcode.id ?? barcode.value ?? barcode}
+                key={String(barcode.busNumber ?? String(barcode))}
+                value={String(barcode.busNumber ?? String(barcode))}
               >
-                {barcode.label ?? barcode.name ?? String(barcode)}
+                {String(barcode.busNumber ?? String(barcode))}
               </option>
             ))}
           </select>

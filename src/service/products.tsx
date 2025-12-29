@@ -1,41 +1,48 @@
+import { adaptProductsForClient } from "@/adapters/products";
+import type { Product } from "@/types/products";
 import { supabase } from ".";
-import { adaptProductsForClient } from "../adapters/products";
-import { Product } from "../types/products";
-import { getBusinessOwnerIdByRole } from "./profiles";
+import { getBusinessOwnerId } from "./profiles";
 
-export const getAllProducts = async (userRole: string) => {
-  const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
-  //TODO traer los productos de este local
+
+export const getAllProducts = async () => {
+  const businessOwnerId = await getBusinessOwnerId();
   const { data: dbProducts, error } = await supabase
     .from("products")
-    .select(
-      `
+    .select(`
+  *,
+  public_images(public_image_src),
+  categories(category_name),
+  sub_categories(sub_category_name),
+  brands(brand_name),
+  product_presentations!inner (
     *,
-    public_images(public_image_src),
-    categories(category_name),
-    sub_categories(sub_category_name),
-    brands(brand_name),
-    providers(provider_name),
-    lots(*,
-      stock(*),
-      prices(*)
-      )
-      `
+    lots(
+      *,
+      lot_containers_location(*),
+      stock(*)
     )
+  )
+`)
+    .is("product_presentations.deleted_at", null)
+    .is("deleted_at", null)
     .eq("business_owner_id", businessOwnerId)
-    .is("deleted_at", null);
+    .order("product_name", { ascending: true });
 
+
+
+  console.log("dbProducts", dbProducts, error);
 
   if (error) {
     throw new Error(error.message);
   }
 
+
   const products = adaptProductsForClient(dbProducts);
+  console.log("adaptedProducts", products);
+
 
   return { products, error };
 };
-
-
 
 export const getProduct = async (productId: number) => {
   const { data: dbProduct, error } = await supabase
@@ -47,21 +54,25 @@ export const getProduct = async (productId: number) => {
       categories(category_name),
       sub_categories(sub_category_name),
       brands(brand_name),
-      
-      product_lots (
-        lots (*)
-        )
-        `
+      lots(
+        *,
+        stock(*)
+      )
+      `
     )
     .eq("product_id", productId)
+    .is("deleted_at", null) // ✅ Solo productos activos
     .single();
 
   if (error) {
+    console.log("getProduct error", error);
     throw new Error(error.message);
   }
+  console.log("XAtaptar", dbProduct);
 
   const product = adaptProductsForClient([dbProduct])[0];
 
+  console.log("adaptedProductSingle", product);
 
   return { product, error };
 };
@@ -75,6 +86,8 @@ export const updateProduct = async (
     .update(productData)
     .eq("product_id", productId);
 
+  console.log("updateProduct", data, error);
+
   if (error) {
     throw new Error(error.message);
   }
@@ -82,8 +95,8 @@ export const updateProduct = async (
   return { data, error };
 };
 
-export const createProduct = async (product: Product, userRole: string) => {
-  const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
+export const createProduct = async (product: Product) => {
+  const businessOwnerId = await getBusinessOwnerId();
 
   const { data: newProduct, error: productError } = await supabase
     .from("products")
@@ -118,10 +131,9 @@ export const deleteProduct = async (productId: string | number) => {
 };
 
 export const getProductsByShortCode = async (
-  shortCode: string,
-  userRole: string
+  shortCode: string
 ) => {
-  const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
+  const businessOwnerId = await getBusinessOwnerId();
 
   const { data: dbProducts, error } = await supabase
     .from("products")
@@ -133,6 +145,7 @@ export const getProductsByShortCode = async (
 
   // .ilike("short_code", `%${shortCode}%`);
 
+  console.log(dbProducts, error);
 
   if (error) throw new Error(error.message);
 
@@ -145,64 +158,77 @@ export const getProductsByShortCode = async (
 //   return s.replace(/[%_]/g, (m) => `\\${m}`);
 // }
 
-export const getProductsByName = async (name: string, userRole: string) => {
-  const businessOwnerId = await getBusinessOwnerIdByRole(userRole);
+export const getProductsByName = async (name: string, withLots: boolean) => {
+  const businessOwnerId = await getBusinessOwnerId();
 
   const q = name.trim();
   const isNumeric = /^\d+$/.test(q);
-  // const safe = escapeLike(q);
 
-  if (isNumeric) {
-    const { data: dbProducts, error } = await supabase
-      .from("products")
-      .select(
-        `
-      *,
-      public_images(public_image_src),
-      categories(category_name),
-      sub_categories(sub_category_name),
-      brands(brand_name),
-      
-      product_lots (
-        lots (*)
-        )
-        `
-      )
-      .is("deleted_at", null)
-      .eq("business_owner_id", businessOwnerId)
-      .eq("short_code", parseInt(q))
-      .order("product_name", { ascending: true })
-      .limit(10);
-
-    if (error) throw new Error(error.message);
-
-    const products = adaptProductsForClient(dbProducts || []);
-    return { products, error: null };
-  }
-
-  const { data: dbProducts, error } = await supabase
+  // Base de la consulta
+  let query = supabase
     .from("products")
-    .select(
-      `
-      *,
-      public_images(public_image_src),
-      categories(category_name),
-      sub_categories(sub_category_name),
-      brands(brand_name),
-      
-      product_lots (
-        lots (*)
-        )
-        `
-    )
+    .select(`
+    product_id,
+    product_name,
+    short_code,
+    updated_at,
+    public_images(public_image_src)
+    ${withLots ? ", lots(lot_id,created_at, stock(stock_id, quantity))" : ""}
+  `)
     .is("deleted_at", null)
     .eq("business_owner_id", businessOwnerId)
-    .ilike("product_name", `%${name}%`)
     .order("product_name", { ascending: true })
-    .limit(10);
+    .limit(2);
+
+
+  if (withLots) {
+    query = query.eq("lots.is_sold_out", false);
+  }
+
+  // Condición según tipo de búsqueda
+  if (isNumeric) {
+    query = query.eq("short_code", parseInt(q));
+  } else {
+    query = query.ilike("product_name", `%${q}%`);
+  }
+
+  // Ejecutar la consulta
+  const { data: dbProducts, error } = await query;
 
   if (error) throw new Error(error.message);
 
   const products = adaptProductsForClient(dbProducts || []);
   return { products, error: null };
+};
+
+
+
+export const checkIfShortCodeIsAvailable = async (
+  shortCode: number,
+  productId?: number
+) => {
+  const businessOwnerId = await getBusinessOwnerId();
+
+  const { data, error } = await supabase.rpc('get_products_stock_status_by_short_code', {
+    p_short_code: shortCode,
+    p_business_owner_id: businessOwnerId,
+  });
+
+
+  if (error) {
+    console.error("checkIfShortCodeIsAvailable RPC error", error);
+    throw new Error(error.message);
+  }
+
+  const filteredProducts = data ? data.filter((p: {
+    product_id: number;
+    product_name: string;
+    is_sold_out: boolean;
+  }) => p.product_id !== productId) : [];
+
+  const isAvailable = filteredProducts.length === 0 || filteredProducts === null;
+
+  return {
+    isAvailable, products: filteredProducts
+  };
 };

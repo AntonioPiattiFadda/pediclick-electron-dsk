@@ -129,29 +129,30 @@ export const getParentUserId = async (userId: string) => {
   return user?.business_owner_id;
 };
 
-export const getBusinessOwnerIdByRole = async (userRole: string) => {
+export const getBusinessOwnerId = async () => {
   const userId = await getUserId();
-  const businessOwnerId =
-    userRole === "OWNER" ? userId : await getParentUserId(userId || "");
-  return businessOwnerId;
-};
-
-const getBusinessOwnerId = async (storeId: number) => {
-  const { data: store, error } = await supabase
-    .from("stores")
-    .select("business_owner_id")
-    .eq("store_id", storeId)
+  const { data: userData, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("id", userId)
     .single();
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return store?.business_owner_id;
+  //FIXME aca hago una llamada extra pero es mas seguro
+  const businessOwnerId =
+    userData.role === "OWNER" ? userId : userData.business_owner_id;
+  console.log("Business Owner ID:", businessOwnerId); // Debug log
+
+  return businessOwnerId;
 };
 
-export const getUserTeamMembers = async (storeId: number) => {
-  const businessOwnerId = await getBusinessOwnerId(storeId);
+
+
+export const getUserTeamMembers = async () => {
+  const businessOwnerId = await getBusinessOwnerId();
 
   const { data: teamMembers, error } = await supabase
     .from("users")
@@ -167,7 +168,7 @@ export const getUserTeamMembers = async (storeId: number) => {
 };
 
 export const createTeamMember = async (newUserData: any) => {
-  const userId = await getBusinessOwnerId(newUserData.store_id);
+  const userId = await getBusinessOwnerId();
 
   const { error: createUserError, data: user } = await createNewUser(
     newUserData.email,

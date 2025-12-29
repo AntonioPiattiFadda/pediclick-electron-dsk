@@ -18,11 +18,11 @@ export const adaptProductForDb = (product: any): Product => {
     sell_measurement_mode: product.sell_measurement_mode || null,
     created_at: product.created_at || null,
     updated_at: product.updated_at || null,
+    iva_id: product.iva_id || null,
     equivalence_minor_mayor_selling: {
       minor: Number(product.equivalence_minor_mayor_selling?.minor) || null,
       mayor: Number(product.equivalence_minor_mayor_selling?.mayor) || null,
     },
-    lots: product.lots || null,
   };
 };
 

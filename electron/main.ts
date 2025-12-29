@@ -3,15 +3,12 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { SerialPort } from "serialport";
-import { usb } from "usb";
-import { exec } from "child_process";
-import { promisify } from "util";
 
 // Agregar estas importaciones al inicio de main.ts
-import os from "os";
-import fs from "fs";
-const execAsync = promisify(exec);
+import { print } from "./printerManager";
+import { closeAllPorts, closeSerialPort, listSerialPorts, openSerialPort } from "./serialManager";
+import { listUsbDevices } from "./usbManager";
+import { connectToScale } from "./scaleManager";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -29,27 +26,21 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
 
 let win: BrowserWindow | null = null;
 
-const listSerialPorts = async () => {
-  try {
-    const ports = await SerialPort.list();
-    console.log("Available Serial Ports:", ports);
-  } catch (error) {
-    console.error("Error listing serial ports:", error);
-  }
-};
-
-const listUsbDevices = () => {
-  try {
-    const devices = usb.getDeviceList();
-    console.log("Available USB Devices:", devices);
-  } catch (error) {
-    console.error("Error listing USB devices:", error);
-  }
-};
+// const listSerialPorts = async () => {
+//   try {
+//     const ports = await SerialPort.list();
+//     console.log("Available Serial Ports:", ports);
+//   } catch (error) {
+//     console.error("Error listing serial ports:", error);
+//   }
+// };
 
 function createWindow() {
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC!, "electron-vite.svg"),
+    fullscreen: true,
+    // width: 800,
+    // height: 300,
     webPreferences: {
       preload: fileURLToPath(new URL("./preload.mjs", import.meta.url)),
     },
@@ -66,15 +57,92 @@ function createWindow() {
   }
 }
 
-ipcMain.handle("list-serial-ports", async () => {
-  const ports = await SerialPort.list();
-  return ports;
+//Serial Ports IPC Handlers
+ipcMain.handle("list-serial-ports", () => listSerialPorts());
+ipcMain.handle("connect-serial-ports", (event, opts) => openSerialPort(event, opts));
+ipcMain.handle("close-serial-ports", (_event, path) => closeSerialPort(path));
+ipcMain.handle("close-all-serial-ports", () => closeAllPorts());
+
+//USB Devices IPC Handlers
+ipcMain.handle("list-usb-devices", () => listUsbDevices());
+
+// Printer IPC Handlers
+ipcMain.handle("print", (_event, vendorId, productId, printFunction, printContent) => {
+  print(vendorId, productId, printFunction, printContent);
 });
 
-ipcMain.handle("list-usb-devices", async () => {
-  const devices = usb.getDeviceList();
-  return devices;
+// Scale IPC Handlers
+ipcMain.handle("connect-scale", (_, portPath, config) => {
+  connectToScale(portPath, config);
 });
+
+// const openPorts = new Map<
+//   string,
+//   { port: SerialPort; parser: ReadlineParser }
+// >();
+
+// ipcMain.handle(
+//   "serial:open",
+//   async (event, opts: { path: string; baudRate?: number }) => {
+//     console.log("Opening port:", event, opts);
+
+//     const { path, baudRate = 9600 } = opts;
+//     if (openPorts.has(path)) return { ok: true, message: "already open" };
+
+//     try {
+//       const port = new SerialPort(opts);
+//       console.log("Opening port:", port);
+//       // const parser = port.pipe(new ReadlineParser({ delimiter: "\r\n" }));
+//       // console.log("Parser set up for port:", parser);
+
+//       port.on("open", () => {
+//         // Enviar comando para solicitar peso (común en balanzas)
+//         console.log("Envie el comando:");
+
+//         port.write(Buffer.from([0x05])); // ENQ
+//       });
+
+//       port.on("data", (chunk: Buffer) => {
+//         console.log("Raw buffer:", chunk);
+//         console.log("As string:", chunk.toString("utf8"));
+//       });
+
+//       port.on("data", (line: string) => {
+//         console.log(`Data from ${path}:`, line);
+//         event.sender.send("serial:data", { path, data: line });
+//       });
+
+//       port.on("error", (err) => {
+//         console.log(`Error from ${path}:`, err.message);
+//         event.sender.send("serial:error", { path, error: err.message });
+//       });
+
+//       port.on("close", () => {
+//         console.log(`Closed port:`, port);
+//         event.sender.send("serial:closed", { path });
+//         openPorts.delete(path);
+//       });
+
+//       await new Promise<void>((resolve, reject) => {
+//         port.open((err) => (err ? reject(err) : resolve()));
+//       });
+
+//       const monitorInterval = setInterval(() => {
+//         if (port.isOpen) {
+//           port.write("W\r\n"); // Solicitar peso cada cierto tiempo
+//         } else {
+//           clearInterval(monitorInterval);
+//         }
+//       }, 50); // Cada 1 segundo
+
+//       openPorts.set(path, { port });
+//       return { ok: true };
+//     } catch (err: any) {
+//       console.log("Error opening port:", err);
+//       return { ok: false, error: err?.message ?? String(err) };
+//     }
+//   }
+// );
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
@@ -97,116 +165,7 @@ app.on("activate", () => {
 //   throw new Error("Function not implemented.");
 // }
 
-// 3. FUNCIÓN PARA CREAR HOTSPOT
-ipcMain.handle(
-  "create-hotspot",
-  async (_event, { ssid, password, interface: networkInterface }) => {
-    try {
-      const platform = os.platform();
-      let command = "";
 
-      // Valores por defecto
-      const hotspotSSID = ssid || "MyHotspot";
-      const hotspotPassword = password || "password123";
-
-      switch (platform) {
-        case "win32":
-          // eslint-disable-next-line no-case-declarations
-          const psCommand = `
-    Add-Type -AssemblyName System.Runtime.WindowsRuntime
-    $tetheringManager = [Windows.Networking.NetworkOperators.NetworkOperatorTetheringManager, Windows.Networking.NetworkOperators, ContentType = WindowsRuntime]::CreateFromConnectionProfile(([Windows.Networking.Connectivity.NetworkInformation, Windows.Networking.Connectivity, ContentType = WindowsRuntime]::GetInternetConnectionProfile()))
-    $tetheringManager.StartTetheringAsync() | Out-Null
-  `;
-          await execAsync(`powershell -Command "${psCommand}"`);
-          break;
-
-        case "darwin": // macOS
-          // macOS - usar sharing preferences (requiere permisos de admin)
-          command = `sudo networksetup -createnetworkservice "Hotspot" "bridge100"`;
-          await execAsync(command);
-          break;
-
-        case "linux":
-          // Linux - usar hostapd y crear access point
-          // eslint-disable-next-line no-case-declarations
-          const configContent = `interface=${networkInterface || "wlan0"}
-driver=nl80211
-ssid=${hotspotSSID}
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=${hotspotPassword}
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP`;
-
-          // Escribir configuración temporal
-          // eslint-disable-next-line no-case-declarations
-          const configPath = "/tmp/hostapd.conf";
-          fs.writeFileSync(configPath, configContent);
-
-          // Iniciar hotspot
-          await execAsync(`sudo hostapd ${configPath} &`);
-          break;
-
-        default:
-          throw new Error(`Plataforma no soportada: ${platform}`);
-      }
-
-      return {
-        success: true,
-        message: `Hotspot '${hotspotSSID}' creado exitosamente`,
-        ssid: hotspotSSID,
-        password: hotspotPassword,
-      };
-    } catch (error) {
-      console.error("Error creating hotspot:", error);
-      return {
-        success: false,
-        error:
-          typeof error === "object" && error !== null && "message" in error
-            ? (error as { message: string }).message
-            : String(error),
-      };
-    }
-  }
-);
-
-// 4. FUNCIÓN PARA DETENER HOTSPOT
-ipcMain.handle("stop-hotspot", async () => {
-  try {
-    const platform = os.platform();
-
-    switch (platform) {
-      case "win32":
-        await execAsync("netsh wlan stop hostednetwork");
-        break;
-      case "linux":
-        await execAsync("sudo pkill hostapd");
-        break;
-      case "darwin":
-        // macOS logic here
-        break;
-    }
-
-    return {
-      success: true,
-      message: "Hotspot detenido exitosamente",
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error:
-        typeof error === "object" && error !== null && "message" in error
-          ? (error as { message: string }).message
-          : String(error),
-    };
-  }
-});
 
 // -----------------
 // Servidor Express

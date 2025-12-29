@@ -15,15 +15,15 @@ export const Layout = ({ children }: LayoutProps) => {
   if (isInPublicRoute) {
     return (
       <main className="flex min-h-screen w-full items-center justify-center bg-background">
-        <div className="w-full max-w-7xl px-4 py-6">{children}</div>
+        <div className="w-full">{children}</div>
       </main>
     );
   }
 
   return (
-    <main className="flex min-h-screen w-full flex-col bg-background">
+    <main className="h-screen overflow-hidden w-full flex-col bg-background grid grid-rows-[auto_1fr]">
       <Header />
-      <div className="container mx-auto w-full max-w-7xl px-4 py-6">{children}</div>
+      <div >{children}</div>
     </main>
   );
 };

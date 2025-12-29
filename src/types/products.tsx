@@ -1,4 +1,4 @@
-import { Lot } from "./lots";
+import type { ProductPresentation } from "./productPresentation";
 
 export type SellMeasurementMode = "QUANTITY" | "WEIGHT";
 
@@ -13,10 +13,12 @@ export interface Product {
   category_id: number | null;
   sub_category_id: number | null;
   brand_id: number | null;
+  iva_id: number | null;
   barcode: number | null;
   public_image_id: number | null;
-  created_at: string | null;
-  updated_at: string | null;
+  public_image_src?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
 
   observations: string | null;
 
@@ -32,9 +34,21 @@ export interface Product {
   };
   //   sale_unit_id: number | null;
   //I dont remember why i put this
+
+
   allow_stock_control: boolean;
   //If no lot control the system will use a single lot as if there was not.
   lot_control: boolean;
+
+  //NEW
+  // uses_lots: boolean;
+  // tracks_stock: boolean;
+
+
+  nameAndCode?: {
+    name: string;
+    short_code: number | null;
+  };
 
   //El formato en que viene de base de datos.
   public_images?: {
@@ -54,14 +68,9 @@ export interface Product {
     sale_unit_name: string;
   };
 
-  lots?: Lot[];
+  product_presentations?: Partial<ProductPresentation>[];
+
+  // lots?: Lot[];
 }
 
-export interface ProductLot {
-  lot_id: number;
-  product_id: number;
-  quantity: number;
-  expiration_date: string;
-  created_at: string;
-  updated_at: string;
-}
+

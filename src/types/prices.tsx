@@ -1,15 +1,18 @@
 export type PriceLogicType = "QUANTITY_DISCOUNT" | "SPECIAL" | "LIMITED_OFFER";
+export type PriceType = "MINOR" | "MAYOR";
 
 export type Price = {
   price_id?: number;
-  lot_id: number;
+  is_new?: boolean; // Para identificar precios nuevos que aún no están en la base de datos
+  location_id: number | null;
   price_number: number;
+  product_presentation_id: number;
 
-  unit_price: number;
-  units_per_price: number;
+  price: number;
+  qty_per_price: number;
   profit_percentage: number;
 
-  price_type: "MINOR" | "MAYOR";
+  price_type: PriceType;
   logic_type: PriceLogicType;
   observations: string | null;
 

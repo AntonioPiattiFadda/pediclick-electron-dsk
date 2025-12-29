@@ -1,18 +1,20 @@
 import { useEffect, useState } from "react";
 import BarcodeSelector from "./BarcodeReaderSelector";
+import { USBDeviceType } from "@/types/devices";
 
 const BarcodeFetcher = () => {
   const [status, setStatus] = useState<
     "idle" | "loading" | "error" | "connected"
   >("loading");
-  const [availableBarcodes, setAvailableBarcodes] = useState<string[]>([]);
-  const [selectedBarcode, setSelectedBarcode] = useState<string | null>(null);
+  const [availableBarcodes, setAvailableBarcodes] = useState<USBDeviceType[]>([]);
+  const [selectedBarcode, setSelectedBarcode] = useState<USBDeviceType | null>(null);
 
   useEffect(() => {
     // Simula la búsqueda de lectores de código de barras
     setStatus("loading");
     window.usb.list().then((list) => {
-      setAvailableBarcodes((list as string[]) ?? []);
+      console.log("Lectores de código de barras encontrados:", list);
+      setAvailableBarcodes((list as USBDeviceType[]) ?? []);
       setStatus("connected");
     });
   }, []);

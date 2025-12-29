@@ -8,3 +8,8 @@ export type Address = string;
 //   references?: string;
 //   [key: string]: unknown;
 // }
+
+export type SubapaseConstrains = {
+    value: string;
+    errorMsg: string;
+}

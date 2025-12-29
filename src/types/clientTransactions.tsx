@@ -1,8 +1,13 @@
-import { PaymentMethod } from "./orderPayments";
+
 // =======================
 // Client Transactions
+
+import type { PaymentMethod } from "./orderPayments";
+import type { PaymentStatus } from "./orders";
+
 // =======================
-export type TransactionType = "INVOICE" | "PAYMENT" | "CREDIT_NOTE" | "DEBIT_NOTE" | "ADJUSTMENT";
+export type TransactionType = "PAYMENT" | "REFUND"
+
 
 export interface ClientTransaction {
   transaction_id: string;
@@ -13,9 +18,9 @@ export interface ClientTransaction {
   created_at: string;
 
 
-  transaction_type: TransactionType;
+  // transaction_type: TransactionType;
   transaction_date: string;
   payment_method?: PaymentMethod;
-  payment_status: "PENDING" | "COMPLETED" | "FAILED";
+  payment_status: PaymentStatus;
   balance_after_transaction: number;
 }

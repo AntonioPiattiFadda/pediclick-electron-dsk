@@ -1,4 +1,5 @@
 import { ipcRenderer, contextBridge } from "electron";
+import { bufferFunctions } from "./printerManager";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -27,23 +28,36 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 
 contextBridge.exposeInMainWorld("serial", {
   list: () => ipcRenderer.invoke("list-serial-ports"),
+  open: (opts: { path: string; baudRate?: number }) => ipcRenderer.invoke("connect-serial-ports", opts),
+  close: (selectedPort: string) => ipcRenderer.invoke("close-serial-port", selectedPort),
+  closeAll: () => ipcRenderer.invoke("close-all-serial-ports"),
 });
+
 
 contextBridge.exposeInMainWorld("usb", {
   list: () => ipcRenderer.invoke("list-usb-devices"),
 });
 
-contextBridge.exposeInMainWorld("hotspot", {
-  // NUEVAS FUNCIONES HOTSPOT
-  createHotspot: (options: {
-    ssid?: string;
-    password?: string;
-    interface?: string;
-  }) => {
-    return ipcRenderer.invoke("create-hotspot", options);
-  },
-
-  stopHotspot: () => {
-    return ipcRenderer.invoke("stop-hotspot");
-  },
+contextBridge.exposeInMainWorld("printer", {
+  print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: unknown) => ipcRenderer.invoke("print", vendorId, productId, printFunction, printContent),
 });
+
+contextBridge.exposeInMainWorld("scale", {
+  connectScale: (portPath: string, config?: object) => ipcRenderer.invoke("connect-scale", portPath, config),
+  // serialOpen: (opts: { path: string; baudRate?: number }) => ipcRenderer.invoke("serial:open", opts),
+});
+
+// contextBridge.exposeInMainWorld("hotspot", {
+//   // NUEVAS FUNCIONES HOTSPOT
+//   createHotspot: (options: {
+//     ssid?: string;
+//     password?: string;
+//     interface?: string;
+//   }) => {
+//     return ipcRenderer.invoke("create-hotspot", options);
+//   },
+
+//   stopHotspot: () => {
+//     return ipcRenderer.invoke("stop-hotspot");
+//   },
+// });

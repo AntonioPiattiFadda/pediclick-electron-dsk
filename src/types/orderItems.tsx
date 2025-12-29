@@ -1,18 +1,36 @@
+import { MovementStatus } from ".";
+import { PriceLogicType, PriceType } from "./prices";
+
 export interface OrderItem {
-  order_item_id?: string;
-  order_id?: string;
+  order_item_id?: number;
+  order_id?: number;
   product_id: number;
-  lot_id?: number;
   product_name: string;
-  price_id?: number;
+  product_presentation_name: string;
+  product_presentation_id: number;
+  lot_id: number;
+  stock_id: number;
+  location_id: number;
+
   //La va a determinar la balanza si es producto por kg
   //Si es por unidad lo va a seleccionar el usuario
-  //Se calculaara unit_price en base a esto
+  //Se calculaara price en base a esto
+
   quantity: number;
-  unit_price: number;
+  price: number;
+
+  price_type: PriceType;
+  logic_type: PriceLogicType;
+
   subtotal: number;
+
+
   discount?: number;
   tax?: number;
-  total_price: number;
-  created_at?: string;
+  is_deleted: boolean;
+
+  total: number;
+  status: MovementStatus;
+
+  created_at: string;
 }
