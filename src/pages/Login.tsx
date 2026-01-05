@@ -13,8 +13,8 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("antonio.piattifadda@gmail.com");
+  const [password, setPassword] = useState("Admin12345*");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();

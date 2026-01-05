@@ -1,7 +1,7 @@
 // src/App.tsx
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./layout/layout";
 import { SignIn } from "./pages/Login";
 import { Orders } from "./pages/Orders";
@@ -33,33 +33,37 @@ function App() {
 
           <Provider store={store}>
 
-            <Layout>
-              <Routes>
-                <Route
-                  path="/"
-                  element={<SignIn />}
-                />
-                <Route
-                  path="/login"
-                  element={
-                    <SignIn />
+            <HashRouter>
+              <Layout>
 
-                  }
-                />
-                <Route
-                  path="/select-store"
-                  element={<SelectStore />}
-                />
-                <Route
-                  path="/orders"
-                  element={
-                    <Orders />
-                  }
-                />
 
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </Layout>
+                <Routes>
+                  <Route
+                    path="/"
+                    element={<SignIn />}
+                  />
+                  <Route
+                    path="/login"
+                    element={
+                      <SignIn />
+
+                    }
+                  />
+                  <Route
+                    path="/select-store"
+                    element={<SelectStore />}
+                  />
+                  <Route
+                    path="/orders"
+                    element={
+                      <Orders />
+                    }
+                  />
+
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </Layout>
+            </HashRouter>
           </Provider>
         </OrderProvider>
       </ShortCutProvider>

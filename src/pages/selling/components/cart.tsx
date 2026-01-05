@@ -102,7 +102,6 @@ const Cart = ({ order, onChangeOrder }: {
 
             console.log("Adapted payments before createOrder:", adaptedPayments);
 
-
             return await createOrder(payload.order, payload.orderItems, adaptedPayments);
         },
         onSuccess: (data) => {
