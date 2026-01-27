@@ -1,7 +1,7 @@
 import { Client } from "./clients";
 
 export type ClientType = "FINAL" | "REGISTERED"
-export type OrderType = "DIRECT_SALE" | "CREDIT_ORDER" | "RESERVATION" | "ONLINE_PICKUP"
+export type OrderType = "DIRECT_SALE" | "DELIVERY"
 export type PaymentStatus = "PENDING" | "PAID" | "PARTIALLY_PAID" | "REFUNDED" | "PARTIALLY_REFUNDED"
 export type OrderStatus = "NEW" | "PROCESSING" | "DELIVERED" | "COMPLETED" | "CANCELLED" | "RETURNED" | "DELIVERING"
 
@@ -18,7 +18,7 @@ export interface OrderT {
   order_status: OrderStatus;
 
   // 🔥 eliminamos payment_method y final_payment_method
-  // en su lugar, tendremos OrderPayment[] asociado a la orden
+  // en su lugar, tendremos Payment[] asociado a la orden
   payment_status: PaymentStatus;
 
   subtotal: number;
@@ -38,6 +38,7 @@ export interface OrderT {
 
 
   client?: Client | null;
+  is_delivery: boolean;
 }
 
 

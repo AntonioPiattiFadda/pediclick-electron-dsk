@@ -1,20 +1,21 @@
 import { NotificationsType } from "@/types/notifications";
 import { OrderItem } from "@/types/orderItems";
-import { OrderPayment } from "@/types/orderPayments";
+import { Payment } from "@/types/payments";
 import { OrderT } from "@/types/orders";
 import { getUserId, supabase } from ".";
 import { getBusinessOwnerId } from "./profiles";
 
-export async function createOrder(order: OrderT, orderItems: OrderItem[], orderPayments: Partial<OrderPayment>[]) {
+export async function createOrder(order: OrderT, orderItems: OrderItem[], payments: Partial<Payment>[]) {
 
   const businessOwnerId = await getBusinessOwnerId();
-  console.log("Creating order with:", { order, orderItems, orderPayments });
+  console.log("Creating order with:", { order, orderItems, payments });
 
   const adaptedOrderItems: Omit<OrderItem, 'product_name' | 'product_presentation_name'>[] = orderItems.map((it) => ({
     order_id: it.order_id,
     product_id: it.product_id,
     price: it.price,
     quantity: it.quantity,
+    over_sell_quantity: it.over_sell_quantity,
     subtotal: it.subtotal,
     discount: it.discount,
     tax: it.tax,
@@ -25,10 +26,11 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], orderP
     price_type: it.price_type,
     logic_type: it.logic_type,
     created_at: it.created_at,
-    is_deleted: it.is_deleted,
     status: it.status,
     location_id: it.location_id,
   }));
+
+  console.log("Adapted order items:", adaptedOrderItems);
 
   const subtotalSum = orderItems.reduce((s, it) => s + (it.subtotal || 0), 0);
   const discountSum = orderItems.reduce((s, it) => s + (it.discount || 0), 0);
@@ -40,8 +42,8 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], orderP
   const adaptedOrder: OrderT = {
     ...order,
     business_owner_id: businessOwnerId,
-    payment_status: orderPayments.length === 0 ? "PENDING" : "PAID",
-    order_status: "COMPLETED",
+    payment_status: payments.length === 0 ? "PENDING" : "PAID",
+    order_status: order.order_status,
     subtotal: subtotalSum,
     discount: discountSum,
     tax: taxSum,
@@ -49,19 +51,26 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], orderP
 
   };
 
-  const filteredOrderPayments = orderPayments.filter((it) => it.amount && it.amount > 0);
+  console.log("Adapted order:", adaptedOrder);
+
+  const filteredpayments = payments.filter((it) => it.amount && it.amount > 0).map((it) => ({
+    ...it,
+    payment_direction: "IN",
+    payment_type: "ORDER",
+  }));
+
+
 
   const { data, error } = await supabase.rpc("register_order", {
     p_order: adaptedOrder,
     p_order_items: adaptedOrderItems,
-    p_order_payments: filteredOrderPayments,
+    p_order_payments: filteredpayments,
   });
-
   console.log("data, error:", data, error);
 
 
   if (error) {
-    throw error;
+    throw new Error(error.message);
   }
 
   return data;
@@ -91,9 +100,10 @@ export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
 
   if (notificationsError) throw notificationsError;
 
-  console.log("Creating order with:", { order, orderItems, notification });
+  console.log("Cancelling order with:", { order, orderItems, notification });
 
   const adaptedOrder = { ...order, business_owner_id: businessOwnerId, order_status: "CANCELLED" };
+  delete adaptedOrder.client;
 
   const { error: orderError } = await supabase
     .from("orders")
@@ -109,6 +119,7 @@ export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
     product_id: it.product_id,
     price: it.price,
     quantity: it.quantity,
+    over_sell_quantity: it.over_sell_quantity,
     subtotal: it.subtotal,
     discount: it.discount,
     tax: it.tax,
@@ -118,7 +129,6 @@ export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
     price_type: it.price_type,
     logic_type: it.logic_type,
     created_at: it.created_at,
-    is_deleted: it.is_deleted,
     status: it.status,
     location_id: it.location_id,
     lot_id: it.lot_id,

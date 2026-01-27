@@ -249,13 +249,13 @@ const ProductSelector = ({
       <input
         className={`border-none h-9 w-14 rounded-lg px-3 text-sm text-center`}
         type="number"
-        value={shortCode ?? ""}
+        value={shortCode ?? undefined}
         ref={focusRef}
         placeholder="--"
         disabled={disabled}
         onChange={(e) => {
           const val = e.target.value;
-          setShortCode(Number(val));
+          setShortCode(val === '' ? null : Number(val));
           // handleCodeMatch(Number(val));
         }}
       />

@@ -3,13 +3,15 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Provider } from "react-redux";
 import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./layout/layout";
-import { SignIn } from "./pages/Login";
-import { Orders } from "./pages/Orders";
-import SelectStore from "./pages/SelectStore";
+import { SignIn } from "./pages/auth/Login";
+import { InSiteOrders } from "./pages/inSiteOrders/InSiteOrders";
+import SelectStore from "./pages/selectStore/SelectStore";
 import { store } from "./stores/store";
 import { OrderProvider } from "./context/OrderContext";
 import { Toaster } from "sonner";
 import { ShortCutProvider } from "./context/ShortCutContext";
+import { ModalsProvider } from "./context/ModalsContext";
+import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 
 // ---- App raíz mínima con QueryClient local ----
 const queryClient = new QueryClient();
@@ -29,43 +31,56 @@ function App() {
         position="bottom-right" /> */}
       <Toaster />
       <ShortCutProvider>
-        <OrderProvider >
+        <ModalsProvider>
+          <OrderProvider >
 
-          <Provider store={store}>
+            <Provider store={store}>
 
-            <HashRouter>
-              <Layout>
+              <HashRouter>
+                <Layout>
 
 
-                <Routes>
-                  <Route
-                    path="/"
-                    element={<SignIn />}
-                  />
-                  <Route
-                    path="/login"
-                    element={
-                      <SignIn />
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={<SignIn />}
+                    />
 
-                    }
-                  />
-                  <Route
-                    path="/select-store"
-                    element={<SelectStore />}
-                  />
-                  <Route
-                    path="/orders"
-                    element={
-                      <Orders />
-                    }
-                  />
+                    <Route
+                      path="/login"
+                      element={
+                        <SignIn />
 
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
-              </Layout>
-            </HashRouter>
-          </Provider>
-        </OrderProvider>
+                      }
+                    />
+
+                    <Route
+                      path="/select-store"
+                      element={<SelectStore />}
+                    />
+
+                    <Route
+                      path="/in-site-orders"
+                      element={
+                        <InSiteOrders />
+                      }
+                    />
+
+                    <Route
+                      path="/delivery-orders"
+                      element={
+                        <DeliveryOrders />
+                      }
+                    />
+
+
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </Layout>
+              </HashRouter>
+            </Provider>
+          </OrderProvider>
+        </ModalsProvider>
       </ShortCutProvider>
     </QueryClientProvider >
   );

@@ -1,3 +1,4 @@
+import { SellType } from ".";
 import type { Lot } from "./lots";
 import { Price } from "./prices";
 
@@ -10,7 +11,7 @@ export type ProductPresentation = {
     updated_at: string;
 
     bulk_quantity_equivalence: number | null;
-
+    sell_type: SellType;
 
     lots?: Lot[];
 

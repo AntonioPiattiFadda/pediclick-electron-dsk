@@ -183,9 +183,7 @@ const SelectProductPresentation = ({ children, focusRef }: {
 
     const handleShortCodeMatch = (shortCode: number | null) => {
         if (shortCode === null) return;
-        console.log("handleShortCodeMatch - shortCode:", shortCode);
         const matched = (presentations as Partial<ProductPresentation>[]).find((p) => p.short_code === shortCode);
-        console.log("handleShortCodeMatch - matched:", matched);
         if (matched) {
             debouncedToast.cancel();
             onChange(matched);
@@ -221,13 +219,15 @@ const SelectProductPresentation = ({ children, focusRef }: {
     return (
         <>
             <input
+                type="number"
                 className={`border border-gray-200 h-9 w-16 rounded-lg p-3 text-sm text-center`}
                 value={shortCode === null ? "" : String(shortCode)}
                 ref={focusRef}
                 placeholder="--"
                 onChange={(e) => {
                     const value = e.target.value;
-                    onChangeShortCode(Number(value) || null);
+                    onChangeShortCode(value === '' ? null : Number(value));
+                    // onChangeShortCode(Number(value) || null);
                     handleShortCodeMatch(Number(value) || null);
                 }}
 

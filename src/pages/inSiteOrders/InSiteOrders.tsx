@@ -1,20 +1,20 @@
 
 import { Button } from "@/components/ui/button";
+import { RefButton } from "@/components/ui/refButton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useOrderContext } from "@/context/OrderContext";
 import { ScaleProvider } from "@/context/ScaleContext";
+import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { startEmptyOrder } from "@/service/orders";
 import { OrderT } from "@/types/orders";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
-import Selling from "./selling/selling";
-import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useEffect, useRef } from "react";
-import { RefButton } from "@/components/ui/refButton";
+import Order from "./Order";
 
 
-export function Orders() {
+export function InSiteOrders() {
     const { orders, setOrders, activeOrder, setactiveOrder } = useOrderContext();
 
     const { handleGetLocationId } = useGetLocationData();
@@ -27,7 +27,7 @@ export function Orders() {
         },
         onSuccess: (data) => {
             if (import.meta.env.DEV) console.log("Orden iniciada:", data)
-            setOrders([...orders, { ...data } as OrderT])
+            setOrders([...orders, { ...data, order_type: "DIRECT_SALE" } as OrderT])
             setactiveOrder((data as OrderT).order_id.toString());
             queryClient.invalidateQueries({ queryKey: ["orders"] })
         },
@@ -69,6 +69,7 @@ export function Orders() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    const filteredOrders = orders.filter(order => order.order_type === "DIRECT_SALE");
 
     return (
         <ScaleProvider>
@@ -76,29 +77,40 @@ export function Orders() {
                 if (startOrderMutation.isPending) return;
                 setactiveOrder(newValue);
             }} className="w-full">
-                <TabsList className="flex items-center gap-1 mt-4 ml-4 h-[43px]">
-                    {orders.map((order, index) => (
-                        <TabsTrigger
-                            key={order.order_id}
-                            value={order.order_id.toString()}>
-                            {`Orden ${index + 1}`}
-                        </TabsTrigger>
-                    ))}
+                <div className="w-full  flex justify-between items-center px-4">
+                    <h1 className="text-2xl">Ordenes de compra</h1>
+                    <TabsList className="flex items-center gap-1 mt-4  h-[43px]">
+                        {filteredOrders.map((order, index) => (
+                            <TabsTrigger
+                                key={order.order_id}
+                                value={order.order_id.toString()}>
+                                {`Orden ${index + 1}`}
+                            </TabsTrigger>
+                        ))}
 
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9 rounded-md"
-                        onClick={handleAddTab}
-                    >
-                        {startOrderMutation.isPending ? <Spinner /> : <PlusCircle />}
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 rounded-md"
+                            onClick={handleAddTab}
+                        >
+                            {startOrderMutation.isPending ? <Spinner /> : <PlusCircle />}
 
-                    </Button>
-                </TabsList>
+                        </Button>
 
-                {orders.length === 0 && (
-                    <div className="w-full flex items-center justify-center h-full absolute top-0 left-0 bg-background/70 z-10">
+
+
+                    </TabsList>
+
+
+
+                </div>
+
+
+
+                {filteredOrders.length === 0 && (
+                    <div className="w-full flex items-center justify-center h-[80%] absolute top-0 left-0 bg-background/70 translate-y-18 z-10">
                         <RefButton
                             onClick={() => startOrderMutation.mutate()}
                             disabled={startOrderMutation.isPending}
@@ -116,11 +128,13 @@ export function Orders() {
                     </div>
                 )}
 
-                {orders.map((order) => (
+                {filteredOrders.map((order) => (
                     <TabsContent key={order.order_id} value={order.order_id.toString()} >
-                        <Selling order={order} onChangeOrder={(updatedOrder: OrderT) => {
-                            handleChangeOrder(updatedOrder)
-                        }} />
+                        <Order
+                            order={order}
+                            onChangeOrder={(updatedOrder: OrderT) => {
+                                handleChangeOrder(updatedOrder)
+                            }} />
                     </TabsContent>
                 ))}
             </Tabs>

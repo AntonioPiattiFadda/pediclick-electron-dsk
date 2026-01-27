@@ -27,7 +27,7 @@ const SelectStore = () => {
                     disabled={selectedStore === null}
                     onClick={() => {
                         handleSetLocation(selectedStore!)
-                        navigate("/orders")
+                        navigate("/in-site-orders")
                     }}
                 >
                     Confirmar

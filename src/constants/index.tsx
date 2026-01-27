@@ -1,5 +1,5 @@
 import type { TaxConditionType } from "@/types/clients";
-import { OrderPayment } from "@/types/orderPayments";
+import { Payment } from "@/types/payments";
 
 export const taxConditionsOpt: { value: TaxConditionType; label: string }[] = [
     { value: "VAT_REGISTERED_RESPONSIBLE", label: "IVA Responsable Inscripto" },
@@ -25,14 +25,14 @@ export const transferOrderStatuses = {
     CANCELLED: "Cancelado",
 } as const;
 
-export const emptyPayments: Pick<OrderPayment, "payment_method" | "amount">[] = [
-    { payment_method: 'CASH', amount: 0 },
-    { payment_method: 'DEBIT_CARD', amount: 0 },
-    { payment_method: 'BANK_TRANSFER', amount: 0 },
-    { payment_method: 'CREDIT_CARD', amount: 0 },
-    { payment_method: 'CHECK', amount: 0 },
+export const emptyPayments: Pick<Payment, "payment_method" | "amount" | 'payment_direction' | 'payment_type'>[] = [
+    { payment_method: 'CASH', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
+    { payment_method: 'DEBIT_CARD', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
+    { payment_method: 'BANK_TRANSFER', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
+    { payment_method: 'CREDIT_CARD', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
+    { payment_method: 'CHECK', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
     // { payment_method: 'MOBILE_PAYMENT', amount: 0 },
-    { payment_method: 'ON_CREDIT', amount: 0 },
+    { payment_method: 'ON_CREDIT', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
 ]
 
 export const paymentMethodOpt = [
@@ -56,4 +56,26 @@ export const priceLogicTypeOpt = [
     { value: 'QUANTITY_DISCOUNT', label: 'Descuento por Cantidad' },
     { value: 'SPECIAL', label: 'Precio Especial' },
     { value: 'LIMITED_OFFER', label: 'Oferta Limitada' },
+];
+
+
+export const ROLES = [
+    {
+        label: "Encargado",
+        value: "MANAGER",
+        descripcion:
+            "Tendra acceso a la creacion de empleados dentro del sistema y a la gestion de inventario",
+    },
+    {
+        label: "Empleado",
+        value: "EMPLOYEE",
+        descripcion:
+            "Solo podra acceder a la pantalla de vendedor. Sin permisos para ingresar a los datos del sistema",
+    },
+    {
+        label: "Propietario",
+        value: "OWNER",
+        descripcion:
+            "Tendra acceso total a todas las funcionalidades del sistema, incluyendo la gestion de usuarios y configuraciones.",
+    }
 ];

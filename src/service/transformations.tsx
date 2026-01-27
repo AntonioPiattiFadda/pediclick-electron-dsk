@@ -3,11 +3,9 @@ import { supabase } from ".";
 import { getBusinessOwnerId } from "./profiles";
 import { Transformation } from "@/types/transformation";
 
-export async function createTransformation(transformation: Omit<Transformation, 'created_at'>, fromTransformationItems: TransformationItems[], toTransformationItems: TransformationItems[]) {
+export async function createTransformation(transformation: Omit<Transformation, 'created_at'>, fromTransformationItems: TransformationItems[], toTransformationItems: TransformationItems[], locationId: number | null) {
     const businessOwnerId = await getBusinessOwnerId();
 
-    const location = localStorage.getItem("selectedStore");
-    const locationId = location ? Number(JSON.parse(location)) : 0;
 
     const adaptedFromTransformationItems: Omit<TransformationItems, 'product' | 'product_presentation'>[] = fromTransformationItems.map((it) => ({
         transformation_item_id: it.transformation_item_id,
@@ -66,16 +64,10 @@ export async function createTransformation(transformation: Omit<Transformation, 
         business_owner_id: businessOwnerId,
     };
 
-    console.log("Adapted Transformation Data:", adaptedTranformationData);
-    console.log("Adapted Transformation Items:", [...adaptedToTransformationItems]);
-
     const { data, error } = await supabase.rpc('create_transformation', {
         p_transformation_data: adaptedTranformationData,
         p_transformation_items: [...adaptedFromTransformationItems, ...adaptedToTransformationItems],
     });
-
-    console.log("Data:", data);
-    console.log("Error:", error);
 
     if (error) {
         throw error;

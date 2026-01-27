@@ -4,3 +4,6 @@ export type CheckOutOptions = {
     printTicket: boolean;
     registerPositiveCredit: boolean;
 };
+
+
+export type SellType = "WEIGHT" | "UNIT";

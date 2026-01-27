@@ -1,6 +1,6 @@
 import { useOrderContext } from '@/context/OrderContext'
 import { createOrder } from '@/service/orders'
-import { OrderPayment } from '@/types/orderPayments'
+import { Payment } from '@/types/payments'
 import { OrderT } from '@/types/orders'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -32,11 +32,11 @@ const Cart = ({ order, onChangeOrder }: {
         registerPositiveCredit: false,
     });
 
-    type CreateOrderPayload = { order: typeof order; orderItems: typeof orderItems, orderPayments?: Partial<OrderPayment>[] };
+    type CreateOrderPayload = { order: typeof order; orderItems: typeof orderItems, payments?: Partial<Payment>[] };
 
     const createOrderMutation = useMutation({
         mutationFn: async (payload: CreateOrderPayload) => {
-            let adaptedPayments = payload.orderPayments ?? []
+            let adaptedPayments = payload.payments ?? []
 
 
             // NOTE Se da cambio por lo tanto se saca del cash el excedente
@@ -45,15 +45,15 @@ const Cart = ({ order, onChangeOrder }: {
                 //Formatt el payment en efectivo para que el monto total sea igual al total de la orden
 
                 const totalOrder = payload.orderItems.reduce((sum, it) => sum + Number(it.total || it.subtotal || 0), 0);
-                const totalPayments = payload.orderPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+                const totalPayments = payload.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
                 const change = totalPayments - totalOrder;
 
-                // const newCashPayment = payload.orderPayments?.find(p => p.payment_method === 'CASH');
+                // const newCashPayment = payload.payments?.find(p => p.payment_method === 'CASH');
 
                 // const newCashAmount = newCashPayment?.amount ? Number(newCashPayment.amount - change).toFixed(2) : 0;
 
-                // const cashPayment: Partial<OrderPayment> = {
+                // const cashPayment: Partial<Payment> = {
                 //     ...newCashPayment,
                 //     amount: Number(newCashAmount),
                 // };
@@ -78,27 +78,26 @@ const Cart = ({ order, onChangeOrder }: {
 
 
                 const totalOrder = payload.orderItems.reduce((sum, it) => sum + Number(it.total || it.subtotal || 0), 0);
-                const totalPayments = payload.orderPayments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
+                const totalPayments = payload.payments?.reduce((sum, p) => sum + (p.amount || 0), 0) || 0;
 
                 const change = totalPayments - totalOrder;
 
                 const overPaymentMethod = {
                     order_id: payload.order.order_id,
                     payment_method: 'OVERPAYMENT',
-                    amount: Number(change.toFixed(2))
+                    amount: Number(change.toFixed(2)),
+                    payment_direction: "IN",
+                    payment_type: "ORDER"
                 };
 
-                adaptedPayments.push(overPaymentMethod as Partial<OrderPayment>);
+                adaptedPayments.push(overPaymentMethod as Partial<Payment>);
 
 
             }
 
-            const a = adaptedPayments.find(p => p.payment_method === 'ON_CREDIT');
-            console.log("a", a);
-            const b = adaptedPayments.find(p => p.payment_method === 'CASH');
-            console.log("b", b);
-            const c = adaptedPayments.find(p => p.payment_method === 'OVERPAYMENT');
-            console.log("c", c);
+            // const a = adaptedPayments.find(p => p.payment_method === 'ON_CREDIT');
+            // const b = adaptedPayments.find(p => p.payment_method === 'CASH');
+            // const c = adaptedPayments.find(p => p.payment_method === 'OVERPAYMENT');
 
             console.log("Adapted payments before createOrder:", adaptedPayments);
 
@@ -109,16 +108,12 @@ const Cart = ({ order, onChangeOrder }: {
             queryClient.invalidateQueries({ queryKey: ["orders"] })
             toast.success("Orden creada con éxito")
 
-            console.log("Order created:", orders)
-            console.log("Order created:", orderItems)
+
 
             const filteredOrders = orders.filter((o: OrderT) => o.order_id !== order.order_id);
             const filteredOrderItems = orderItems.filter(it => it.order_id !== order.order_id);
-            console.log("Filtered orders after creation:", filteredOrders);
-            console.log("Filtered orders after creation:", filteredOrderItems);
 
             const orderToPrint = orders.filter((o: OrderT) => o.order_id === order.order_id);
-            console.log("Order to print:", orderToPrint);
             const orderItemsToPrint = orderItems.filter(it => it.order_id === order.order_id);
 
             const printContent: PrintTicketPayload = {
@@ -136,7 +131,6 @@ const Cart = ({ order, onChangeOrder }: {
             };
 
             if (checkOutOptions.printTicket) {
-                alert("Imprimiendo ticket...");
                 handlePrintTicket(printContent);
             }
 
@@ -152,28 +146,39 @@ const Cart = ({ order, onChangeOrder }: {
         },
     })
 
-    const handleCreateOrder = async (orderPayments: Partial<OrderPayment>[]) => {
+    const handleCreateOrder = async (payments: Partial<Payment>[]) => {
         try {
-            await createOrderMutation.mutateAsync({ order, orderItems, orderPayments })
+            await createOrderMutation.mutateAsync({ order, orderItems, payments })
         } catch (e) {
             console.error("Error al crear la orden", e)
         }
     }
 
-    const filteredOrderItems = orderItems.filter(it => it.order_id === order.order_id);
+
+    const isDelivery = order.order_type === 'DELIVERY';
+
+    const filteredOrderItems = orderItems.filter(it => it.order_id === order.order_id).sort((a, b) => {
+        if (!isDelivery) return 0; // no tocar el orden si no es delivery
+
+        return a.product_name.localeCompare(b.product_name, 'es', {
+            sensitivity: 'base',
+        });
+    });
+
+    // const formattedOrderItems 
     const orderTotal = filteredOrderItems.reduce((sum, it) => sum + Number(it.total || it.subtotal || 0), 0)
 
     return (
         <div className="rounded-lg border bg-card p-4 shadow-sm h-full flex flex-col  ">
-            <h3 className="mb-2 text-base font-semibold text-foreground">Orden de compra</h3>
+            <h3 className="mb-2 text-base font-semibold text-foreground">{isDelivery ? "Pedido" : "Orden de compra"}</h3>
             {filteredOrderItems.length === 0 ? (
                 <EmptyCart />
             ) : (
                 <ul className="space-y-1  overflow-auto max-h-[calc(100vh-330px)]">
                     {filteredOrderItems.map((it, idx) => (
                         <li key={idx} className="flex items-center justify-between  text-sm h-9">
-                            <span>{it.product_name} {it.product_presentation_name} x {it.quantity}</span>
-                            <span className='ml-auto'>${Number(it.total ?? it.subtotal ?? 0).toFixed(2)}</span>
+                            <span className={`${it.status !== 'CANCELLED' ? '' : 'line-through'}`}>{it.product_name} {it.product_presentation_name} x {it.quantity + it.over_sell_quantity}</span>
+                            <span className={`ml-auto  ${it.status !== 'CANCELLED' ? 'mr-1' : 'mr-3'}`}>${Number(it.total ?? it.subtotal ?? 0).toFixed(2)}</span>
                             {it.status !== 'CANCELLED' && (
                                 <DeleteCartItemButton itemData={it} />
                             )}

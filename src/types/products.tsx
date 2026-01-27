@@ -25,13 +25,13 @@ export interface Product {
   //NOTE El rinde es por producto o por remito?
   //NOTE La comision es por lote o por remito?
 
-  sell_measurement_mode: SellMeasurementMode;
+  // sell_measurement_mode: SellMeasurementMode;
 
   //Darle una vuelta a esto
-  equivalence_minor_mayor_selling: {
-    minor: number | null;
-    mayor: number | null;
-  };
+  // equivalence_minor_mayor_selling: {
+  //   minor: number | null;
+  //   mayor: number | null;
+  // };
   //   sale_unit_id: number | null;
   //I dont remember why i put this
 

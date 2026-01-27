@@ -1,4 +1,4 @@
-import ClientInformation from "@/pages/selling/components/clientInformation";
+import { ClientInformation } from "@/components/shared/selectors/clientSelector";
 import { getClient } from "@/service/clients";
 import { useQuery } from "@tanstack/react-query";
 

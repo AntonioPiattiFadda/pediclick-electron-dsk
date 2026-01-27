@@ -17,6 +17,7 @@ export interface OrderItem {
   //Se calculaara price en base a esto
 
   quantity: number;
+  over_sell_quantity: number;
   price: number;
 
   price_type: PriceType;
@@ -27,7 +28,6 @@ export interface OrderItem {
 
   discount?: number;
   tax?: number;
-  is_deleted: boolean;
 
   total: number;
   status: MovementStatus;

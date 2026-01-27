@@ -40,6 +40,7 @@ interface ClientSelectorContextType {
     isLoading: boolean;
     shortCode: number | null;
     onChangeShortCode: (shortCode: number | null) => void;
+    showInfo: boolean;
 }
 
 const ClientSelectorContext =
@@ -59,10 +60,11 @@ interface RootProps {
     disabled?: boolean;
     children: ReactNode;
     shortCode?: number | null;
+    showInfo: boolean;
 
 }
 
-const ClientSelectorRoot = ({ value, onChange, disabled = false, children }: RootProps) => {
+const ClientSelectorRoot = ({ value, onChange, disabled = false, children, showInfo }: RootProps) => {
     const { data: clients, isLoading, isError } = useQuery({
         queryKey: ["clients"],
         queryFn: async () => {
@@ -87,9 +89,10 @@ const ClientSelectorRoot = ({ value, onChange, disabled = false, children }: Roo
                 isLoading,
                 shortCode,
                 onChangeShortCode: setShortCode,
+                showInfo
             }}
         >
-            <div className="flex items-center gap-2 w-full h-10">{children}</div>
+            <div className="flex items-center gap-2 w-full">{children}</div>
         </ClientSelectorContext.Provider>
     );
 };
@@ -97,9 +100,8 @@ const ClientSelectorRoot = ({ value, onChange, disabled = false, children }: Roo
 // ---------- Select ----------
 const SelectClient = () => {
     const { value, onChange, disabled, clients, isLoading,
-        onChangeShortCode
-    } =
-        useClientSelectorContext();
+        onChangeShortCode, showInfo
+    } = useClientSelectorContext();
 
 
     // const handleCodeMatch = (code: number) => {
@@ -128,8 +130,9 @@ const SelectClient = () => {
 
     return (
         <>
-            <div className="flex w-full border border-gray-200 rounded-md ">
-                {/* <Input
+            <div className="flex flex-col gap-4 w-full">
+                <div className="flex w-full border border-gray-200 rounded-md ">
+                    {/* <Input
                     className={`  border-none    h-9 w-14 `}
                     value={shortCode ?? ""}
                     placeholder="Código"
@@ -141,36 +144,43 @@ const SelectClient = () => {
                     }}
                 /> */}
 
-                <Select
-                    disabled={disabled}
-                    value={value?.client_id?.toString() ?? ""}
-                    onValueChange={(val) => {
-                        const m = clients.find((m) => m.client_id === Number(val)) || null;
-                        onChange(m);
-                        onChangeShortCode(m?.short_code ?? null);
-                    }}
-                >
-                    <SelectTrigger className="h-11 w-full border-none">
-                        <SelectValue placeholder="Seleccionar cliente" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectGroup>
-                            <SelectLabel>Clientes</SelectLabel>
-                            {clients.map((m) => {
-                                const label = m.short_code ? `${m.short_code} - ${m.full_name}` : m.full_name;
-                                return (
-                                    <SelectItem
-                                        key={m.client_id}
-                                        value={m?.client_id?.toString() || ""}>
-                                        {label}
-                                    </SelectItem>
-                                )
-                            })}
-                        </SelectGroup>
-                    </SelectContent>
-                </Select>
-            </div>
+                    <Select
+                        disabled={disabled}
+                        value={value?.client_id?.toString() ?? ""}
+                        onValueChange={(val) => {
+                            const m = clients.find((m) => m.client_id === Number(val)) || null;
+                            onChange(m);
+                            onChangeShortCode(m?.short_code ?? null);
+                        }}
+                    >
+                        <SelectTrigger className="h-11 w-full border-none">
+                            <SelectValue placeholder="Seleccionar cliente" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Clientes</SelectLabel>
+                                {clients.map((m) => {
+                                    const label = m.short_code ? `${m.short_code} - ${m.full_name}` : m.full_name;
+                                    return (
+                                        <SelectItem
+                                            key={m.client_id}
+                                            value={m?.client_id?.toString() || ""}>
+                                            {label}
+                                        </SelectItem>
+                                    )
+                                })}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </div>
 
+                <div className="w-[115%]">
+                    {showInfo &&
+                        <ClientInformation selectedClient={clients.find(c => c.client_id === Number(value?.client_id))!} />
+                    }
+                </div>
+
+            </div>
         </>
     );
 };
@@ -179,6 +189,9 @@ import { Label } from "@/components/ui/label";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { taxConditionsOpt } from "@/constants";
+import { formatCurrency } from "@/utils/prices";
+import { formatDate } from "@/utils";
+import ClientHistoricalMvts from "@/pages/inSiteOrders/components/clientHistoricalMvts";
 
 
 const CreateClient = ({ isShortCut = false }: {
@@ -271,7 +284,7 @@ const CreateClient = ({ isShortCut = false }: {
                 {isShortCut ?
                     <SidebarMenuButton>Cliente</SidebarMenuButton>
                     : <Button
-                        className="border border-gray-200"
+                        className="border border-gray-200 mb-auto"
                         disabled={disabled}
                         variant="outline"
                     >
@@ -430,7 +443,7 @@ const CancelClientSelection = () => {
                     onChange(null);
                     onChangeShortCode(null);
                 }}
-                className="text-red-500 hover:text-red-700 h-9"
+                className="text-red-500 hover:text-red-700 h-9 mb-auto"
             >
                 <X className="w-5 h-5" />
             </Button>
@@ -438,11 +451,64 @@ const CancelClientSelection = () => {
     );
 };
 
+const ClientInformation = ({
+    selectedClient,
+    showHistoricalMvtsBtn = true
+}: {
+    selectedClient: Client;
+    showHistoricalMvtsBtn?: boolean;
+}) => {
+
+
+    return (selectedClient && (
+        <div className="w-full">
+
+            <div className="grid grid-cols-[1fr_1fr_1fr_1fr_1fr_auto] gap-x-4 gap-y-1 text-xs">
+                <div className='flex flex-col gap-2 text-center'>
+                    <Label className='flex items-center justify-center'>Credito disponible</Label>
+                    <span>{formatCurrency(selectedClient.available_credit)}</span>
+                </div>
+
+                <div className='flex flex-col gap-2 text-center'>
+                    <Label className='flex items-center justify-center'>Credito disponible</Label>
+                    <span>{formatCurrency(selectedClient.credit_limit || 0)}</span>
+                </div>
+
+                <div className='flex flex-col gap-2 text-center'>
+                    <Label className='flex items-center justify-center'>Saldo actual</Label>
+                    <span>{formatCurrency(selectedClient.current_balance)}</span>
+                </div>
+
+                <div className='flex flex-col gap-2 text-center'>
+                    <Label className='flex items-center justify-center'>Cond. impositiva</Label>
+                    <span>{taxConditionsOpt.find(opt => opt.value === selectedClient.tax_condition)?.label}</span>
+                </div>
+
+                <div className='flex flex-col gap-2 text-center'>
+                    <Label className='flex items-center justify-center'>Últ. transacción</Label>
+                    <span>{formatDate(selectedClient.last_transaction_date)}</span>
+                </div>
+
+                {showHistoricalMvtsBtn && (
+                    <ClientHistoricalMvts selectedClientId={selectedClient.client_id} />
+                )}
+
+            </div>
+
+        </div>
+
+
+    )
+    )
+}
+
 
 // ---------- Compound export ----------
 export {
     ClientSelectorRoot,
     CreateClient,
     SelectClient,
-    CancelClientSelection
+    CancelClientSelection,
+    ClientInformation
 };
+

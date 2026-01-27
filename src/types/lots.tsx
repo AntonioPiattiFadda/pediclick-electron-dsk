@@ -11,7 +11,7 @@ export type LotContainerAssignment = {
 };
 
 export type BaseLot = {
-  lot_id?: number;
+  lot_id: number;
   load_order_id: number | null;
   product_name?: string;
   product_id: number;
@@ -91,7 +91,7 @@ export type BaseLot = {
   purchasing_agent_commision_unit_value: number | null; // Input tipo numero, solo si buyer_commission_type es FIXED
 
 
-  created_at?: string;
+  created_at: string;
   deleted_at?: string;
 
   is_derived: boolean;

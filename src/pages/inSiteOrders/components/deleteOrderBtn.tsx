@@ -18,11 +18,9 @@ import { toast } from "sonner"
 export function DeleteOrderBtn({ orderId }: {
     orderId: number;
 }) {
-    const { orderItems, setOrderItems, orders, setOrders, setactiveOrder, activeOrder, resetAfterOrderCreation } = useOrderContext()
+    const { orderItems, setOrderItems, orders, setOrders, setactiveOrder, resetAfterOrderCreation } = useOrderContext()
     const [open, setOpen] = useState(false)
 
-    console.log("Orden activeOrder:", activeOrder)
-    console.log("Orden orders:", orders)
 
     const queryClient = useQueryClient();
 
@@ -39,7 +37,9 @@ export function DeleteOrderBtn({ orderId }: {
         onSuccess: (orderId) => {
             if (import.meta.env.DEV) console.log("Orden cancelada:", orderId)
             queryClient.invalidateQueries({ queryKey: ["orders"] })
-            toast.success("Orden Cancelada con éxito")
+            toast.success("Orden Cancelada con éxito", {
+                description: "Se notificara la cancelación de la orden",
+            })
             const filteredOrders = orders.filter(o => o.order_id !== orderId);
             setOrders(filteredOrders);
             setactiveOrder(filteredOrders[0]?.order_id.toString() || "");
@@ -58,7 +58,7 @@ export function DeleteOrderBtn({ orderId }: {
         try {
             await cancelOrderMutation.mutateAsync()
         } catch (e) {
-            console.error("Error al crear la orden", e)
+            console.error("Error al cancelar la orden", e)
         }
     }
 

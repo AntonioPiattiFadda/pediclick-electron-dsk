@@ -18,7 +18,7 @@ const ScaleContext = createContext<ScaleContextValue>({
 });
 
 export const ScaleProvider = ({ children }: { children: ReactNode }) => {
-    const [weightKg, setWeightKg] = useState<number>(0);
+    const [weightKg, setWeightKg] = useState<number>(1);
     const [unitsCount, setUnitsCount] = useState<number>(1);
 
     return (

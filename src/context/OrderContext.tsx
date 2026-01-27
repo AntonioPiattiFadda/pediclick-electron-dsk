@@ -40,6 +40,9 @@ const OrderContext = createContext<{
   activeOrder: string;
   setactiveOrder: React.Dispatch<React.SetStateAction<string>>;
 
+  activeDeliveryOrder: string;
+  setActiveDeliveryOrder: React.Dispatch<React.SetStateAction<string>>;
+
   resetAfterOrderCreation: () => void;
 
   effectivePrice: number;
@@ -80,6 +83,8 @@ const OrderContext = createContext<{
 
   activeOrder: "",
   setactiveOrder: () => { },
+  activeDeliveryOrder: "",
+  setActiveDeliveryOrder: () => { },
   resetAfterOrderCreation: () => { },
 
   effectivePrice: 0,
@@ -122,6 +127,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
   const [selectedStockId, setSelectedStockId] = useState<number | null>(null);
 
   const [activeOrder, setactiveOrder] = useState<string>("");
+  const [activeDeliveryOrder, setActiveDeliveryOrder] = useState<string>("");
 
   const [effectivePrice, setEffectivePrice] = useState<number>(0);
 
@@ -169,6 +175,10 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
         setSellPriceType,
         activeOrder,
         setactiveOrder,
+
+        activeDeliveryOrder,
+        setActiveDeliveryOrder,
+
         resetAfterOrderCreation,
         effectivePrice,
         setEffectivePrice,

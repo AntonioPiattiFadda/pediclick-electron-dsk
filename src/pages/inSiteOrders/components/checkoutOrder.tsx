@@ -16,7 +16,7 @@ import { RefButton } from "@/components/ui/refButton";
 import { emptyPayments, paymentMethodOpt, } from "@/constants";
 import { useOrderContext } from "@/context/OrderContext";
 import { CheckOutOptions } from "@/types";
-import { OrderPayment } from "@/types/orderPayments";
+import { Payment } from "@/types/payments";
 import { OrderT } from "@/types/orders";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,7 +36,7 @@ export default function CheckoutOrder({
   checkOutOptions,
   onChangeOptions
 }: {
-  onConfirm?: (orderPayments: Partial<OrderPayment>[]) => void | Promise<void>;
+  onConfirm?: (orderPayments: Partial<Payment>[]) => void | Promise<void>;
   isLoading: boolean;
   order: OrderT,
   onChangeOrder: (order: OrderT) => void,
@@ -67,7 +67,7 @@ export default function CheckoutOrder({
     return { subtotal, total: subtotal, itemCount: items.length };
   }, [items]);
 
-  const [payments, setPayments] = useState<Pick<OrderPayment, "payment_method" | "amount">[]>(emptyPayments);
+  const [payments, setPayments] = useState<Pick<Payment, "payment_method" | "amount">[]>(emptyPayments);
 
   useEffect(() => {
     if (!hasClient) {
@@ -94,7 +94,7 @@ export default function CheckoutOrder({
       }
 
       if (onConfirm) {
-        const orderPayments: Partial<OrderPayment>[] = payments.map((p) => ({
+        const orderPayments: Partial<Payment>[] = payments.map((p) => ({
           order_id: order.order_id || 0,
           payment_method: p.payment_method,
           amount: Number(p.amount || 0),
@@ -131,9 +131,6 @@ export default function CheckoutOrder({
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log("keydown checkout order", e.key);
-
-
 
 
       if (e.key === "Enter") {
@@ -187,6 +184,7 @@ export default function CheckoutOrder({
 
   }, [handleAssignRest, isCheckOutOpen]);
 
+  const isDelivery = order.order_type === 'DELIVERY';
 
 
   return (
@@ -196,17 +194,18 @@ export default function CheckoutOrder({
           disabled={orderItems.length === 0}
           btnRef={addButtonRef}
         >
-          Finalizar compra
+          {isDelivery ? "Registrar pedido" : "Finalizar compra"}
         </RefButton>
         {/* <Button disabled={orderItems.length === 0}>Finalizar compra</Button> */}
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader className="flex flex-row justify-between">
           <div>
-            <DialogTitle>Confirmar orden de compra</DialogTitle>
+            <DialogTitle>{isDelivery ? "Registrar pedido" : "Finalizar compra"}</DialogTitle>
             <DialogDescription>
-              Revise los items y complete los datos  antes de generar <br /> la orden y el
-              ticket.
+              Revise los items y complete los datos  antes de generar <br /> {
+                isDelivery ? "el pedido." : "la orden y el ticket."
+              }
             </DialogDescription>
           </div>
           <div className="space-y-1.5 mr-4">
@@ -377,7 +376,7 @@ export default function CheckoutOrder({
                 </span>
               </div>
               <div>
-                Vuelto:{" "}
+                Cambio:{" "}
                 <span className={Number(remaining) === 0 ? "text-green-600" : "text-amber-600"}>
                   {formatCurrency(changeOrCredit)}
                 </span>

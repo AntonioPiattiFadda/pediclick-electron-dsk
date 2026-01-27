@@ -1,15 +1,15 @@
-import Cart from "@/pages/selling/components/cart"
-import ScaleDataDisplay from "@/pages/selling/components/scaleDataDisplay"
-import SellingPointProductSelector from "@/pages/selling/components/sellingPointProductSelector"
-import ClientInformation from "@/pages/selling/components/clientInformation"
 import { CancelClientSelection, ClientSelectorRoot, CreateClient, SelectClient } from "@/components/shared/selectors/clientSelector"
 import { Label } from "@/components/ui/label"
 import { OrderT } from "@/types/orders"
+import SellingPointProductSelector from "./components/sellingPointProductSelector"
+import ScaleDataDisplay from "./components/scaleDataDisplay"
+import Cart from "./components/cart"
 
 const Order = ({ order, onChangeOrder }: {
     order: OrderT,
     onChangeOrder: (order: OrderT) => void
 }) => {
+
 
     return (
         <div className="grid grid-cols-[1fr_1fr] space-x-4 p-4 h-[calc(100vh-7rem)] -mt-2">
@@ -24,6 +24,7 @@ const Order = ({ order, onChangeOrder }: {
                             onChange={v => {
                                 onChangeOrder({ ...order, client_id: v ? Number(v.client_id) : null, client: v });
                             }}
+                            showInfo={true}
                         >
                             <SelectClient />
                             <CancelClientSelection />
@@ -31,9 +32,7 @@ const Order = ({ order, onChangeOrder }: {
                         </ClientSelectorRoot>
                     </div>
 
-                    {order?.client && (
-                        <ClientInformation selectedClient={order?.client} />
-                    )}
+
 
                     <SellingPointProductSelector />
 

@@ -33,6 +33,7 @@ export const getProductPresentations = async (
         product_presentation_id,
         product_presentation_name,
         short_code,
+        sell_type,
         bulk_quantity_equivalence,
         lots(lot_id,
           created_at,
@@ -50,6 +51,7 @@ export const getProductPresentations = async (
         product_presentation_id,
         product_presentation_name,
         short_code,
+        sell_type,
         bulk_quantity_equivalence,
         prices(*),
         lots(lot_id,
@@ -73,6 +75,7 @@ export const getProductPresentations = async (
         product_presentation_id,
         product_presentation_name,
         short_code,
+        sell_type,
         bulk_quantity_equivalence
         prices(*),
 

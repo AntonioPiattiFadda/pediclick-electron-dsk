@@ -31,8 +31,9 @@ export function SignIn() {
       queryClient.invalidateQueries({ queryKey: ["user"] });
       setError(null);
 
-      //FICME CORREGIR ESTO
+      //FIXME CORREGIR ESTO
       const response = await getUserDataByUid();
+      console.log(response.data);
       //Buscar al usuario en base de datos para ponerlo en la app
       dispatch(setUser(response.data));
       navigate("/select-store");

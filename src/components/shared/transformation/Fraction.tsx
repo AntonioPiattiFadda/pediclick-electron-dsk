@@ -72,6 +72,7 @@ export function Fraction({
     const [selectedLocation] = useState<Partial<Location> | null>(handleGetLocationId() ? {
         location_id: handleGetLocationId(),
     } : null);
+    console.log("Selected location in Fraction:", selectedLocation);
 
     const queryClient = useQueryClient();
 
@@ -105,7 +106,7 @@ export function Fraction({
     const createTransformationMutation = useMutation({
         mutationFn: async () => {
 
-            return await createTransformation(transformation, fromTransformationItems, toTransformationItems);
+            return await createTransformation(transformation, fromTransformationItems, toTransformationItems, selectedLocation?.location_id || null);
         },
         onSuccess: (data) => {
             if (import.meta.env.DEV) console.log("Transformacion:", data)

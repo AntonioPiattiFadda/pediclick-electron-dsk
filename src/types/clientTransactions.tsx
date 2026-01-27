@@ -2,7 +2,7 @@
 // =======================
 // Client Transactions
 
-import type { PaymentMethod } from "./orderPayments";
+import type { PaymentMethod } from "./payments";
 import type { PaymentStatus } from "./orders";
 
 // =======================
