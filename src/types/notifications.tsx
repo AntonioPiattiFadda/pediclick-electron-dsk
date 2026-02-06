@@ -1,6 +1,6 @@
 export type NotificationsType = {
     notification_id?: number;
-    business_owner_id?: string;
+    organization_id?: string;
     title: string;
     message: string;
     status: "PENDING" | "READ" | "ARCHIVED";

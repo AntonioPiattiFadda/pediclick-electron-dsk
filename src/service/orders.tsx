@@ -3,13 +3,14 @@ import { OrderItem } from "@/types/orderItems";
 import { Payment } from "@/types/payments";
 import { OrderT } from "@/types/orders";
 import { getUserId, supabase } from ".";
-import { getBusinessOwnerId } from "./profiles";
+import { getOrganizationId } from "./profiles";
 
-export async function createOrder(order: OrderT, orderItems: OrderItem[], payments: Partial<Payment>[]) {
+export async function createOrder(order: OrderT, orderItems: OrderItem[], payments: Omit<Payment, 'payment_id' | 'created_at' | 'selected'>[]) {
 
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
   console.log("Creating order with:", { order, orderItems, payments });
 
+  // FIXME comente el is_:deleted esta bien= o se usa en la funcion de supabase
   const adaptedOrderItems: Omit<OrderItem, 'product_name' | 'product_presentation_name'>[] = orderItems.map((it) => ({
     order_id: it.order_id,
     product_id: it.product_id,
@@ -28,6 +29,7 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], paymen
     created_at: it.created_at,
     status: it.status,
     location_id: it.location_id,
+    is_deleted: it.is_deleted,
   }));
 
   console.log("Adapted order items:", adaptedOrderItems);
@@ -41,7 +43,7 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], paymen
   //FIXME La client transaction tampoco se esta actualizando bien
   const adaptedOrder: OrderT = {
     ...order,
-    business_owner_id: businessOwnerId,
+    organization_id: organizationId,
     payment_status: payments.length === 0 ? "PENDING" : "PAID",
     order_status: order.order_status,
     subtotal: subtotalSum,
@@ -78,12 +80,12 @@ export async function createOrder(order: OrderT, orderItems: OrderItem[], paymen
 
 export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
 
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const userId = await getUserId();
 
   const notification: NotificationsType = {
-    business_owner_id: businessOwnerId,
+    organization_id: organizationId,
     title: "Orden cancelada",
     message: `La orden ${order.order_number} ha sido cancelada.`,
     status: 'PENDING',
@@ -102,7 +104,7 @@ export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
 
   console.log("Cancelling order with:", { order, orderItems, notification });
 
-  const adaptedOrder = { ...order, business_owner_id: businessOwnerId, order_status: "CANCELLED" };
+  const adaptedOrder = { ...order, organization_id: organizationId, order_status: "CANCELLED" };
   delete adaptedOrder.client;
 
   const { error: orderError } = await supabase
@@ -132,6 +134,7 @@ export async function cancelOrder(order: OrderT, orderItems: OrderItem[]) {
     status: it.status,
     location_id: it.location_id,
     lot_id: it.lot_id,
+    is_deleted: it.is_deleted,
   }));
 
   console.log("Adapted order items:", adaptedOrderItems);
@@ -208,8 +211,9 @@ export async function generateOrderNumber(locationId: number) {
   return nextNumber;
 }
 
-export async function startEmptyOrder(locationId: number) {
-  const businessOwnerId = await getBusinessOwnerId();
+export async function startEmptyOrder(locationId: number, terminalSessionId: number) {
+  const organizationId = await getOrganizationId();
+
 
   const response = await generateOrderNumber(locationId);
 
@@ -219,7 +223,8 @@ export async function startEmptyOrder(locationId: number) {
     .from("orders")
     .insert({
       location_id: locationId,
-      business_owner_id: businessOwnerId,
+      organization_id: organizationId,
+      terminal_session_id: terminalSessionId,
       order_number: orderNumber,
       payment_status: "PENDING",
       order_type: "DIRECT_SALE",

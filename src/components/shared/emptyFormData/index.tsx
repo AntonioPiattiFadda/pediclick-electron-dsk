@@ -56,7 +56,7 @@ export const emptyProduct = {
   updated_at: "",
 };
 
-export const emptyLot: Lot = {
+export const emptyLot: Omit<Lot, "lot_id" | "created_at" | "updated_at"> = {
   lot_number: null,
   expiration_date: null,
   expiration_date_notification: false,

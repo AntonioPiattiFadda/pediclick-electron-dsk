@@ -30,7 +30,8 @@ export interface OrderT {
   currency: string;
   notes?: string;
   delivery_date?: string; // ISO date string
-  business_owner_id?: number;
+  organization_id?: number;
+  terminal_session_id: number | null;
 
   created_at: string;
   updated_at?: string;

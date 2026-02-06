@@ -91,6 +91,8 @@ export const getLotsAndStockFromFirtsToLast = ({
         created_at,
         order_id,
         is_deleted,
+        // FIXME VER ESTO QUE LO COMPLETE DE ONDA
+        status: "COMPLETED",
       },
     ];
   }

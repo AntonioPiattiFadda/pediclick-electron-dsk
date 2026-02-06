@@ -13,6 +13,7 @@ import { PrintTicketPayload } from '@/types/printer'
 import { useGetLocationData } from '@/hooks/useGetLocationData'
 import { useState } from 'react'
 import { CheckOutOptions } from '@/types'
+import { useTerminalSessionData } from '@/hooks/useTerminalSessionData'
 
 const Cart = ({ order, onChangeOrder }: {
     order: OrderT,
@@ -32,11 +33,19 @@ const Cart = ({ order, onChangeOrder }: {
         registerPositiveCredit: false,
     });
 
-    type CreateOrderPayload = { order: typeof order; orderItems: typeof orderItems, payments?: Partial<Payment>[] };
+    type CreateOrderPayload = { order: typeof order; orderItems: typeof orderItems, payments?: Omit<Payment, 'payment_id' | 'created_at' | 'selected'>[] };
+
+    const { handleGetTerminalSessionId } = useTerminalSessionData();
 
     const createOrderMutation = useMutation({
         mutationFn: async (payload: CreateOrderPayload) => {
-            let adaptedPayments = payload.payments ?? []
+            const terminalSessionId = await handleGetTerminalSessionId();
+            let adaptedPayments = (payload.payments ?? []).map((p) => {
+                return {
+                    ...p,
+                    terminal_session_id: terminalSessionId
+                }
+            });
 
 
             // NOTE Se da cambio por lo tanto se saca del cash el excedente
@@ -90,7 +99,7 @@ const Cart = ({ order, onChangeOrder }: {
                     payment_type: "ORDER"
                 };
 
-                adaptedPayments.push(overPaymentMethod as Partial<Payment>);
+                adaptedPayments.push(overPaymentMethod as Payment);
 
 
             }
@@ -146,7 +155,7 @@ const Cart = ({ order, onChangeOrder }: {
         },
     })
 
-    const handleCreateOrder = async (payments: Partial<Payment>[]) => {
+    const handleCreateOrder = async (payments: Omit<Payment, 'payment_id' | 'created_at' | 'selected'>[]) => {
         try {
             await createOrderMutation.mutateAsync({ order, orderItems, payments })
         } catch (e) {

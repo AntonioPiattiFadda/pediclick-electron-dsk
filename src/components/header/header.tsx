@@ -6,14 +6,15 @@ import {
     MenubarMenu,
     MenubarSeparator,
     MenubarTrigger
-} from "@/components/ui/menubar"
-import RegisterClientPayment from "../registerClientPayment/RegisterClientPayment"
+} from "@/components/ui/menubar";
 import { useModalsContext } from "@/context/ModalsContext";
 import { Menu } from "lucide-react";
-import UserData from "./UserData";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
 import { useNavigate } from "react-router-dom";
+import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
+import RegisterClientPayment from "../registerClientPayment/RegisterClientPayment";
+import TerminalSessionClosure from "../terminalSessionClosure/TerminalSessionClosure";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import UserData from "./UserData";
 
 // const devices: { title: string; description: string; selector: React.ReactNode }[] = [
 //     {
@@ -37,11 +38,15 @@ import { useNavigate } from "react-router-dom";
 // ]
 
 const Header = () => {
-    const { setClientPaymentModalOpen } = useModalsContext();
+    const { setClientPaymentModalOpen, setTerminalSessionClosure } = useModalsContext();
     const navigate = useNavigate();
 
     const handleOpenClientPaymentModal = () => {
         setClientPaymentModalOpen(true);
+    }
+
+    const handleOpenTerminalSessionClosureModal = () => {
+        setTerminalSessionClosure(true);
     }
 
     const handleNavigateTo = (path: string) => {
@@ -82,8 +87,8 @@ const Header = () => {
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
                                 <MenubarSeparator />
-                                <MenubarItem>
-                                    Cerrar caja
+                                <MenubarItem onClick={handleOpenTerminalSessionClosureModal}>
+                                    Cierre de caja
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
                                 <MenubarItem onClick={handleOpenClientPaymentModal}>
@@ -109,6 +114,7 @@ const Header = () => {
                     </Menubar>
 
                     <RegisterClientPayment />
+                    <TerminalSessionClosure />
                 </div >
             </div >
         </header >

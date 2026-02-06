@@ -7,5 +7,5 @@ export interface SubCategory {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
-  business_owner_id: string | null;
+  organization_id: string | null;
 }

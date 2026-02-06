@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useScaleContext } from "@/context/ScaleContext";
 import { signIn } from "@/service/auth";
 import { getUserDataByUid } from "@/service/profiles";
 import type { AppDispatch } from "@/stores/store";
@@ -11,6 +12,10 @@ import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+// import PrinterFetcher from "@/components/printersUNUSED/PrinterFetcher";
+import ScaleFetcher from "@/components/scales/ScaleFetcher";
+// import { useScaleContext } from "@/context/ScaleContext";
+// import usePrinter from "@/hooks/usePrinter";
 
 export function SignIn() {
   const [email, setEmail] = useState("antonio.piattifadda@gmail.com");
@@ -18,6 +23,8 @@ export function SignIn() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const { weightKg } = useScaleContext();
 
   // const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
@@ -33,9 +40,9 @@ export function SignIn() {
 
       //FIXME CORREGIR ESTO
       const response = await getUserDataByUid();
-      console.log(response.data);
       //Buscar al usuario en base de datos para ponerlo en la app
       dispatch(setUser(response.data));
+
       navigate("/select-store");
     },
     onError: (err: any) => {
@@ -49,6 +56,8 @@ export function SignIn() {
   };
 
   const loading = loginMutation.isPending;
+
+  // const { handlePrintTest } = usePrinter();
 
   // const { handlePrintTicket } = usePrinter();
 
@@ -80,7 +89,19 @@ export function SignIn() {
     //   title="Iniciar Sesión"
     //   description="Ingresa tus credenciales para acceder a tu cuenta"
     // >
-    <div className="w-screen flex items-center justify-center">
+    <div className="w-screen flex items-center justify-center relative">
+      <div className="absolute top-14 right-14 text-black">V: 0.0.8</div>
+      {/* <div className="absolute top-24 right-14 text-black hover:bg-gray-200"><button onClick={handlePrintTest}>Print Test</button></div> */}
+      <div className="absolute -top-40 right-[50%] text-black">
+        <ScaleFetcher></ScaleFetcher>
+        PESO: {weightKg}
+      </div>
+
+      {/* <div className="absolute top-20 right-[50%] text-black">
+        <PrinterFetcher></PrinterFetcher>
+        Printer:
+      </div> */}
+
       {/* <div className="absolute top-[50%] left-4">
 
         <ScaleFetcher />

@@ -118,7 +118,7 @@ export async function createNewUser(email: string, password: string) {
 export const getParentUserId = async (userId: string) => {
   const { data: user, error } = await supabase
     .from("users")
-    .select("business_owner_id")
+    .select("organization_id")
     .eq("id", userId)
     .single();
 
@@ -126,10 +126,10 @@ export const getParentUserId = async (userId: string) => {
     throw new Error(error.message);
   }
 
-  return user?.business_owner_id;
+  return user?.organization_id;
 };
 
-export const getBusinessOwnerId = async () => {
+export const getOrganizationId = async () => {
   const userId = await getUserId();
   const { data: userData, error } = await supabase
     .from("users")
@@ -142,22 +142,21 @@ export const getBusinessOwnerId = async () => {
   }
 
   //FIXME aca hago una llamada extra pero es mas seguro
-  const businessOwnerId =
-    userData.role === "OWNER" ? userId : userData.business_owner_id;
-  console.log("Business Owner ID:", businessOwnerId); // Debug log
+  const organizationId = userData.organization_id
 
-  return businessOwnerId;
+  return organizationId;
 };
 
 
 
+
 export const getUserTeamMembers = async () => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const { data: teamMembers, error } = await supabase
     .from("users")
     .select("*")
-    .eq("business_owner_id", businessOwnerId)
+    .eq("organization_id", organizationId)
     .is("deleted_at", null);
 
   if (error) {
@@ -168,7 +167,7 @@ export const getUserTeamMembers = async () => {
 };
 
 export const createTeamMember = async (newUserData: any) => {
-  const userId = await getBusinessOwnerId();
+  const userId = await getOrganizationId();
 
   const { error: createUserError, data: user } = await createNewUser(
     newUserData.email,

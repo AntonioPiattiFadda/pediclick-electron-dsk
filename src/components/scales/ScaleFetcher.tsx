@@ -46,7 +46,7 @@ const ScaleFetcher = () => {
     }
     setStatus("connecting");
     try {
-      window.serial.open({ path: selectedScale.path, baudRate: 9600 }).then((response) => {
+      window.scale.connectScale(selectedScale.path).then((response) => {
         console.log("Respuesta de conexión:", response);
         if ((response as any).ok) {
           setStatus("connected");

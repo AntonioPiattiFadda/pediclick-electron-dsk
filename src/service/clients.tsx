@@ -1,13 +1,13 @@
 import { Client } from "@/types/clients";
 import { supabase } from ".";
-import { getBusinessOwnerId } from "./profiles";
+import { getOrganizationId } from "./profiles";
 
 export const getClients = async () => {
-    const businessOwnerId = await getBusinessOwnerId();
+    const organizationId = await getOrganizationId();
     const { data: clients, error } = await supabase
         .from("clients")
         .select("*")
-        .eq("business_owner_id", businessOwnerId);
+        .eq("organization_id", organizationId);
 
     if (error) {
         throw new Error(error.message);
@@ -31,10 +31,10 @@ export const getClient = async (clientId: number): Promise<{ client: Client | nu
 };
 
 export const createClient = async (clientData: Partial<Client>) => {
-    const businessOwnerId = await getBusinessOwnerId();
+    const organizationId = await getOrganizationId();
     const { data, error } = await supabase
         .from("clients")
-        .insert({ ...clientData, business_owner_id: businessOwnerId })
+        .insert({ ...clientData, organization_id: organizationId })
         .select()
         .single();
 

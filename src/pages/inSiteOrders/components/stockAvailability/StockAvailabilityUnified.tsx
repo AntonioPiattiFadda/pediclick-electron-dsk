@@ -21,6 +21,9 @@ const StockAvailabilityUnified = ({ unifyedStock, remainingUnifyedStock }: {
                     lot_id: null,
                     min_notification: null,
                     max_notification: null,
+                    stock_type: "STORE",
+                    updated_at: null,
+                    transformed_from_product_id: null,
                 }} />
             </div>
             <span

@@ -18,5 +18,9 @@ export const useGetLocationData = () => {
         return location ? location.location_id : null;
     }
 
-    return { handleGetLocation, handleSetLocation, handleGetLocationId };
+    const handleRemoveLocation = () => {
+        localStorage.removeItem("selectedStore");
+    }
+
+    return { handleGetLocation, handleSetLocation, handleGetLocationId, handleRemoveLocation };
 }

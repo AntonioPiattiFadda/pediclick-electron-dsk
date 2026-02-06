@@ -1,10 +1,10 @@
 import { TransformationItems } from "@/types/transformationItems";
 import { supabase } from ".";
-import { getBusinessOwnerId } from "./profiles";
+import { getOrganizationId } from "./profiles";
 import { Transformation } from "@/types/transformation";
 
 export async function createTransformation(transformation: Omit<Transformation, 'created_at'>, fromTransformationItems: TransformationItems[], toTransformationItems: TransformationItems[], locationId: number | null) {
-    const businessOwnerId = await getBusinessOwnerId();
+    const organizationId = await getOrganizationId();
 
 
     const adaptedFromTransformationItems: Omit<TransformationItems, 'product' | 'product_presentation'>[] = fromTransformationItems.map((it) => ({
@@ -61,8 +61,12 @@ export async function createTransformation(transformation: Omit<Transformation, 
 
     const adaptedTranformationData = {
         ...transformation,
-        business_owner_id: businessOwnerId,
+        organization_id: organizationId,
     };
+
+    console.log('adaptedTranformationData', adaptedTranformationData);
+    console.log('adaptedFromTransformationItems', adaptedFromTransformationItems);
+    console.log('adaptedToTransformationItems', adaptedToTransformationItems);
 
     const { data, error } = await supabase.rpc('create_transformation', {
         p_transformation_data: adaptedTranformationData,

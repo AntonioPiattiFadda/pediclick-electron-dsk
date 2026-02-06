@@ -1,17 +1,27 @@
-// @see - https://www.electron.build/configuration/configuration
 {
   $schema: "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  appId: "YourAppID",
+  appId: "com.marketstore.market-store",
+  productName: "Market-Store",
   asar: true,
-  productName: "MarketStore",
+
   directories: {
     output: "release/${version}",
   },
-  files: ["dist", "dist-electron"],
+
+  files: ["dist", "dist-electron", "package.json"],
+
+  extraResources: [
+    {
+      from: "public/bin",
+      to: "bin",
+    },
+  ],
+
   mac: {
     target: ["dmg"],
-    artifactName: "${productName}-Mac-${version}-Installer.${ext}",
+    artifactName: "${productName}-${version}-Setup.${ext}",
   },
+
   win: {
     target: [
       {
@@ -19,16 +29,26 @@
         arch: ["x64"],
       },
     ],
-    artifactName: "${productName}-Windows-${version}-Setup.${ext}",
+    artifactName: "${productName}-${version}-Setup.${ext}",
+    icon: "public/icons/dsk.png",
   },
+
   nsis: {
     oneClick: false,
     perMachine: false,
     allowToChangeInstallationDirectory: true,
     deleteAppDataOnUninstall: false,
   },
+
   linux: {
     target: ["AppImage"],
-    artifactName: "${productName}-Linux-${version}.${ext}",
+    artifactName: "${productName}-${version}-Setup.${ext}",
   },
+
+  publish: [
+    {
+      provider: "github",
+      releaseType: "release",
+    },
+  ],
 }

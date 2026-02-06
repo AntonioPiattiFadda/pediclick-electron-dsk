@@ -19,4 +19,6 @@ export const signOut = async () => {
   if (error) {
     throw new Error(error.message);
   }
+
+  window.location.href = "/";
 };

@@ -55,7 +55,7 @@ const ScaleDataDisplay = ({ order }: {
 
     } = useOrderContext();
 
-    const [allowedToOverSelling, setAllowedToOverSelling] = useState(true);
+    const [allowedToOverSelling] = useState(true);
 
     console.log("ScaleDataDisplay - selectedPriceId:", productPresentation);
 
@@ -84,8 +84,6 @@ const ScaleDataDisplay = ({ order }: {
             ) ?? null
         );
     }, [selectedProductPresentation?.lots, selectedLotId]);
-
-
 
     console.log("selectedLot:", selectedLot);
 
@@ -120,8 +118,6 @@ const ScaleDataDisplay = ({ order }: {
 
     console.log("unifyedStock:", unifyedStock);
 
-
-
     const prices = selectedProductPresentation?.prices ?? [];
 
     const lots = selectedProductPresentation?.lots ?? [];
@@ -135,7 +131,6 @@ const ScaleDataDisplay = ({ order }: {
     console.log("selectedProductPresentation:", selectedProductPresentation);
 
     console.log("orderItems:", orderItems);
-
 
     const allocatedQty = useMemo(() => {
         if (!hasProduct(selectedProduct)) return 0;
@@ -333,7 +328,7 @@ const ScaleDataDisplay = ({ order }: {
             <div className="border rounded-lg p-4 shadow-sm bg-white">
                 <div className="grid grid-cols-3 gap-4 text-center items-center">
                     <div className="flex flex-col gap-2 justify-center">
-                        <div className="flex gap-2 justify-center items-center h-10">
+                        <div className="flex gap-2 items-center ">
                             <span className="text-base font-semibold text-slate-500">Precio</span>
                             {filteredPrices && filteredPrices.length === 0 ? (
                                 <span className="text-base font-semibold text-blue-600">
@@ -352,12 +347,15 @@ const ScaleDataDisplay = ({ order }: {
                         </div>
 
                         <MoneyInput
-                            label="Precio"
+                            label=""
                             value={effectivePrice || undefined}
                             onChange={(value) => {
+                                console.log("Manual price change:", value);
                                 setEffectivePrice(value ?? 0);
                                 setSelectedPriceId(null);
                             }}
+                            resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}`}
+
                         />
 
 
@@ -458,6 +456,7 @@ const ScaleDataDisplay = ({ order }: {
                         onClick={handleAddItem}
                         btnRef={addButtonRef}
                     >
+
                         {!hasProduct(selectedProduct)
                             ? "Seleccioná un producto"
                             : Number(remainingStock) <= 0
@@ -465,6 +464,7 @@ const ScaleDataDisplay = ({ order }: {
                                 : Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) > Number(unifyLots ? remainingUnifyedStock : remainingStock)
                                     ? "Cantidad supera el stock disponible"
                                     : "Agregar al pedido"}
+
                     </RefButton>
                 </div>
             </div>

@@ -19,6 +19,15 @@ declare global {
     scale: {
       connectScale: (portPath: string, config?: object) => Promise<void>;
     };
+    scaleAPI: {
+      onWeight: (
+        cb: (data: {
+          weight: string;
+          isScaleConnected: boolean;
+          isScaleError: boolean;
+        }) => void
+      ) => void;
+    };
     // hotspot: {
     //   createHotspot: (options: {
     //     ssid?: string;

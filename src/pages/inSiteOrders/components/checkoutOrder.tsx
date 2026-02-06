@@ -36,7 +36,8 @@ export default function CheckoutOrder({
   checkOutOptions,
   onChangeOptions
 }: {
-  onConfirm?: (orderPayments: Partial<Payment>[]) => void | Promise<void>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onConfirm?: (orderPayments: any[]) => Promise<void>;
   isLoading: boolean;
   order: OrderT,
   onChangeOrder: (order: OrderT) => void,
@@ -94,7 +95,7 @@ export default function CheckoutOrder({
       }
 
       if (onConfirm) {
-        const orderPayments: Partial<Payment>[] = payments.map((p) => ({
+        const orderPayments = payments.map((p) => ({
           order_id: order.order_id || 0,
           payment_method: p.payment_method,
           amount: Number(p.amount || 0),

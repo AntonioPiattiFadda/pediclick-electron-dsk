@@ -28,7 +28,6 @@ contextBridge.exposeInMainWorld("ipcRenderer", {
 
 contextBridge.exposeInMainWorld("serial", {
   list: () => ipcRenderer.invoke("list-serial-ports"),
-  open: (opts: { path: string; baudRate?: number }) => ipcRenderer.invoke("connect-serial-ports", opts),
   close: (selectedPort: string) => ipcRenderer.invoke("close-serial-port", selectedPort),
   closeAll: () => ipcRenderer.invoke("close-all-serial-ports"),
 });
@@ -43,21 +42,19 @@ contextBridge.exposeInMainWorld("printer", {
 });
 
 contextBridge.exposeInMainWorld("scale", {
-  connectScale: (portPath: string, config?: object) => ipcRenderer.invoke("connect-scale", portPath, config),
+  connectScale: (portPath: string) => ipcRenderer.invoke("connect-scale", portPath),
   // serialOpen: (opts: { path: string; baudRate?: number }) => ipcRenderer.invoke("serial:open", opts),
 });
 
-// contextBridge.exposeInMainWorld("hotspot", {
-//   // NUEVAS FUNCIONES HOTSPOT
-//   createHotspot: (options: {
-//     ssid?: string;
-//     password?: string;
-//     interface?: string;
-//   }) => {
-//     return ipcRenderer.invoke("create-hotspot", options);
-//   },
+contextBridge.exposeInMainWorld("scaleAPI", {
+  onWeight: (callback: (data: {
+    weight: string;
+    isScaleConnected: boolean;
+    isScaleError: boolean;
+  }) => void) => {
+    ipcRenderer.on("scale-weight", (_event, data) => {
+      callback(data);
+    });
+  },
+});
 
-//   stopHotspot: () => {
-//     return ipcRenderer.invoke("stop-hotspot");
-//   },
-// });

@@ -12,10 +12,11 @@ import { Toaster } from "sonner";
 import { ShortCutProvider } from "./context/ShortCutContext";
 import { ModalsProvider } from "./context/ModalsContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
+import { ScaleProvider } from "./context/ScaleContext";
+import SelectTerminalPage from "./pages/selectTerminal/SelectTerminal";
 
 // ---- App raíz mínima con QueryClient local ----
 const queryClient = new QueryClient();
-
 
 
 function App() {
@@ -30,58 +31,68 @@ function App() {
       {/* <ReactHotToast
         position="bottom-right" /> */}
       <Toaster />
-      <ShortCutProvider>
-        <ModalsProvider>
-          <OrderProvider >
+      <ScaleProvider>
+        <ShortCutProvider>
+          <ModalsProvider>
+            <OrderProvider >
 
-            <Provider store={store}>
+              <Provider store={store}>
 
-              <HashRouter>
-                <Layout>
-
-
-                  <Routes>
-                    <Route
-                      path="/"
-                      element={<SignIn />}
-                    />
-
-                    <Route
-                      path="/login"
-                      element={
-                        <SignIn />
-
-                      }
-                    />
-
-                    <Route
-                      path="/select-store"
-                      element={<SelectStore />}
-                    />
-
-                    <Route
-                      path="/in-site-orders"
-                      element={
-                        <InSiteOrders />
-                      }
-                    />
-
-                    <Route
-                      path="/delivery-orders"
-                      element={
-                        <DeliveryOrders />
-                      }
-                    />
+                <HashRouter>
+                  <Layout>
 
 
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Layout>
-              </HashRouter>
-            </Provider>
-          </OrderProvider>
-        </ModalsProvider>
-      </ShortCutProvider>
+                    <Routes>
+                      <Route
+                        path="/"
+                        element={<SignIn />}
+                      />
+
+                      <Route
+                        path="/login"
+                        element={
+                          <SignIn />
+
+                        }
+                      />
+
+                      <Route
+                        path="/select-terminal"
+                        element={
+                          <SelectTerminalPage />
+
+                        }
+                      />
+
+                      <Route
+                        path="/select-store"
+                        element={<SelectStore />}
+                      />
+
+                      <Route
+                        path="/in-site-orders"
+                        element={
+                          <InSiteOrders />
+                        }
+                      />
+
+                      <Route
+                        path="/delivery-orders"
+                        element={
+                          <DeliveryOrders />
+                        }
+                      />
+
+
+                      <Route path="*" element={<Navigate to="/" />} />
+                    </Routes>
+                  </Layout>
+                </HashRouter>
+              </Provider>
+            </OrderProvider>
+          </ModalsProvider>
+        </ShortCutProvider>
+      </ScaleProvider >
     </QueryClientProvider >
   );
 }

@@ -11,6 +11,8 @@ const PrinterFetcher = () => {
     const fetchPrinters = async () => {
       setStatus("loading");
       try {
+        const reponse = await window.usb.list();
+        console.log("USB devices:", reponse);
         // Simula la búsqueda de impresoras
         await new Promise((resolve) => setTimeout(resolve, 2000));
         // Aquí debería implementarse la lógica real para detectar impresoras

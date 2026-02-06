@@ -14,7 +14,7 @@ export type TaxConditionType =
 
 export interface Client {
   client_id: number;
-  business_owner_id: string;
+  organization_id: string;
   full_name: string;
   email: string;
   phone?: string;

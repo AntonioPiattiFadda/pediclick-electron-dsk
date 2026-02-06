@@ -4,7 +4,7 @@ export type SellMeasurementMode = "QUANTITY" | "WEIGHT";
 
 export interface Product {
   // Todo pertenece al bussines owner id porque si esta en el limbo es ahi y despues lo asigno a donde yo quiero,
-  business_owner_id?: string;
+  organization_id?: string;
   product_id?: number;
   product_name: string;
   //I will overwrite the previous only if previous stock is finished

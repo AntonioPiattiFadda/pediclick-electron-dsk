@@ -1,14 +1,14 @@
 import { supabase } from ".";
-import { getBusinessOwnerId } from "./profiles";
+import { getOrganizationId } from "./profiles";
 import type { Location } from "@/types/locations";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const createLocation = async (formData: any) => {
-    const businessOwnerId = await getBusinessOwnerId();
+    const organizationId = await getOrganizationId();
 
     const formattedLocation = {
         ...formData,
-        business_owner_id: businessOwnerId,
+        organization_id: organizationId,
     };
 
     const { data, error } = await supabase
@@ -25,12 +25,12 @@ export const createLocation = async (formData: any) => {
 };
 
 export const getLocations = async () => {
-    const businessOwnerId = await getBusinessOwnerId();
+    const organizationId = await getOrganizationId();
 
     const { data: locations, error } = await supabase
         .from("locations")
         .select("*")
-        .eq("business_owner_id", businessOwnerId)
+        .eq("organization_id", organizationId)
         .is("deleted_at", null)
         .order("name", { ascending: true });
 

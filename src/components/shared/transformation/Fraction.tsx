@@ -133,7 +133,7 @@ export function Fraction({
         },
         onError: (e) => {
             console.error("Error hacer la transformación", e)
-            toast.error("Error al hacer la transformación")
+            toast.error("Error al hacer la transformación" + e.message)
         },
     })
 

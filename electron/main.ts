@@ -1,13 +1,15 @@
 // main.ts
 import { app, BrowserWindow, ipcMain } from "electron";
+import { autoUpdater } from "electron-updater";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Agregar estas importaciones al inicio de main.ts
 import { print } from "./printerManager";
-import { closeAllPorts, closeSerialPort, listSerialPorts, openSerialPort } from "./serialManager";
+import { listSerialPorts } from "./serialManager";
 import { listUsbDevices } from "./usbManager";
+import { getScreenSize } from "./windows";
 import { connectToScale } from "./scaleManager";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -24,7 +26,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   ? path.join(process.env.APP_ROOT!, "public")
   : RENDERER_DIST;
 
-let win: BrowserWindow | null = null;
+export let win: BrowserWindow | null = null;
 
 // const listSerialPorts = async () => {
 //   try {
@@ -36,11 +38,12 @@ let win: BrowserWindow | null = null;
 // };
 
 function createWindow() {
+  const { width, height } = getScreenSize();
+
   win = new BrowserWindow({
     icon: path.join(process.env.VITE_PUBLIC!, "electron-vite.svg"),
-    fullscreen: true,
-    // width: 800,
-    // height: 300,
+    width,
+    height,
     webPreferences: {
       preload: fileURLToPath(new URL("./preload.mjs", import.meta.url)),
     },
@@ -59,9 +62,11 @@ function createWindow() {
 
 //Serial Ports IPC Handlers
 ipcMain.handle("list-serial-ports", () => listSerialPorts());
-ipcMain.handle("connect-serial-ports", (event, opts) => openSerialPort(event, opts));
-ipcMain.handle("close-serial-ports", (_event, path) => closeSerialPort(path));
-ipcMain.handle("close-all-serial-ports", () => closeAllPorts());
+// ipcMain.handle("connect-serial-ports", (event, opts) => connectToScaleNormal(opts.path, {
+//   ...opts
+// }));
+// ipcMain.handle("close-serial-ports", (_event, path) => closeSerialPort(path));
+// ipcMain.handle("close-all-serial-ports", () => closeAllPorts());
 
 //USB Devices IPC Handlers
 ipcMain.handle("list-usb-devices", () => listUsbDevices());
@@ -72,8 +77,8 @@ ipcMain.handle("print", (_event, vendorId, productId, printFunction, printConten
 });
 
 // Scale IPC Handlers
-ipcMain.handle("connect-scale", (_, portPath, config) => {
-  connectToScale(portPath, config);
+ipcMain.handle("connect-scale", (_, portPath) => {
+  connectToScale(portPath);
 });
 
 // const openPorts = new Map<
@@ -190,7 +195,40 @@ expressApp.listen(PORT, () => {
   console.log(`Servidor Express corriendo en http://localhost:${PORT}`);
 });
 
+
+
+
+
+autoUpdater.on("checking-for-update", () => {
+  console.log("Checking for update...");
+});
+
+autoUpdater.on("update-available", info => {
+  console.log("Update available:", info);
+});
+
+autoUpdater.on("update-not-available", info => {
+  console.log("No update available:", info);
+});
+
+autoUpdater.on("error", err => {
+  console.error("Updater error:", err);
+});
+
+autoUpdater.on("download-progress", progress => {
+  console.log("Download progress:", progress.percent);
+});
+
+autoUpdater.on("update-downloaded", () => {
+  console.log("Update downloaded — installing...");
+  // autoUpdater.quitAndInstall();
+});
+
+
+
 app.whenReady().then(() => {
+  autoUpdater.checkForUpdatesAndNotify();
+
   createWindow();
   listUsbDevices();
   listSerialPorts();

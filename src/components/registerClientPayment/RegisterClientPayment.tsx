@@ -23,6 +23,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { MoneyInput } from "../shared/MoneyInput";
 import { CancelClientSelection, ClientSelectorRoot, SelectClient } from "../shared/selectors/clientSelector";
+import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
 
 
 const RegisterClientPayment = ({ client }: {
@@ -47,10 +48,16 @@ const RegisterClientPayment = ({ client }: {
         registerPositiveCredit: false,
     });
 
+    const { handleGetTerminalSessionId } = useTerminalSessionData();
 
     const registerClientPaymentMutation = useMutation({
         mutationFn: async () => {
-            const adaptedPayments = [...payments];
+            const terminalSessionId = await handleGetTerminalSessionId();
+
+            const adaptedPayments = [...payments].map(p => ({
+                ...p,
+                terminal_session_id: terminalSessionId,
+            }));
 
             const totalPayments = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
 
@@ -61,14 +68,16 @@ const RegisterClientPayment = ({ client }: {
                 amount: Number(change.toFixed(2)),
                 payment_direction: "IN",
                 payment_type: "CLIENT_PAYMENT",
+                terminal_session_id: terminalSessionId,
             };
 
-            adaptedPayments.push(overPaymentMethod as Pick<Payment, "payment_method" | "amount">);
+            adaptedPayments.push(overPaymentMethod as Pick<Payment, "payment_method" | "amount" | "payment_direction" | "payment_type" | "terminal_session_id">);
 
             // const a = adaptedPayments.find(p => p.payment_method === 'ON_CREDIT');
             // const b = adaptedPayments.find(p => p.payment_method === 'CASH');
             // const c = adaptedPayments.find(p => p.payment_method === 'OVERPAYMENT');
 
+            console.log("adaptedPayments to register:", adaptedPayments);
 
 
             return await registerClientPayment(adaptedPayments, selectedClient!.client_id);

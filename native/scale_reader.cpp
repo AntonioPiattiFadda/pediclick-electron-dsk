@@ -13,12 +13,12 @@ void closeSerialPort()
     {
         CloseHandle(g_hSerial);
         g_hSerial = INVALID_HANDLE_VALUE;
-        std::cerr << "[INFO] Puerto COM cerrado correctamente\n";
+        std::cerr << "[INFO] Puerto COM cerrado\n";
     }
 }
 
 /* ==================================================
-   Handler para cierre de proceso (Ctrl+C, cerrar ventana)
+   Handler de cierre (Electron / Ctrl+C / kill)
    ================================================== */
 BOOL WINAPI consoleHandler(DWORD signal)
 {
@@ -37,7 +37,7 @@ BOOL WINAPI consoleHandler(DWORD signal)
 }
 
 /* ==================================================
-   Loop de lectura de peso (Systel Clipse / Croma)
+   Loop de lectura CONTINUA de peso
    ================================================== */
 void readWeightLoop(const std::string &comPort)
 {
@@ -58,7 +58,7 @@ void readWeightLoop(const std::string &comPort)
         return;
     }
 
-    // Configuración del puerto (según manual)
+    // Configuración 9600 8N1
     DCB dcb = {0};
     dcb.DCBlength = sizeof(dcb);
     GetCommState(g_hSerial, &dcb);
@@ -81,6 +81,8 @@ void readWeightLoop(const std::string &comPort)
     DWORD bytesWritten = 0;
     DWORD bytesRead = 0;
 
+    std::cerr << "[INFO] Balanza conectada. Leyendo peso...\n";
+
     while (true)
     {
         // Pedir peso
@@ -99,14 +101,13 @@ void readWeightLoop(const std::string &comPort)
                     { // ETX
                         weight += buffer[i++];
                     }
-
-                    // Salida limpia para Electron (stdout)
+                    // Salida continua
                     std::cout << weight << std::endl;
                 }
             }
         }
 
-        Sleep(200); // polling estable
+        Sleep(200); // 5 lecturas por segundo (estable)
     }
 }
 
@@ -121,11 +122,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    // Registrar handler de cierre
     SetConsoleCtrlHandler(consoleHandler, TRUE);
-
     readWeightLoop(argv[1]);
-
     closeSerialPort();
     return 0;
 }

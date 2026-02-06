@@ -12,6 +12,7 @@ const SelectStore = () => {
 
     const { handleSetLocation } = useGetLocationData();
 
+
     return (
         <div className="w-screen h-[80vh] flex items-center justify-center ">
             <div className="flex flex-col gap-4 w-lg">
@@ -27,7 +28,7 @@ const SelectStore = () => {
                     disabled={selectedStore === null}
                     onClick={() => {
                         handleSetLocation(selectedStore!)
-                        navigate("/in-site-orders")
+                        navigate("/select-terminal")
                     }}
                 >
                     Confirmar

@@ -1,13 +1,13 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 type ScaleContextValue = {
     // Current scale weight in kilograms (mocked for now)
-    weightKg: number;
-    setWeightKg: React.Dispatch<React.SetStateAction<number>>;
+    weightKg: number | undefined;
+    setWeightKg: React.Dispatch<React.SetStateAction<number | undefined>>;
 
     // Units selected by user when sell_measurement_mode === "QUANTITY"
-    unitsCount: number;
-    setUnitsCount: React.Dispatch<React.SetStateAction<number>>;
+    unitsCount: number | undefined;
+    setUnitsCount: React.Dispatch<React.SetStateAction<number | undefined>>;
 };
 
 const ScaleContext = createContext<ScaleContextValue>({
@@ -18,8 +18,39 @@ const ScaleContext = createContext<ScaleContextValue>({
 });
 
 export const ScaleProvider = ({ children }: { children: ReactNode }) => {
-    const [weightKg, setWeightKg] = useState<number>(1);
-    const [unitsCount, setUnitsCount] = useState<number>(1);
+    const [weightKg, setWeightKg] = useState<number | undefined>(1);
+
+    const [scaleData, setScaleData] = useState<{
+        isScaleConnected: boolean;
+        isScaleError: boolean;
+    } | null>(null);
+
+    const [unitsCount, setUnitsCount] = useState<number | undefined>(1);
+
+    useEffect(() => {
+        window.scaleAPI.onWeight((data) => {
+            console.log("Received weight from scaleAPI:", data);
+            if (data.isScaleError === scaleData?.isScaleError && data.isScaleConnected === scaleData?.isScaleConnected) {
+                return;
+            } else {
+                console.log("Updating scale connection/error status:", data);
+                setScaleData({
+                    isScaleConnected: data.isScaleConnected,
+                    isScaleError: data.isScaleError,
+                });
+            }
+            if (Number(data.weight) === weightKg) {
+                return;
+            } else {
+                console.log("Updating scale connection/error status:", data);
+
+                setWeightKg(Number(data.weight));
+            }
+
+
+
+        });
+    }, []);
 
     return (
         <ScaleContext.Provider

@@ -2,7 +2,7 @@ import type { Lot } from "./lots";
 
 export type LoadOrder = {
   load_order_id?: number;
-  business_owner_id?: number; // Viene por defecto del usuario logueado
+  organization_id?: number; // Viene por defecto del usuario logueado
   load_order_number: number | null; //Input tipo numero
   //Lo tiene el remito del proveedor
   provider_id: number | null; //Al seleccionar se despliegan adderess y ciuit abjo que vienen por base dde datos

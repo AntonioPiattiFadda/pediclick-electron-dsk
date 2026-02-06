@@ -159,7 +159,7 @@ const SelectClient = () => {
                         <SelectContent>
                             <SelectGroup>
                                 <SelectLabel>Clientes</SelectLabel>
-                                {clients.map((m) => {
+                                {(clients && clients.length > 0) ? clients.map((m) => {
                                     const label = m.short_code ? `${m.short_code} - ${m.full_name}` : m.full_name;
                                     return (
                                         <SelectItem
@@ -168,7 +168,7 @@ const SelectClient = () => {
                                             {label}
                                         </SelectItem>
                                     )
-                                })}
+                                }) : <SelectItem value="" disabled>No hay clientes disponibles</SelectItem>}
                             </SelectGroup>
                         </SelectContent>
                     </Select>

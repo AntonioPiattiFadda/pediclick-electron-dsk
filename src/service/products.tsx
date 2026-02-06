@@ -1,11 +1,11 @@
 import { adaptProductsForClient } from "@/adapters/products";
 import type { Product } from "@/types/products";
 import { supabase } from ".";
-import { getBusinessOwnerId } from "./profiles";
+import { getOrganizationId } from "./profiles";
 
 
 export const getAllProducts = async () => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
   const { data: dbProducts, error } = await supabase
     .from("products")
     .select(`
@@ -25,7 +25,7 @@ export const getAllProducts = async () => {
 `)
     .is("product_presentations.deleted_at", null)
     .is("deleted_at", null)
-    .eq("business_owner_id", businessOwnerId)
+    .eq("organization_id", organizationId)
     .order("product_name", { ascending: true });
 
 
@@ -96,12 +96,12 @@ export const updateProduct = async (
 };
 
 export const createProduct = async (product: Product) => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const { data: newProduct, error: productError } = await supabase
     .from("products")
     .insert({
-      business_owner_id: businessOwnerId,
+      organization_id: organizationId,
       ...product,
     })
     .select()
@@ -133,13 +133,13 @@ export const deleteProduct = async (productId: string | number) => {
 export const getProductsByShortCode = async (
   shortCode: string
 ) => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const { data: dbProducts, error } = await supabase
     .from("products")
     .select("*")
     .is("deleted_at", null)
-    .eq("business_owner_id", businessOwnerId)
+    .eq("organization_id", organizationId)
     .order("product_name", { ascending: true })
     .eq("short_code", shortCode);
 
@@ -159,7 +159,7 @@ export const getProductsByShortCode = async (
 // }
 
 export const getProductsByName = async (name: string, withLots: boolean) => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const q = name.trim();
   const isNumeric = /^\d+$/.test(q);
@@ -176,7 +176,7 @@ export const getProductsByName = async (name: string, withLots: boolean) => {
     ${withLots ? ", lots(lot_id,created_at, stock(stock_id, quantity))" : ""}
   `)
     .is("deleted_at", null)
-    .eq("business_owner_id", businessOwnerId)
+    .eq("organization_id", organizationId)
     .order("product_name", { ascending: true })
     .limit(2);
 
@@ -207,11 +207,11 @@ export const checkIfShortCodeIsAvailable = async (
   shortCode: number,
   productId?: number
 ) => {
-  const businessOwnerId = await getBusinessOwnerId();
+  const organizationId = await getOrganizationId();
 
   const { data, error } = await supabase.rpc('get_products_stock_status_by_short_code', {
     p_short_code: shortCode,
-    p_business_owner_id: businessOwnerId,
+    p_organization_id: organizationId,
   });
 
 
