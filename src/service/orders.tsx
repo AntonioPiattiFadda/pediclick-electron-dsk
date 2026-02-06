@@ -240,3 +240,92 @@ export async function startEmptyOrder(locationId: number, terminalSessionId: num
 
   return newOrder;
 }
+
+export async function startEmptyDeliveryOrder(locationId: number, terminalSessionId: number) {
+  const organizationId = await getOrganizationId();
+
+  const response = await generateOrderNumber(locationId);
+  const orderNumber = response;
+
+  const { data: newOrder, error: error } = await supabase
+    .from("orders")
+    .insert({
+      location_id: locationId,
+      organization_id: organizationId,
+      terminal_session_id: terminalSessionId,
+      order_number: orderNumber,
+      payment_status: "PENDING",
+      order_type: "DELIVERY",
+      order_status: "NEW",
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creando la orden de delivery:", error);
+    throw error;
+  }
+
+  return newOrder;
+}
+
+export interface OrderWithMetadata extends OrderT {
+  client_name?: string;
+  item_count: number;
+}
+
+export async function getDeliveryOrdersByDateRange(
+  locationId: number,
+  daysBack: number
+): Promise<OrderWithMetadata[]> {
+  const organizationId = await getOrganizationId();
+
+  // Calculate the date threshold
+  const dateThreshold = new Date();
+  dateThreshold.setDate(dateThreshold.getDate() - daysBack);
+
+  // Fetch orders
+  const { data: orders, error: ordersError } = await supabase
+    .from("orders")
+    .select(`
+      *,
+      client:clients(client_name)
+    `)
+    .eq("order_type", "DELIVERY")
+    .eq("location_id", locationId)
+    .eq("organization_id", organizationId)
+    .gte("created_at", dateThreshold.toISOString())
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false });
+
+  if (ordersError) {
+    console.error("Error fetching delivery orders:", ordersError);
+    throw ordersError;
+  }
+
+  if (!orders) return [];
+
+  // For each order, fetch order items count
+  const ordersWithMetadata: OrderWithMetadata[] = await Promise.all(
+    orders.map(async (order) => {
+      const { count, error: countError } = await supabase
+        .from("order_items")
+        .select("*", { count: "exact", head: true })
+        .eq("order_id", order.order_id)
+        .is("is_deleted", false);
+
+      if (countError) {
+        console.error("Error counting order items:", countError);
+      }
+
+      return {
+        ...order,
+        client_name: order.client?.client_name || null,
+        item_count: count || 0,
+      };
+    })
+  );
+
+  return ordersWithMetadata;
+}

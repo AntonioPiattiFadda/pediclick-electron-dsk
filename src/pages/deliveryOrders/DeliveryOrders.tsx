@@ -1,140 +1,191 @@
-
-import { Button } from "@/components/ui/button";
-import { RefButton } from "@/components/ui/refButton";
-import { Spinner } from "@/components/ui/spinner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useOrderContext } from "@/context/OrderContext";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
-import { startEmptyOrder } from "@/service/orders";
-import { OrderT } from "@/types/orders";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { PlusCircle } from "lucide-react";
-import { useEffect, useRef } from "react";
-import Order from "../inSiteOrders/Order";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
-
+import { supabase } from "@/service";
+import { startEmptyDeliveryOrder } from "@/service/orders";
+import { OrderT } from "@/types/orders";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
+import Order from "../inSiteOrders/Order";
+import { DeliveryOrderSelector } from "./components/DeliveryOrderSelector";
 
 export function DeliveryOrders() {
-    const { orders, setOrders, activeDeliveryOrder, setActiveDeliveryOrder } = useOrderContext();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedOrderId = searchParams.get("orderId")
+    ? Number(searchParams.get("orderId"))
+    : null;
 
-    const { handleGetLocationId } = useGetLocationData();
+  const { handleGetLocationId } = useGetLocationData();
+  const { handleGetTerminalSessionId } = useTerminalSessionData();
+  const queryClient = useQueryClient();
 
-    const queryClient = useQueryClient();
+  // Fetch selected order from database
+  const {
+    data: selectedOrder,
+    isLoading: isLoadingOrder,
+    error: orderError,
+  } = useQuery({
+    queryKey: ["delivery-order", selectedOrderId],
+    queryFn: async () => {
+      if (!selectedOrderId) return null;
 
-    const { handleGetTerminalSessionId } = useTerminalSessionData();
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*, client:clients(*)")
+        .eq("order_id", selectedOrderId)
+        .single();
 
-    const startOrderMutation = useMutation({
-        mutationFn: async () => {
-            const terminalSessionId = await handleGetTerminalSessionId();
-            return await startEmptyOrder(handleGetLocationId(), terminalSessionId);
+      if (error) throw error;
+      return data as OrderT;
+    },
+    enabled: !!selectedOrderId,
+    refetchOnWindowFocus: false,
+  });
+
+  // Real-time subscription for order_items of selected order
+  useEffect(() => {
+    if (!selectedOrderId) return;
+
+    const channel = supabase
+      .channel(`order-items-${selectedOrderId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "order_items",
+          filter: `order_id=eq.${selectedOrderId}`,
         },
-        onSuccess: (data) => {
-            if (import.meta.env.DEV) console.log("Orden iniciada:", data)
-            setOrders([...orders, { ...data, order_type: "DELIVERY" } as OrderT])
-            setActiveDeliveryOrder((data as OrderT).order_id.toString());
-            queryClient.invalidateQueries({ queryKey: ["orders"] })
-        },
-        onError: (e) => {
-            console.error("Error iniciando orden vacía", e)
-        },
-    })
-
-    const handleAddTab = () => {
-        if (startOrderMutation.isPending) return;
-        startOrderMutation.mutate();
-    };
-
-    const handleChangeOrder = (updatedOrder: OrderT) => {
-        const orderIndex = orders.findIndex(o => o.order_id === updatedOrder.order_id);
-        if (orderIndex !== -1) {
-            const updatedOrders = [...orders];
-            updatedOrders[orderIndex] = updatedOrder;
-            setOrders(updatedOrders);
-        } else {
-            setOrders([...orders, updatedOrder]);
+        (payload) => {
+          console.log("Order item change detected:", payload);
+          queryClient.invalidateQueries({
+            queryKey: ["delivery-order", selectedOrderId],
+          });
+          queryClient.invalidateQueries({ queryKey: ["order-items"] });
         }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, [selectedOrderId, queryClient]);
 
-    const initiateOrderBtnRef = useRef<HTMLButtonElement>(null);
+  // Real-time subscription for selected order changes
+  useEffect(() => {
+    if (!selectedOrderId) return;
 
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (startOrderMutation.isPending) return;
-            if (e.key === "F8") {
-                e.preventDefault();
-                initiateOrderBtnRef.current?.click();
-                return;
-            }
-        };
+    const channel = supabase
+      .channel(`order-${selectedOrderId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "orders",
+          filter: `order_id=eq.${selectedOrderId}`,
+        },
+        (payload) => {
+          console.log("Order change detected:", payload);
+          queryClient.invalidateQueries({
+            queryKey: ["delivery-order", selectedOrderId],
+          });
+          toast.info("Orden actualizada por otro usuario");
+        }
+      )
+      .subscribe();
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedOrderId, queryClient]);
 
-    const filteredOrders = orders.filter(order => order.order_type === "DELIVERY");
+  // Create new delivery order mutation
+  const createOrderMutation = useMutation({
+    mutationFn: async () => {
+      const terminalSessionId = await handleGetTerminalSessionId();
+      return await startEmptyDeliveryOrder(
+        handleGetLocationId(),
+        terminalSessionId
+      );
+    },
+    onSuccess: (data) => {
+      if (import.meta.env.DEV) console.log("Orden de delivery creada:", data);
+      setSearchParams({ orderId: data.order_id.toString() });
+      queryClient.invalidateQueries({ queryKey: ["delivery-orders"] });
+      toast.success("Orden creada exitosamente");
+    },
+    onError: (e) => {
+      console.error("Error creando orden de delivery", e);
+      toast.error("Error al crear orden");
+    },
+  });
 
-    return (
-        <Tabs value={activeDeliveryOrder} onValueChange={(newValue) => {
-            if (startOrderMutation.isPending) return;
-            setActiveDeliveryOrder(newValue);
-        }} className="w-full">
-            <div className="w-full  flex justify-between items-center px-4">
-                <h1 className="text-2xl">Pedidos</h1>
-                <TabsList className="flex items-center gap-1 mt-4  h-[43px]">
-                    {filteredOrders.map((order, index) => (
-                        <TabsTrigger
-                            key={order.order_id}
-                            value={order.order_id.toString()}>
-                            {`Pedido ${index + 1}`}
-                        </TabsTrigger>
-                    ))}
+  const handleOrderSelect = (orderId: number | null) => {
+    if (orderId) {
+      setSearchParams({ orderId: orderId.toString() });
+    } else {
+      setSearchParams({});
+    }
+  };
 
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-9 w-9 rounded-md"
-                        onClick={handleAddTab}
-                    >
-                        {startOrderMutation.isPending ? <Spinner /> : <PlusCircle />}
+  const handleCreateOrder = () => {
+    if (createOrderMutation.isPending) return;
+    createOrderMutation.mutate();
+  };
 
-                    </Button>
+  const handleChangeOrder = (updatedOrder: OrderT) => {
+    // Invalidate queries to refetch from DB
+    queryClient.invalidateQueries({
+      queryKey: ["delivery-order", updatedOrder.order_id],
+    });
+    queryClient.invalidateQueries({ queryKey: ["delivery-orders"] });
+  };
 
+  // Show error if order fetch failed
+  useEffect(() => {
+    if (orderError) {
+      toast.error("Error al cargar la orden");
+      setSearchParams({});
+    }
+  }, [orderError, setSearchParams]);
 
+  return (
+    <div className="w-full">
+      <div className="w-full flex justify-between items-center px-4 py-3">
+        <h1 className="text-2xl">Órdenes de Delivery</h1>
+      </div>
 
-                </TabsList>
+      <DeliveryOrderSelector
+        selectedOrderId={selectedOrderId}
+        onOrderSelect={handleOrderSelect}
+        onCreateOrder={handleCreateOrder}
+      />
 
-            </div>
+      {/* Order Content Area */}
+      {!selectedOrderId && (
+        <div className="flex items-center justify-center h-[60vh] text-muted-foreground">
+          <div className="text-center space-y-2">
+            <p>Seleccione una orden del menú superior o cree una nueva.</p>
+          </div>
+        </div>
+      )}
 
+      {selectedOrderId && isLoadingOrder && (
+        <div className="flex items-center justify-center h-[60vh]">
+          <p className="text-muted-foreground">Cargando orden...</p>
+        </div>
+      )}
 
-
-            {filteredOrders.length === 0 && (
-                <div className="w-full flex items-center justify-center h-[80%] absolute top-0 left-0 bg-background/70 translate-y-18 z-10">
-                    <RefButton
-                        onClick={() => startOrderMutation.mutate()}
-                        disabled={startOrderMutation.isPending}
-                        btnRef={initiateOrderBtnRef}
-                    >
-                        {startOrderMutation.isPending ? "Iniciando..." :
-                            "Iniciar pedido"
-                        }
-                    </RefButton>
-                    {/* <Button
-                            ref={initiateOrderBtnRef}
-                            onClick={() => startOrderMutation.mutate()} disabled={startOrderMutation.isPending}>
-
-                        </Button> */}
-                </div>
-            )}
-
-            {filteredOrders.map((order) => (
-                <TabsContent key={order.order_id} value={order.order_id.toString()} >
-                    <Order order={order} onChangeOrder={(updatedOrder: OrderT) => {
-                        handleChangeOrder(updatedOrder)
-                    }} />
-                </TabsContent>
-            ))}
-        </Tabs>
-    );
+      {selectedOrderId && selectedOrder && (
+        <Order
+          order={selectedOrder}
+          onChangeOrder={(updatedOrder: OrderT) => {
+            handleChangeOrder(updatedOrder);
+          }}
+        />
+      )}
+    </div>
+  );
 }
