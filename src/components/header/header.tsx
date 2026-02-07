@@ -13,8 +13,10 @@ import { useNavigate } from "react-router-dom";
 import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
 import RegisterClientPayment from "../registerClientPayment/RegisterClientPayment";
 import TerminalSessionClosure from "../terminalSessionClosure/TerminalSessionClosure";
+import OpenSessionsManager from "../openSessionsManager/OpenSessionsManager";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import UserData from "./UserData";
+import { useState } from "react";
 
 // const devices: { title: string; description: string; selector: React.ReactNode }[] = [
 //     {
@@ -40,6 +42,7 @@ import UserData from "./UserData";
 const Header = () => {
     const { setClientPaymentModalOpen, setTerminalSessionClosure } = useModalsContext();
     const navigate = useNavigate();
+    const [openSessionsManagerOpen, setOpenSessionsManagerOpen] = useState(false);
 
     const handleOpenClientPaymentModal = () => {
         setClientPaymentModalOpen(true);
@@ -47,6 +50,10 @@ const Header = () => {
 
     const handleOpenTerminalSessionClosureModal = () => {
         setTerminalSessionClosure(true);
+    }
+
+    const handleOpenSessionsManager = () => {
+        setOpenSessionsManagerOpen(true);
     }
 
     const handleNavigateTo = (path: string) => {
@@ -95,6 +102,11 @@ const Header = () => {
                                     Registrar pago de cliente
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
+                                <MenubarSeparator />
+                                <MenubarItem onClick={handleOpenSessionsManager}>
+                                    Sesiones abiertas (Dev)
+                                    {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
+                                </MenubarItem>
 
                                 {/* <MenubarItem disabled>New Incognito Window</MenubarItem>
                                 <MenubarSeparator />
@@ -115,6 +127,10 @@ const Header = () => {
 
                     <RegisterClientPayment />
                     <TerminalSessionClosure />
+                    <OpenSessionsManager
+                        open={openSessionsManagerOpen}
+                        onOpenChange={setOpenSessionsManagerOpen}
+                    />
                 </div >
             </div >
         </header >

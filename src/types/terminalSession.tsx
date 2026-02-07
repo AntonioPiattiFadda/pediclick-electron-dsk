@@ -9,3 +9,10 @@ export interface TerminalSession {
     closing_balance: number | null;
     status: 'OPEN' | 'CLOSED';
 }
+
+export interface OpenSessionDisplay {
+    terminal_session_id: number;
+    terminal_name: string;
+    user_name: string;
+    opened_at: string;
+}

@@ -111,3 +111,54 @@ export async function getTerminalSessionClosureData(
         standalonePayments,
     };
 }
+
+interface TerminalSessionWithRelations {
+    terminal_session_id: number;
+    opened_at: string;
+    terminals: {
+        terminal_name: string;
+    } | null;
+    profiles: {
+        name: string;
+    } | null;
+}
+
+export async function getOpenTerminalSessions(organizationId: string) {
+    const { data, error } = await supabase
+        .from("terminal_sessions")
+        .select(`
+            terminal_session_id,
+            opened_at,
+            terminals (
+                terminal_name
+            ),
+            profiles (
+                name
+            )
+        `)
+        .eq("status", "OPEN")
+        .eq("organization_id", organizationId);
+
+    if (error) throw error;
+
+    // Transform the data to match OpenSessionDisplay interface
+    return (data as TerminalSessionWithRelations[]).map((session) => ({
+        terminal_session_id: session.terminal_session_id,
+        terminal_name: session.terminals?.terminal_name || "Unknown Terminal",
+        user_name: session.profiles?.name || "Unknown User",
+        opened_at: session.opened_at,
+    }));
+}
+
+export async function closeTerminalSessionDev(terminalSessionId: number) {
+    const { data, error } = await supabase
+        .from("terminal_sessions")
+        .update({
+            status: "CLOSED",
+            closed_at: new Date().toISOString(),
+        })
+        .eq("terminal_session_id", terminalSessionId);
+
+    if (error) throw error;
+    return data;
+}
