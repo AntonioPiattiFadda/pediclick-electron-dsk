@@ -61,6 +61,7 @@ export async function getTerminalSessionClosureData(
     terminalSessionId: number
 ): Promise<{
     terminalSession: TerminalSession;
+    user: any;
     orders: OrderWithPayments[];
     payments: Payment[];
 }> {
