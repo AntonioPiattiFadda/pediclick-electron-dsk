@@ -57,20 +57,15 @@ export const emptyProduct = {
 };
 
 export const emptyLot: Omit<Lot, "lot_id" | "created_at" | "updated_at"> = {
-  lot_number: null,
   expiration_date: null,
   expiration_date_notification: false,
   provider_id: null,
   load_order_id: null,
   product_id: 0,
-  has_lot_container: false,
-  is_parent_lot: false,
   is_sold_out: false,
   initial_stock_quantity: 0,
-  parent_lot_id: null,
   is_expired: false,
   product_presentation_id: null,
-  lot_containers: [],
   download_total_cost: null,
   download_cost_per_unit: null,
 
@@ -96,23 +91,11 @@ export const emptyLot: Omit<Lot, "lot_id" | "created_at" | "updated_at"> = {
   purchasing_agent_commision_percentage: null,
   purchasing_agent_commision_unit_value: null,
 
-
-  is_derived: false,
-  is_transformed: false,
-  quantity_transformed: null,
-
-  lot_containers_location: [],
+  bulk_quantity_equivalence: null,
+  extra_cost_total: null,
+  is_finished: false,
 
 
-  //  {
-  //   quantity: null,
-  //   created_at: null,
-  //   should_notify_owner: false,
-  //   location: null,
-  // },
-
-  // acá decidís si querés que el control sea con stock único o no
-  lot_control: false,
 };
 
 export const emptyPrices: Price[] = [];

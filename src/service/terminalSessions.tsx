@@ -2,9 +2,10 @@ import { SubapaseConstrains } from "@/types/shared";
 import { supabase } from "."
 import { getOrganizationId } from "./profiles";
 import { handleSupabaseError } from "@/utils/handleSupabaseErrors";
-import { TerminalSession } from "@/types/terminalSession";
+import { OpenSessionDisplay, TerminalSession } from "@/types/terminalSession";
 import { OrderT } from "@/types/orders";
 import { Payment } from "@/types/payments";
+import { User } from "@supabase/supabase-js";
 
 export const entityConstraints: SubapaseConstrains[] = [{
     value: "one_open_session_per_terminal",
@@ -61,7 +62,7 @@ export async function getTerminalSessionClosureData(
     terminalSessionId: number
 ): Promise<{
     terminalSession: TerminalSession;
-    user: any;
+    user: User;
     orders: OrderWithPayments[];
     payments: Payment[];
 }> {
@@ -109,8 +110,9 @@ export async function getTerminalSessionClosureData(
 
     if (terminalSessionError) throw terminalSessionError;
 
-    const terminalSessionUser = terminalSession.users;
+    const terminalSessionUser = terminalSession.users as User;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const terminalSessionWithNoUser = terminalSession as any;
     delete terminalSessionWithNoUser.users;
 
@@ -121,24 +123,16 @@ export async function getTerminalSessionClosureData(
         payments: standalonePayments,
     };
 }
-
-interface TerminalSessionWithRelations {
-    terminal_session_id: number;
-    opened_at: string;
-    terminals: {
-        name: string;
-    } | null;
-}
-
-export async function getOpenTerminalSessions(organizationId: string) {
+export async function getOpenTerminalSessions(organizationId: string): Promise<OpenSessionDisplay[]> {
     const { data, error } = await supabase
         .from("terminal_sessions")
-        .select(`
-            terminal_session_id,
-            opened_at,
+        .select(`*,
             terminals (
                 name
-            )
+            ),
+                users (
+                    *
+                )
         `)
         .eq("status", "OPEN")
         .eq("organization_id", organizationId);
@@ -147,12 +141,15 @@ export async function getOpenTerminalSessions(organizationId: string) {
 
     if (error) throw error;
 
-    // Transform the data to match OpenSessionDisplay interface
-    return (data as TerminalSessionWithRelations[]).map((session) => ({
+    const adaptedData: OpenSessionDisplay[] = data.map((session) => ({
         terminal_session_id: session.terminal_session_id,
-        terminal_name: session.terminals?.name || "Unknown Terminal",
+        opened_by_user_id: session.opened_by_user_id,
         opened_at: session.opened_at,
+        opened_by_user_name: session.users.full_name || session.users.email, // Assuming users is the correct relation name
     }));
+
+    // Transform the data to match OpenSessionDisplay interface
+    return adaptedData;
 }
 
 export async function closeTerminalSessionDev(terminalSessionId: number) {

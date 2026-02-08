@@ -3,7 +3,6 @@ import usePrinter from "@/hooks/usePrinter";
 import { supabase } from "@/service";
 import { OrderItem } from "@/types/orderItems";
 import { OrderT } from "@/types/orders";
-import { DeliveryOrderPayload } from "@/types/printer";
 import { Printer } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -61,7 +60,7 @@ export function DeliveryOrderPrintButton({
 
 
       const printData = {
-        clientData: clientData,
+        client: clientData,
         order: order,
         orderItems: orderItems as OrderItem[],
       };

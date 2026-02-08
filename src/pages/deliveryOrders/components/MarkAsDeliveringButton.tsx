@@ -66,7 +66,7 @@ export function MarkAsDeliveringButton({ order }: { order: OrderT }) {
           </AlertDialogTitle>
           <AlertDialogDescription>
             Orden #{order.order_number}
-            {order.client && ` - ${order.client.name}`}
+            {order.client && ` - ${order.client.full_name}`}
             <br />
             Estado actual: {order.order_status === "NEW" ? "Nueva" : "Procesando"}
             <br />

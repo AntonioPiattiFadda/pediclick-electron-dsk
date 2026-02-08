@@ -17,11 +17,14 @@ export const formatCurrency = (
     locale: string = 'es-AR',
     currency: string = 'ARS'
 ): string => {
-    return (value).toLocaleString(locale, {
+    return new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency,
-    });
+        currency: currency,
+        minimumFractionDigits: 2
+    }).format(value);
 };
+
+
 
 
 export function resolveEffectivePrice(
@@ -96,8 +99,6 @@ export function resolveEffectivePrice(
                     Number(a.qty_per_price)
             )[0];
 
-        console.log("applicableQty", applicableQty);
-
 
         if (applicableQty) {
             return {
@@ -128,9 +129,6 @@ export function resolveEffectivePrice(
                     Number(b.qty_per_price) -
                     Number(a.qty_per_price)
             )[0];
-
-        console.log("applicable", applicable);
-
 
         if (applicable) {
             return {

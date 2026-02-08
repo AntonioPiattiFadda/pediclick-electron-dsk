@@ -19,3 +19,5 @@ export type DeliveryOrderPayload = {
     order: OrderT;
     orderItems: OrderItem[];
 };
+
+export type PrintPayload = PrintTicketPayload | DeliveryOrderPayload;

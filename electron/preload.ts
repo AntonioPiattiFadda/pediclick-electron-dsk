@@ -1,5 +1,6 @@
 import { ipcRenderer, contextBridge } from "electron";
 import { bufferFunctions } from "./printerManager";
+import { PrintPayload } from "../src/types/printer";
 
 // --------- Expose some API to the Renderer process ---------
 contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -38,7 +39,7 @@ contextBridge.exposeInMainWorld("usb", {
 });
 
 contextBridge.exposeInMainWorld("printer", {
-  print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: unknown) => ipcRenderer.invoke("print", vendorId, productId, printFunction, printContent),
+  print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: PrintPayload) => ipcRenderer.invoke("print", vendorId, productId, printFunction, printContent),
 });
 
 contextBridge.exposeInMainWorld("scale", {

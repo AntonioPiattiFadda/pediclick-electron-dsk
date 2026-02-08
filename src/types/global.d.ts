@@ -1,4 +1,5 @@
 import { bufferFunctions } from "electron/printerManager";
+import { PrintPayload } from "./printer";
 
 export { };
 
@@ -14,7 +15,7 @@ declare global {
       list: () => Promise<unknown[]>;
     };
     printer: {
-      print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: unknown) => Promise<void>;
+      print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: PrintPayload) => Promise<void>;
     };
     scale: {
       connectScale: (portPath: string, config?: object) => Promise<void>;

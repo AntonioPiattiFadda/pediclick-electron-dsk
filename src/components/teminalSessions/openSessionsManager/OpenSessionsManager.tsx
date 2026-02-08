@@ -140,7 +140,7 @@ const OpenSessionsManager = ({ open, onOpenChange }: OpenSessionsManagerProps) =
                                         className="flex justify-between items-start p-4 border rounded-lg"
                                     >
                                         <div className="flex-1">
-                                            <h3 className="font-semibold">{session.terminal_name}</h3>
+                                            <h3 className="font-semibold">{session.terminal_session_id}</h3>
                                             <p className="text-sm text-muted-foreground">
                                                 Usuario:
                                             </p>
@@ -189,7 +189,7 @@ const OpenSessionsManager = ({ open, onOpenChange }: OpenSessionsManagerProps) =
                     <AlertDialogHeader>
                         <AlertDialogTitle>¿Cerrar sesión de terminal?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            ¿Estás seguro de cerrar la sesión de {sessionToClose?.terminal_name}?
+                            ¿Estás seguro de cerrar la sesión de {sessionToClose?.terminal_session_id}?
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

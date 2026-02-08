@@ -12,7 +12,6 @@ import {
   addDeliveryOrderItem,
   removeDeliveryOrderItem,
   updateDeliveryOrderClient,
-  DeliveryOrderItemInput,
 } from "@/service";
 import { toast } from "sonner";
 import { OrderItem } from "@/types/orderItems";
@@ -159,7 +158,7 @@ export const DeliveryOrderProvider = ({ children }: { children: ReactNode }) => 
 
   // Add item mutation
   const addItemMutation = useMutation({
-    mutationFn: (itemData: DeliveryOrderItemInput) => {
+    mutationFn: (itemData: OrderItem) => {
       toast.loading("Creando producto...");
       if (!activeDeliveryOrderId) {
         throw new Error("No active delivery order");
@@ -274,11 +273,14 @@ export const DeliveryOrderProvider = ({ children }: { children: ReactNode }) => 
         activeDeliveryOrderId,
         setActiveDeliveryOrderId,
 
-        addItemToOrder: (itemData) => addItemMutation.mutateAsync(itemData),
-        removeItemFromOrder: (removeData) =>
-          removeItemMutation.mutateAsync(removeData),
-        updateOrderClient: (clientId) =>
-          updateClientMutation.mutateAsync(clientId),
+        addItemToOrder: async (itemData) => {
+          await addItemMutation.mutateAsync(itemData);
+        },
+        removeItemFromOrder: (orderItemId, stockId) =>
+          removeItemMutation.mutateAsync({ orderItemId, stockId }),
+        updateOrderClient: async (clientId) => {
+          await updateClientMutation.mutateAsync(clientId);
+        },
 
         isRemovingItem: removeItemMutation.isPending,
 

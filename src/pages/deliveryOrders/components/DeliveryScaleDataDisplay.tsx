@@ -1,12 +1,16 @@
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { Switch } from "@/components/ui/switch";
 import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
 import { useScaleContext } from "@/context/ScaleContext";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
+import { getDeliveryOrderItems } from "@/service";
+import { OrderItem } from "@/types/orderItems";
 import { OrderT } from "@/types/orders";
 import type { PriceLogicType, PriceType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import { getLotsAndStockFromFirtsToLast } from "@/utils";
 import { resolveEffectivePrice } from "@/utils/prices";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox } from "../../../components/ui/checkbox";
 import {
@@ -22,10 +26,6 @@ import { NotSelectedProduct } from "../../inSiteOrders/components/notSelectedPro
 import { PricesSelector } from "../../inSiteOrders/components/PricesSelector";
 import StockAvailability from "../../inSiteOrders/components/stockAvailability/StockAvailability";
 import StockAvailabilityUnified from "../../inSiteOrders/components/stockAvailability/StockAvailabilityUnified";
-import { MoneyInput } from "@/components/shared/MoneyInput";
-import { useQuery } from "@tanstack/react-query";
-import { getDeliveryOrderItems, supabase } from "@/service";
-import { OrderItem } from "@/types/orderItems";
 
 const hasProduct = (p: Product) => Boolean(p?.product_id);
 
@@ -55,14 +55,13 @@ export const DeliveryScaleDataDisplay = ({ order }: { order: OrderT }) => {
   const { handleGetLocationId } = useGetLocationData();
 
   // Fetch order items from database
-  const { data: orderItems = [], isLoading, isError } = useQuery({
+  const { data: orderItems = [] } = useQuery({
     queryKey: ["delivery-order-items", order.order_id],
     queryFn: async () => getDeliveryOrderItems(order.order_id!),
     enabled: !!order.order_id,
     refetchOnWindowFocus: true, // Refetch when window regains focus
   });
 
-  const productPresentationId = productPresentation?.product_presentation_id;
 
   const selectedLot = useMemo(() => {
     if (!productPresentation?.lots) return null;
@@ -230,7 +229,7 @@ export const DeliveryScaleDataDisplay = ({ order }: { order: OrderT }) => {
 
     // Add each calculated item to database
     for (const item of itemsCalculated) {
-      const itemToAdd: Omit<OrderItem, "order_item_id" | 'created_at'> = {
+      const itemToAdd: Omit<OrderItem, "order_item_id"> = {
         product_id: item.product_id,
         product_name: item.product_name,
         product_presentation_id: item.product_presentation_id,
@@ -244,7 +243,12 @@ export const DeliveryScaleDataDisplay = ({ order }: { order: OrderT }) => {
         lot_id: item.lot_id,
         status: "PENDING",
         price_type: item.price_type,
-        logic_type: item.logic_type
+        logic_type: item.logic_type,
+        order_id: item.order_id,
+        location_id: item.location_id,
+        is_deleted: item.is_deleted,
+        created_at: item.created_at,
+
       };
 
       await addItemToOrder(itemToAdd);

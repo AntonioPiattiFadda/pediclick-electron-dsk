@@ -1,7 +1,6 @@
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
-import { supabase } from "@/service";
-import { startEmptyDeliveryOrder } from "@/service/orders";
+import { startEmptyDeliveryOrder, supabase } from "@/service";
 import { OrderT } from "@/types/orders";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";

@@ -1,5 +1,5 @@
 import { supabase } from ".";
-import { OrderItem } from "@/types/orderItems";
+import { OrderItem, OrderItemDisplay } from "@/types/orderItems";
 /**
  * Add item to delivery order
  * Later: Convert to RPC call with inventory validation
@@ -57,7 +57,7 @@ export async function removeDeliveryOrderItem(
 }
 
 
-export const getDeliveryOrderItems = async (orderId: number): Promise<OrderItem[]> => {
+export const getDeliveryOrderItems = async (orderId: number): Promise<OrderItemDisplay[]> => {
   const { data, error } = await supabase
     .from("order_items")
     .select(`
@@ -90,12 +90,14 @@ export const getDeliveryOrderItems = async (orderId: number): Promise<OrderItem[
 
   const formattedData = data.map((item) => {
     const { products, product_presentations, ...orderItemFields } = item;
+    const productsArray = Array.isArray(products) ? products : [products];
+    const presentationsArray = Array.isArray(product_presentations) ? product_presentations : [product_presentations];
 
     return {
       ...orderItemFields,
-      product_name: products?.product_name || "Producto desconocido",
-      product_presentation_name: product_presentations?.product_presentation_name || "Presentación desconocida",
-    } as OrderItem;
+      product_name: productsArray[0]?.product_name || "Producto desconocido",
+      product_presentation_name: presentationsArray[0]?.product_presentation_name || "Presentación desconocida",
+    } as OrderItemDisplay;
   });
 
 

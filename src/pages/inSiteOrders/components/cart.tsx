@@ -1,19 +1,17 @@
 import { useOrderContext } from '@/context/OrderContext'
+import usePrinter from '@/hooks/usePrinter'
+import { useTerminalSessionData } from '@/hooks/useTerminalSessionData'
 import { createOrder } from '@/service/orders'
-import { Payment } from '@/types/payments'
+import { CheckOutOptions } from '@/types'
 import { OrderT } from '@/types/orders'
+import { Payment } from '@/types/payments'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import CheckoutOrder from './checkoutOrder'
 import { DeleteCartItemButton } from './deleteCartItemButton'
 import { DeleteOrderBtn } from './deleteOrderBtn'
 import { EmptyCart } from './EmptyCart'
-import usePrinter from '@/hooks/usePrinter'
-import { PrintTicketPayload } from '@/types/printer'
-import { useGetLocationData } from '@/hooks/useGetLocationData'
-import { useState } from 'react'
-import { CheckOutOptions } from '@/types'
-import { useTerminalSessionData } from '@/hooks/useTerminalSessionData'
 
 const Cart = ({ order, onChangeOrder }: {
     order: OrderT,
@@ -26,7 +24,7 @@ const Cart = ({ order, onChangeOrder }: {
 
     const { handlePrintTicket } = usePrinter();
 
-    const { handleGetLocationId, handleGetLocation } = useGetLocationData();
+    // const { handleGetLocationId, handleGetLocation } = useGetLocationData();
 
     const [checkOutOptions, setCheckOutOptions] = useState<CheckOutOptions>({
         printTicket: false,

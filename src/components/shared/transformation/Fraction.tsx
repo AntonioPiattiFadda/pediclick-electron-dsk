@@ -35,7 +35,6 @@ import { ProductPresentationSelectorRoot, SelectProductPresentation } from "../s
 import ProductSelector from "../selectors/productSelector"
 import { getLotData } from "@/utils/stock"
 import { useGetLocationData } from "@/hooks/useGetLocationData"
-
 const generateNewTransformationItems = (isOrigin: boolean, newTransformationId: number, locationId: number) => {
     return {
         transformation_item_id: Math.random(),
@@ -57,8 +56,8 @@ const generateNewTransformationItems = (isOrigin: boolean, newTransformationId: 
         lot: null,
     }
 }
-
 export function Fraction({
+    //
     disabled = false
 }: {
     disabled?: boolean

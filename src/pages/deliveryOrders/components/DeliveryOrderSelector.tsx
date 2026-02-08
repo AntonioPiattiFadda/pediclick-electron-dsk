@@ -7,13 +7,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
-import { getDeliveryOrdersByDateRange, OrderWithMetadata } from "@/service/orders";
-import { supabase } from "@/service";
+import { getDeliveryOrdersByDateRange, OrderWithMetadata, supabase } from "@/service";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DeliveryOrderPrintButton } from "./DeliveryOrderPrintButton";
 import { DATE_RANGE_OPTIONS } from "../constants";
+import { formatCurrency } from "@/utils/prices";
+import { formatDate } from "@/utils";
 
 type DateRangeFilter = "today" | "2days" | "3days" | "5days" | "7days";
 
@@ -102,19 +103,7 @@ export function DeliveryOrderSelector({
     };
   }, [locationId, queryClient]);
 
-  const formatCurrency = (n: number) =>
-    new Intl.NumberFormat("es-AR", {
-      style: "currency",
-      currency: "ARS",
-    }).format(n || 0);
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("es-AR", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   const getPaymentStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -203,7 +192,7 @@ export function DeliveryOrderSelector({
                     | {order.item_count} items |{" "}
                     {getPaymentStatusLabel(order.payment_status)} |{" "}
                     {formatCurrency(order.total_amount)} |{" "}
-                    {formatTime(order.created_at)} |{" "}
+                    {formatDate(order.created_at)} |{" "}
                     {getOrderStatusLabel(order.order_status)}
                   </span>
 

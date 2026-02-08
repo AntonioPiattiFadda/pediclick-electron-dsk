@@ -31,3 +31,5 @@ release
 
 .agents
 .claude
+docs
+.env

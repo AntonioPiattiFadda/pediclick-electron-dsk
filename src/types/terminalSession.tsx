@@ -10,9 +10,6 @@ export interface TerminalSession {
     status: 'OPEN' | 'CLOSED';
 }
 
-export interface OpenSessionDisplay {
-    terminal_session_id: number;
-    terminal_name: string;
-    user_name: string;
-    opened_at: string;
+export interface OpenSessionDisplay extends Pick<TerminalSession, 'terminal_session_id' | 'opened_by_user_id' | 'opened_at'> {
+    opened_by_user_name: string;
 }

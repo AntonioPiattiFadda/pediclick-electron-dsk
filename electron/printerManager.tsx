@@ -1,19 +1,19 @@
 
-import { DeliveryOrderPayload, PrintTicketPayload } from "@/types/printer";
+import { DeliveryOrderPayload, PrintPayload, PrintTicketPayload } from "@/types/printer";
 import usb from "usb";
 import { buildPrinterSelectedBuffer, printDeliveryOrder, printTicket } from "./printerBufferFactory";
 
 export const bufferFunctions = {
-    printTest: (printContent: PrintTicketPayload) => buildPrinterSelectedBuffer(printContent),
-    printTicket: (printContent: PrintTicketPayload) => printTicket(printContent),
-    printDeliveryOrder: (printContent: DeliveryOrderPayload) => printDeliveryOrder(printContent), // Por ahora usamos la misma función, pero se puede diferenciar si es necesario
+    printTest: (printContent: PrintPayload) => buildPrinterSelectedBuffer(printContent as PrintTicketPayload),
+    printTicket: (printContent: PrintPayload) => printTicket(printContent as PrintTicketPayload),
+    printDeliveryOrder: (printContent: PrintPayload) => printDeliveryOrder(printContent as DeliveryOrderPayload),
 }
 
 export const print = (
     vendorId: number,
     productId: number,
     printFunction: keyof typeof bufferFunctions,
-    printContent?: PrintTicketPayload
+    printContent?: PrintPayload
 ) => {
 
 
@@ -31,7 +31,6 @@ export const print = (
         console.error("Failed to open USB device:", err);
         return;
     }
-    console.log("Connected USB devices:", device.interfaces);
 
     if (!device.interfaces) {
         console.error("Failed to open USB device:", "No interfaces found");
@@ -43,7 +42,6 @@ export const print = (
     const iface = device.interfaces.find((iface) =>
         iface.endpoints.some((e) => e.direction === "out")
     );
-    console.log("iface:", iface);
 
     if (!iface) {
         console.error("No USB interface with OUT endpoint found");
@@ -83,15 +81,12 @@ export const print = (
 
     console.log("Preparing data to print...");
 
-    let buffer
+    let buffer;
     try {
-        if (printContent) {
-            buffer = bufferFunctions[printFunction](printContent);
-        } else {
-            buffer = bufferFunctions[printFunction](printContent!);
+        if (!printContent) {
+            throw new Error("Print content is required");
         }
-        console.log("Buffer:", buffer);
-
+        buffer = bufferFunctions[printFunction](printContent);
     } catch (error) {
         console.error("Error building print buffer:", error);
         iface.release(true, () => {

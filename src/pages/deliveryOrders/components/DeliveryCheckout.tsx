@@ -13,14 +13,14 @@ import {
 import { RefButton } from "@/components/ui/refButton";
 import { emptyPayments } from "@/constants";
 import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
-import { Payment } from "@/types/payments";
-import { OrderT } from "@/types/orders";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase, completeDeliveryOrder, getDeliveryOrderItems } from "@/service";
-import { OrderItem } from "@/types/orderItems";
-import { toast } from "sonner";
+import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
+import { completeDeliveryOrder, getDeliveryOrderItems } from "@/service";
 import { CheckOutOptions } from "@/types";
+import { OrderT } from "@/types/orders";
+import { Payment } from "@/types/payments";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(
@@ -120,6 +120,7 @@ export function DeliveryCheckout({
       );
     },
   });
+  const { handleGetTerminalSessionId } = useTerminalSessionData();
 
   const handleConfirm = async () => {
     try {
@@ -127,12 +128,17 @@ export function DeliveryCheckout({
         throw new Error("El total pagado no coincide con el total de la orden.");
       }
 
+
       const orderPayments = payments.map((p) => ({
         order_id: order.order_id || 0,
         payment_method: p.payment_method,
         amount: Number(p.amount || 0),
         payment_direction: "IN" as const,
         payment_type: "ORDER" as const,
+        client_id: order.client_id || null,
+        //TODO Check if provider_id and terminal_session_id are needed here, if not remove from backend
+        provider_id: null,
+        terminal_session_id: handleGetTerminalSessionId(),
       }));
 
       await completeOrderMutation.mutateAsync(orderPayments);
@@ -240,7 +246,7 @@ export function DeliveryCheckout({
                 <span className="text-xs w-24">
                   {pay.payment_method === "CASH"
                     ? "Efectivo"
-                    : pay.payment_method === "TRANSFER"
+                    : pay.payment_method === "BANK_TRANSFER"
                       ? "Transferencia"
                       : pay.payment_method === "DEBIT_CARD"
                         ? "Débito"

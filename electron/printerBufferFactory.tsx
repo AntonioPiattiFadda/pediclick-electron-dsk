@@ -1,6 +1,4 @@
-// !SECTION HELPER FUNCIONES DE PRINT
-
-import { DeliveryOrderPayload, PrintTicketPayload } from "@/types/printer";
+import { DeliveryOrderPayload, PrintPayload, PrintTicketPayload } from "@/types/printer";
 
 const ESC = 0x1b;
 const GS = 0x1d;
@@ -32,7 +30,7 @@ export const escpos = {
 };
 
 
-export function buildPrinterSelectedBuffer(printContent: PrintTicketPayload): Buffer {
+export function buildPrinterSelectedBuffer(printContent: PrintPayload): Buffer {
     console.log("buildPrinterSelectedBuffer", printContent);
     return Buffer.concat([
         escpos.init(),
@@ -49,10 +47,11 @@ export function buildPrinterSelectedBuffer(printContent: PrintTicketPayload): Bu
     ]);
 }
 
-export function printTicket(payload: PrintTicketPayload): Buffer {
+export function printTicket(payload: PrintPayload): Buffer {
     const buffers: Buffer[] = [];
 
-    const { user, location, order, orderItems } = payload;
+    const typedPayload = payload as PrintTicketPayload;
+    const { user, location, order, orderItems } = typedPayload;
     console.log("payload", payload);
 
     buffers.push(escpos.init());
@@ -149,11 +148,12 @@ export function printTicket(payload: PrintTicketPayload): Buffer {
 }
 
 
-export function printDeliveryOrder(payload: DeliveryOrderPayload): Buffer {
+export function printDeliveryOrder(payload: PrintPayload): Buffer {
     console.log("printDeliveryOrder", payload);
     const buffers: Buffer[] = [];
 
-    const { user, location, order, orderItems, client } = payload;
+    const typedPayload = payload as DeliveryOrderPayload;
+    const { user, location, order, orderItems, client } = typedPayload;
     console.log("payload", payload);
 
     buffers.push(escpos.init());

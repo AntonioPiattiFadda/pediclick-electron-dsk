@@ -37,3 +37,8 @@ export interface OrderItem {
 
   is_deleted: boolean;
 }
+
+export interface OrderItemDisplay extends OrderItem {
+  product_name: string;
+  product_presentation_name: string;
+}

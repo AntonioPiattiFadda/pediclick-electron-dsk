@@ -125,10 +125,7 @@ export const DeliveryCart = ({
               {it.status !== "CANCELLED" && (
                 <button
                   disabled={isRemovingItem}
-                  onClick={() => removeItemFromOrder({
-                    orderItemId: it.order_item_id!,
-                    stockId: it.stock_id!,
-                  })}
+                  onClick={() => removeItemFromOrder(it.order_item_id!, it.stock_id!)}
                   className="text-red-500 hover:text-red-700 ml-1"
                   title="Eliminar producto"
                 >
