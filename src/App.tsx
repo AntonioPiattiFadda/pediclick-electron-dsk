@@ -14,6 +14,7 @@ import { ModalsProvider } from "./context/ModalsContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 import { ScaleProvider } from "./context/ScaleContext";
 import SelectTerminalPage from "./pages/selectTerminal/SelectTerminal";
+import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
 
 // ---- App raíz mínima con QueryClient local ----
 const queryClient = new QueryClient();
@@ -79,7 +80,9 @@ function App() {
                       <Route
                         path="/delivery-orders"
                         element={
-                          <DeliveryOrders />
+                          <DeliveryOrderProvider>
+                            <DeliveryOrders />
+                          </DeliveryOrderProvider>
                         }
                       />
 

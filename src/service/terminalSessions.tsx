@@ -62,7 +62,7 @@ export async function getTerminalSessionClosureData(
 ): Promise<{
     terminalSession: TerminalSession;
     orders: OrderWithPayments[];
-    standalonePayments: Payment[];
+    payments: Payment[];
 }> {
 
     /* -----------------------------
@@ -80,6 +80,7 @@ export async function getTerminalSessionClosureData(
       )
     `)
         .eq("terminal_session_id", terminalSessionId)
+        .eq("order_type", "DIRECT_SALE")
         .is("deleted_at", null);
 
     if (ordersError) throw ordersError;
@@ -99,16 +100,24 @@ export async function getTerminalSessionClosureData(
     const { data: terminalSession, error: terminalSessionError } =
         await supabase
             .from("terminal_sessions")
-            .select(`*`)
+            .select(`*,
+        users ( *
+        )`)
             .eq("terminal_session_id", terminalSessionId)
             .single();
 
     if (terminalSessionError) throw terminalSessionError;
 
+    const terminalSessionUser = terminalSession.users;
+
+    const terminalSessionWithNoUser = terminalSession as any;
+    delete terminalSessionWithNoUser.users;
+
     return {
-        terminalSession,
+        terminalSession: terminalSessionWithNoUser as TerminalSession,
+        user: terminalSessionUser,
         orders,
-        standalonePayments,
+        payments: standalonePayments,
     };
 }
 
@@ -116,9 +125,6 @@ interface TerminalSessionWithRelations {
     terminal_session_id: number;
     opened_at: string;
     terminals: {
-        terminal_name: string;
-    } | null;
-    profiles: {
         name: string;
     } | null;
 }
@@ -130,22 +136,20 @@ export async function getOpenTerminalSessions(organizationId: string) {
             terminal_session_id,
             opened_at,
             terminals (
-                terminal_name
-            ),
-            profiles (
                 name
             )
         `)
         .eq("status", "OPEN")
         .eq("organization_id", organizationId);
 
+    console.log("Fetched open terminal sessions:", data, "with error:", error);
+
     if (error) throw error;
 
     // Transform the data to match OpenSessionDisplay interface
     return (data as TerminalSessionWithRelations[]).map((session) => ({
         terminal_session_id: session.terminal_session_id,
-        terminal_name: session.terminals?.terminal_name || "Unknown Terminal",
-        user_name: session.profiles?.name || "Unknown User",
+        terminal_name: session.terminals?.name || "Unknown Terminal",
         opened_at: session.opened_at,
     }));
 }

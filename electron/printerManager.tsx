@@ -1,12 +1,12 @@
 
+import { DeliveryOrderPayload, PrintTicketPayload } from "@/types/printer";
 import usb from "usb";
-import { listUsbDevices } from "./usbManager";
-import { buildPrinterSelectedBuffer, printTicket } from "./printerBufferFactory";
-import { PrintTicketPayload } from "@/types/printer";
+import { buildPrinterSelectedBuffer, printDeliveryOrder, printTicket } from "./printerBufferFactory";
 
 export const bufferFunctions = {
     printTest: (printContent: PrintTicketPayload) => buildPrinterSelectedBuffer(printContent),
     printTicket: (printContent: PrintTicketPayload) => printTicket(printContent),
+    printDeliveryOrder: (printContent: DeliveryOrderPayload) => printDeliveryOrder(printContent), // Por ahora usamos la misma función, pero se puede diferenciar si es necesario
 }
 
 export const print = (
@@ -15,14 +15,7 @@ export const print = (
     printFunction: keyof typeof bufferFunctions,
     printContent?: PrintTicketPayload
 ) => {
-    console.log("printFunction:", printFunction);
-    console.log("vendorId:", vendorId);
-    console.log("productId:", productId);
-    console.log("printContent:", printContent);
 
-
-    const devices = listUsbDevices();
-    console.log("Connected USB devices:", devices?.length);
 
     const device = usb.findByIds(vendorId, productId);
 

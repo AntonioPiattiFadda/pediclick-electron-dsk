@@ -125,16 +125,7 @@ const Cart = ({ order, onChangeOrder }: {
             const orderToPrint = orders.filter((o: OrderT) => o.order_id === order.order_id);
             const orderItemsToPrint = orderItems.filter(it => it.order_id === order.order_id);
 
-            const printContent: PrintTicketPayload = {
-                user: null,
-                location: {
-                    location_id: handleGetLocationId(),
-                    name: handleGetLocation()?.name,
-                    address: handleGetLocation()?.address,
-                    type: 'STORE',
-                    created_at: '',
-                    deleted_at: null,
-                },
+            const printContent = {
                 order: orderToPrint[0],
                 orderItems: orderItemsToPrint
             };

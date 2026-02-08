@@ -271,7 +271,7 @@ export async function startEmptyDeliveryOrder(locationId: number, terminalSessio
 }
 
 export interface OrderWithMetadata extends OrderT {
-  client_name?: string;
+  client_full_name?: string;
   item_count: number;
 }
 
@@ -290,7 +290,7 @@ export async function getDeliveryOrdersByDateRange(
     .from("orders")
     .select(`
       *,
-      client:clients(client_name)
+      client:clients(full_name)
     `)
     .eq("order_type", "DELIVERY")
     .eq("location_id", locationId)
@@ -299,21 +299,28 @@ export async function getDeliveryOrdersByDateRange(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
+  console.log("Fetched delivery orders:", ordersError);
+
   if (ordersError) {
     console.error("Error fetching delivery orders:", ordersError);
     throw ordersError;
   }
+
+  console.log("Orders fetched for location", orders);
 
   if (!orders) return [];
 
   // For each order, fetch order items count
   const ordersWithMetadata: OrderWithMetadata[] = await Promise.all(
     orders.map(async (order) => {
-      const { count, error: countError } = await supabase
+      console.log(`Processing order ${order.order_id} for item count...`);
+      const { data, error: countError } = await supabase
         .from("order_items")
-        .select("*", { count: "exact", head: true })
-        .eq("order_id", order.order_id)
-        .is("is_deleted", false);
+        .select(`*`)
+        .eq("order_id", Number(order.order_id))
+      // .is("is_deleted", false);
+
+      console.log(`Count for order ${order.order_id}:`, data, countError);
 
       if (countError) {
         console.error("Error counting order items:", countError);
@@ -321,8 +328,8 @@ export async function getDeliveryOrdersByDateRange(
 
       return {
         ...order,
-        client_name: order.client?.client_name || null,
-        item_count: count || 0,
+        client_full_name: order.client?.full_name || null,
+        item_count: data?.length || 0,
       };
     })
   );

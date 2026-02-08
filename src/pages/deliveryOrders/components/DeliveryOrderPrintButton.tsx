@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { useGetLocationData } from "@/hooks/useGetLocationData";
 import usePrinter from "@/hooks/usePrinter";
-import { useUserData } from "@/hooks/useUserData";
 import { supabase } from "@/service";
 import { OrderItem } from "@/types/orderItems";
 import { OrderT } from "@/types/orders";
+import { DeliveryOrderPayload } from "@/types/printer";
 import { Printer } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -19,9 +18,8 @@ export function DeliveryOrderPrintButton({
   onClick,
 }: DeliveryOrderPrintButtonProps) {
   const [isPrinting, setIsPrinting] = useState(false);
-  const { handlePrintTicket } = usePrinter();
-  const { userData } = useUserData();
-  const { location } = useGetLocationData();
+  const { handlePrintDeliveryOrder } = usePrinter();
+
 
   const handlePrint = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -37,7 +35,12 @@ export function DeliveryOrderPrintButton({
         .from("order_items")
         .select("*")
         .eq("order_id", order.order_id)
-        .eq("is_deleted", false);
+
+      const { data: clientData, error: clientError } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("client_id", order.client_id)
+        .single();
 
       if (itemsError) {
         throw new Error("Error al cargar items de la orden");
@@ -48,17 +51,26 @@ export function DeliveryOrderPrintButton({
         return;
       }
 
-      if (!location) {
-        throw new Error("No se pudo obtener la información de la ubicación");
+      if (clientError) {
+        console.warn("No se pudo cargar información del cliente", clientError);
       }
 
-      // Print ticket
-      handlePrintTicket({
-        user: userData,
-        location: location,
+      if (!clientData) {
+        console.warn("No se encontró información del cliente para client_id:", order.client_id);
+      }
+
+
+      const printData = {
+        clientData: clientData,
         order: order,
         orderItems: orderItems as OrderItem[],
-      });
+      };
+
+      console.log("Prepared print data:", printData);
+
+      // Print ticket
+      handlePrintDeliveryOrder(printData);
+
 
       toast.success("Ticket impreso correctamente");
     } catch (error) {

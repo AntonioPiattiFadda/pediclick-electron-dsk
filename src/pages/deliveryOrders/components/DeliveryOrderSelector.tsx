@@ -13,6 +13,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { DeliveryOrderPrintButton } from "./DeliveryOrderPrintButton";
+import { DATE_RANGE_OPTIONS } from "../constants";
 
 type DateRangeFilter = "today" | "2days" | "3days" | "5days" | "7days";
 
@@ -20,15 +21,8 @@ interface DeliveryOrderSelectorProps {
   selectedOrderId: number | null;
   onOrderSelect: (orderId: number | null) => void;
   onCreateOrder: () => void;
+  isCreatingOrder: boolean;
 }
-
-const DATE_RANGE_OPTIONS = [
-  { value: "today" as const, label: "Hoy", days: 0 },
-  { value: "2days" as const, label: "Últimos 2 días", days: 2 },
-  { value: "3days" as const, label: "Últimos 3 días", days: 3 },
-  { value: "5days" as const, label: "Últimos 5 días", days: 5 },
-  { value: "7days" as const, label: "Últimos 7 días", days: 7 },
-];
 
 const FILTER_STORAGE_KEY = "delivery-order-filters";
 
@@ -36,6 +30,7 @@ export function DeliveryOrderSelector({
   selectedOrderId,
   onOrderSelect,
   onCreateOrder,
+  isCreatingOrder
 }: DeliveryOrderSelectorProps) {
   const { handleGetLocationId } = useGetLocationData();
   const locationId = handleGetLocationId();
@@ -128,12 +123,25 @@ export function DeliveryOrderSelector({
       PARTIALLY_PAID: "PAGO PARCIAL",
       REFUNDED: "REEMBOLSADO",
       PARTIALLY_REFUNDED: "REEMBOLSO PARCIAL",
+      NEW: "NUEVA",
     };
     return labels[status] || status;
   };
 
+  const getOrderStatusLabel = (status: string) => {
+    const labels: Record<string, string> = {
+      PENDING: "PENDIENTE",
+      PREPARING: "EN PREPARACIÓN",
+      READY: "LISTO",
+      DELIVERING: "EN REPARTO",
+      DELIVERED: "ENTREGADO",
+      CANCELLED: "CANCELADO",
+    };
+    return labels[status] || status;
+  }
+
   return (
-    <div className="space-y-4 px-4 py-3 border-b">
+    <div className="flex gap-2  items-center ">
       {/* Filters Row */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
@@ -164,7 +172,7 @@ export function DeliveryOrderSelector({
           value={selectedOrderId?.toString() || ""}
           onValueChange={(value) => onOrderSelect(value ? Number(value) : null)}
         >
-          <SelectTrigger className="flex-1">
+          <SelectTrigger className="flex-1 min-w-[250px]">
             <SelectValue placeholder="Seleccionar orden..." />
           </SelectTrigger>
           <SelectContent>
@@ -191,27 +199,32 @@ export function DeliveryOrderSelector({
               >
                 <div className="flex items-center justify-between w-full pr-2">
                   <span className="text-sm font-mono">
-                    #{order.order_number} | {order.client_name || "Sin cliente"}{" "}
+                    #{order.order_number} | {order.client_full_name || "Sin cliente"}{" "}
                     | {order.item_count} items |{" "}
-                    {formatCurrency(order.total_amount)} |{" "}
                     {getPaymentStatusLabel(order.payment_status)} |{" "}
-                    {formatTime(order.created_at)}
+                    {formatCurrency(order.total_amount)} |{" "}
+                    {formatTime(order.created_at)} |{" "}
+                    {getOrderStatusLabel(order.order_status)}
                   </span>
-                  <DeliveryOrderPrintButton
-                    order={order}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                  />
+
                 </div>
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        <Button onClick={onCreateOrder} size="sm" className="gap-2">
+        {selectedOrderId && (
+          <DeliveryOrderPrintButton
+            order={orders.find((o) => o.order_id === selectedOrderId) || {} as OrderWithMetadata}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          />
+        )}
+
+        <Button disabled={isCreatingOrder} onClick={onCreateOrder} size="sm" className="gap-2">
           <PlusCircle className="h-4 w-4" />
-          Nueva Orden
+          {isCreatingOrder ? "Creando..." : "Nuevo pedido"}
         </Button>
       </div>
     </div>

@@ -106,6 +106,7 @@ export const OrderProvider = ({ children }: { children: ReactNode }) => {
 
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
 
+  console.log("OrderContext orders:", orders.length);
   const [currentOrderItem, setCurrentOrderItem] = useState<OrderItem>(
     {} as OrderItem
   );

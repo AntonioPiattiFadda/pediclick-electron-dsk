@@ -1,7 +1,6 @@
 import { MovementStatus } from ".";
 import { PriceLogicType, PriceType } from "./prices";
 
-
 // FIXME VERIFICAR SI LOT ID Y STOCK ID PUEDEN SER NULL
 export interface OrderItem {
   order_item_id?: number;

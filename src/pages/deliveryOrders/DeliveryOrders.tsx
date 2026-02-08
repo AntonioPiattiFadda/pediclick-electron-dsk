@@ -7,8 +7,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
-import Order from "../inSiteOrders/Order";
+import DeliveryOrder from "./DeliveryOrder";
 import { DeliveryOrderSelector } from "./components/DeliveryOrderSelector";
+import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
 
 export function DeliveryOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,6 +20,12 @@ export function DeliveryOrders() {
   const { handleGetLocationId } = useGetLocationData();
   const { handleGetTerminalSessionId } = useTerminalSessionData();
   const queryClient = useQueryClient();
+  const { setActiveDeliveryOrderId } = useDeliveryOrderContext();
+
+  // Update active delivery order ID in context when URL changes
+  useEffect(() => {
+    setActiveDeliveryOrderId(selectedOrderId);
+  }, [selectedOrderId, setActiveDeliveryOrderId]);
 
   // Fetch selected order from database
   const {
@@ -28,7 +35,6 @@ export function DeliveryOrders() {
   } = useQuery({
     queryKey: ["delivery-order", selectedOrderId],
     queryFn: async () => {
-      if (!selectedOrderId) return null;
 
       const { data, error } = await supabase
         .from("orders")
@@ -58,6 +64,7 @@ export function DeliveryOrders() {
           filter: `order_id=eq.${selectedOrderId}`,
         },
         (payload) => {
+          // alert("Cambios detectados en los items de la orden. Refrescando datos...");
           console.log("Order item change detected:", payload);
           queryClient.invalidateQueries({
             queryKey: ["delivery-order", selectedOrderId],
@@ -155,13 +162,15 @@ export function DeliveryOrders() {
     <div className="w-full">
       <div className="w-full flex justify-between items-center px-4 py-3">
         <h1 className="text-2xl">Órdenes de Delivery</h1>
+
+        <DeliveryOrderSelector
+          isCreatingOrder={createOrderMutation.isPending}
+          selectedOrderId={selectedOrderId}
+          onOrderSelect={handleOrderSelect}
+          onCreateOrder={handleCreateOrder}
+        />
       </div>
 
-      <DeliveryOrderSelector
-        selectedOrderId={selectedOrderId}
-        onOrderSelect={handleOrderSelect}
-        onCreateOrder={handleCreateOrder}
-      />
 
       {/* Order Content Area */}
       {!selectedOrderId && (
@@ -179,7 +188,7 @@ export function DeliveryOrders() {
       )}
 
       {selectedOrderId && selectedOrder && (
-        <Order
+        <DeliveryOrder
           order={selectedOrder}
           onChangeOrder={(updatedOrder: OrderT) => {
             handleChangeOrder(updatedOrder);
