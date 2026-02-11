@@ -3,13 +3,13 @@ import { Lot } from "@/types/lots";
 import { OrderItem } from "@/types/orderItems";
 import { PriceLogicType, PriceType } from "@/types/prices";
 
-// const formatTime = (dateString: string) => {
-//   const date = new Date(dateString);
-//   return date.toLocaleTimeString("es-AR", {
-//     hour: "2-digit",
-//     minute: "2-digit",
-//   });
-// };
+export const formatDateToHours = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export function formatDate(value?: string) {
   if (!value) return "--";

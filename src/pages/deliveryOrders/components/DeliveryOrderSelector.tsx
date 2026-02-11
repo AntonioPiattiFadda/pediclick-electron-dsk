@@ -8,13 +8,13 @@ import {
 } from "@/components/ui/select";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { getDeliveryOrdersByDateRange, OrderWithMetadata, supabase } from "@/service";
+import { formatDateToHours } from "@/utils";
+import { formatCurrency } from "@/utils/prices";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useState } from "react";
-import { DeliveryOrderPrintButton } from "./DeliveryOrderPrintButton";
 import { DATE_RANGE_OPTIONS } from "../constants";
-import { formatCurrency } from "@/utils/prices";
-import { formatDate } from "@/utils";
+import { DeliveryOrderPrintButton } from "./DeliveryOrderPrintButton";
 
 type DateRangeFilter = "today" | "2days" | "3days" | "5days" | "7days";
 
@@ -107,12 +107,12 @@ export function DeliveryOrderSelector({
 
   const getPaymentStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      PENDING: "PENDIENTE",
+      PENDING: "NO PAGADO",
       PAID: "PAGADO",
-      PARTIALLY_PAID: "PAGO PARCIAL",
-      REFUNDED: "REEMBOLSADO",
-      PARTIALLY_REFUNDED: "REEMBOLSO PARCIAL",
-      NEW: "NUEVA",
+      // PARTIALLY_PAID: "PAGO PARCIAL",
+      // REFUNDED: "REEMBOLSADO",
+      // PARTIALLY_REFUNDED: "REEMBOLSO PARCIAL",
+      // NEW: "NUEVA",
     };
     return labels[status] || status;
   };
@@ -192,7 +192,7 @@ export function DeliveryOrderSelector({
                     | {order.item_count} items |{" "}
                     {getPaymentStatusLabel(order.payment_status)} |{" "}
                     {formatCurrency(order.total_amount)} |{" "}
-                    {formatDate(order.created_at)} |{" "}
+                    {formatDateToHours(order.created_at)} |{" "}
                     {getOrderStatusLabel(order.order_status)}
                   </span>
 

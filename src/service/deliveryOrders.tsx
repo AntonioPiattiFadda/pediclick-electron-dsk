@@ -154,11 +154,11 @@ export async function getDeliveryOrdersByDateRange(
 ): Promise<OrderWithMetadata[]> {
   const organizationId = await getOrganizationId();
 
-  // Calculate the date threshold
+  // Calcular el threshold en Argentina timezone
   const dateThreshold = new Date();
   dateThreshold.setDate(dateThreshold.getDate() - daysBack);
+  dateThreshold.setHours(0, 0, 0, 0); // Start of day en tu timezone local
 
-  // Fetch orders
   const { data: orders, error: ordersError } = await supabase
     .from("orders")
     .select(`
@@ -172,28 +172,15 @@ export async function getDeliveryOrdersByDateRange(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-
-  if (ordersError) {
-    console.error("Error fetching delivery orders:", ordersError);
-    throw ordersError;
-  }
-
+  if (ordersError) throw ordersError;
   if (!orders) return [];
 
-  // For each order, fetch order items count
   const ordersWithMetadata: OrderWithMetadata[] = await Promise.all(
     orders.map(async (order) => {
-      const { data, error: countError } = await supabase
+      const { data } = await supabase
         .from("order_items")
         .select(`*`)
-        .eq("order_id", Number(order.order_id))
-      // .is("is_deleted", false);
-
-      console.log(`Count for order ${order.order_id}:`, data, countError);
-
-      if (countError) {
-        console.error("Error counting order items:", countError);
-      }
+        .eq("order_id", Number(order.order_id));
 
       return {
         ...order,
