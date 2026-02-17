@@ -95,6 +95,8 @@ const ProductPresentationSelectorRoot = ({
 
 }: RootProps) => {
 
+    console.log("Rendering ProductPresentationSelectorRoot with productId:", productId, "isFetchWithLots:", isFetchWithLots, "isFetchWithLotContainersLocation:", isFetchWithLotContainersLocation, "locationId:", locationId);
+
     const { setProductPresentations } = useOrderContext();
 
     const [shortCode, setShortCode] = useState<number | null>(null);
@@ -113,6 +115,7 @@ const ProductPresentationSelectorRoot = ({
         },
         enabled: !!productId,
     });
+
 
     const hasHandledInitialFetch = useRef(false);
 

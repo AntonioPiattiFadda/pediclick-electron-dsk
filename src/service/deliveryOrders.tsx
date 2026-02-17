@@ -172,6 +172,8 @@ export async function getDeliveryOrdersByDateRange(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
+  console.log("Fetched delivery orders:", orders, ordersError);
+
   if (ordersError) throw ordersError;
   if (!orders) return [];
 

@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = import.meta.env.VITE_APP_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_APP_SUPABASE_ANON_KEY;
+export const BACKEND_URL = import.meta.env.VITE_APP_BACKEND_URL;
 
 // const storageUrl =
 //   "https://khpuigptjufryfxcnsrs.supabase.co/storage/v1/object/public/";

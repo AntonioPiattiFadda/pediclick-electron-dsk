@@ -15,6 +15,8 @@ import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 import { ScaleProvider } from "./context/ScaleContext";
 import SelectTerminalPage from "./pages/selectTerminal/SelectTerminal";
 import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
+import { DeliveryOrderAiProvider } from "./context/DeliveryOrderAiContext";
+import { DeliveryOrdersAi } from "./pages/deliveryOrdersAi/InSiteOrders";
 
 // ---- App raíz mínima con QueryClient local ----
 const queryClient = new QueryClient();
@@ -86,6 +88,14 @@ function App() {
                         }
                       />
 
+                      <Route
+                        path="/delivery-orders-ai"
+                        element={
+                          <DeliveryOrderAiProvider>
+                            <DeliveryOrdersAi />
+                          </DeliveryOrderAiProvider>
+                        }
+                      />
 
                       <Route path="*" element={<Navigate to="/" />} />
                     </Routes>

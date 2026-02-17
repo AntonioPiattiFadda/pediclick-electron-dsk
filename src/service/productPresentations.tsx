@@ -20,6 +20,7 @@ export const getProductPresentations = async (
   isFetchedWithLotContainersLocation: boolean = false,
   locationId: number | null = null,
 ) => {
+  console.log("Fetching product presentations with params - productId:", productId, "isFetchWithLots:", isFetchWithLots, "isFetchedWithLotContainersLocation:", isFetchedWithLotContainersLocation, "locationId:", locationId);
 
   if (!productId) {
     return [];

@@ -8,7 +8,7 @@ import {
     MenubarTrigger
 } from "@/components/ui/menubar";
 import { useModalsContext } from "@/context/ModalsContext";
-import { Menu } from "lucide-react";
+import { Menu, Sparkle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
 import RegisterClientPayment from "../registerClientPayment/RegisterClientPayment";
@@ -91,6 +91,10 @@ const Header = () => {
                                 </MenubarItem>
                                 <MenubarItem onClick={() => handleNavigateTo("/delivery-orders")}>
                                     Pedidos
+                                    {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
+                                </MenubarItem>
+                                <MenubarItem onClick={() => handleNavigateTo("/delivery-orders-ai")}>
+                                    Pedidos (AI) <Sparkle />
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
                                 <MenubarSeparator />
