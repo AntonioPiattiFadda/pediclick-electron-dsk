@@ -29,6 +29,53 @@ declare global {
         }) => void
       ) => void;
     };
+    mercadoPago: {
+      listPointDevices: () => Promise<unknown>;
+      createPointIntent: (
+        amount: number,
+        description: string,
+        externalRef: string,
+      ) => Promise<{
+        id?: string;
+        state?: string;
+        amount?: number;
+        error?: string;
+        message?: string;
+        [k: string]: unknown;
+      }>;
+      cancelPointIntent: () => Promise<{ success?: boolean; [k: string]: unknown }>;
+      checkPointIntent: (intentId: string) => Promise<{
+        id?: string;
+        state?: string;
+        payment?: { total_paid_amount?: number; [k: string]: unknown };
+        [k: string]: unknown;
+      }>;
+      createQROrder: (
+        items: {
+          product_id: number;
+          product_name: string;
+          quantity: number;
+          price: number;
+          total_price: number;
+        }[],
+        totalAmount: number,
+        externalRef: string,
+      ) => Promise<{
+        qr_data?: string;
+        qr_image?: string | null;
+        error?: string;
+        message?: string;
+        [k: string]: unknown;
+      }>;
+      checkMerchantOrder: (externalRef: string) => Promise<{
+        elements?: {
+          order_status?: string;
+          payments?: { status?: string; amount?: number }[];
+        }[];
+        [k: string]: unknown;
+      }>;
+      deleteQROrder: () => Promise<{ success?: boolean; [k: string]: unknown }>;
+    };
     // hotspot: {
     //   createHotspot: (options: {
     //     ssid?: string;

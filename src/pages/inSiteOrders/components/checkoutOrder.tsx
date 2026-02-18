@@ -18,9 +18,10 @@ import { useOrderContext } from "@/context/OrderContext";
 import { CheckOutOptions } from "@/types";
 import { Payment } from "@/types/payments";
 import { OrderT } from "@/types/orders";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, QrCode } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import MercadoPagoPaymentDialog from "./MercadoPagoPaymentDialog";
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(
@@ -69,6 +70,7 @@ export default function CheckoutOrder({
   }, [items]);
 
   const [payments, setPayments] = useState<Pick<Payment, "payment_method" | "amount">[]>(emptyPayments);
+  const [isMpDialogOpen, setIsMpDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!hasClient) {
@@ -189,6 +191,7 @@ export default function CheckoutOrder({
 
 
   return (
+    <>
     <Dialog open={isCheckOutOpen} onOpenChange={setIsCheckOutOpen}>
       <DialogTrigger asChild>
         <RefButton
@@ -286,23 +289,22 @@ export default function CheckoutOrder({
             {/* {payments.find(p => p.payment_method === 'ON_CREDIT')?.amount} */}
 
             {payments.map((p, idx) => {
+              const isMp = p.payment_method === 'MOBILE_PAYMENT';
               return (<div key={idx} className="grid grid-cols-10 gap-2 items-center">
                 <div>
                   <Input
                     value={paymentMethodOpt.find((o) => o.value === p.payment_method)?.keyCode || ''}
                     disabled
                   />
-
                 </div>
                 <div className="col-span-4">
                   <Input
                     value={paymentMethodOpt.find((o) => o.value === p.payment_method)?.label || ''}
                     disabled
                   />
-
                 </div>
 
-                <div className="col-span-4">
+                <div className={isMp ? "col-span-3" : "col-span-4"}>
                   <MoneyInput
                     value={p.amount || undefined}
                     onChange={(v) => {
@@ -329,43 +331,42 @@ export default function CheckoutOrder({
                       );
                     }}
                   />
-                  {/* <InputGroup>
-                    <InputGroupInput
-                      type="number"
-                    />
-                    <InputGroupAddon>
-                      $
-                    </InputGroupAddon>
-                  </InputGroup> */}
-
-                  {/* <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={p.amount ?? 0}
-                    onChange={(e) => {
-                      const amount = Number(e.target.value || 0);
-                      console.log(amount)
-                      setPayments((prev) =>
-                        prev.map((pay, i) =>
-                          i === idx ? { ...pay, amount } : pay
-                        )
-                      );
-                    }}
-                  /> */}
                 </div>
 
-                <div className="col-span-1">
-                  <Button
-                    onClick={() => handleAssignRest(p.payment_method)}
-                    size={'icon'}
-                    variant={'ghost'}
-                    className="col-span-1 cursor-pointer"
-                    disabled={Number(remaining) <= 0}
-                  >
-                    <ChevronRight />
-                  </Button>
-                </div>
+                {isMp ? (
+                  <div className="col-span-2 flex gap-1">
+                    <Button
+                      onClick={() => handleAssignRest(p.payment_method)}
+                      size={'icon'}
+                      variant={'ghost'}
+                      className="cursor-pointer"
+                      disabled={Number(remaining) <= 0}
+                    >
+                      <ChevronRight />
+                    </Button>
+                    <Button
+                      onClick={() => setIsMpDialogOpen(true)}
+                      size={'icon'}
+                      variant={'secondary'}
+                      className="cursor-pointer"
+                      title="Pagar con Mercado Pago"
+                    >
+                      <QrCode className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="col-span-1">
+                    <Button
+                      onClick={() => handleAssignRest(p.payment_method)}
+                      size={'icon'}
+                      variant={'ghost'}
+                      className="col-span-1 cursor-pointer"
+                      disabled={Number(remaining) <= 0}
+                    >
+                      <ChevronRight />
+                    </Button>
+                  </div>
+                )}
               </div>)
             })}
 
@@ -416,6 +417,22 @@ export default function CheckoutOrder({
           </Button> */}
         </DialogFooter>
       </DialogContent>
-    </Dialog >
+    </Dialog>
+
+    <MercadoPagoPaymentDialog
+      open={isMpDialogOpen}
+      onOpenChange={setIsMpDialogOpen}
+      amount={Math.max(0, remainingToShow + Number(payments.find(p => p.payment_method === 'MOBILE_PAYMENT')?.amount || 0))}
+      orderId={order.order_id || 0}
+      items={items}
+      onSuccess={(paidAmount) => {
+        setPayments((prev) =>
+          prev.map((p) =>
+            p.payment_method === 'MOBILE_PAYMENT' ? { ...p, amount: paidAmount } : p
+          )
+        );
+      }}
+    />
+    </>
   );
 }

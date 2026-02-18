@@ -31,7 +31,7 @@ export const emptyPayments: Pick<Payment, "payment_method" | "amount" | 'payment
     { payment_method: 'BANK_TRANSFER', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
     { payment_method: 'CREDIT_CARD', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
     { payment_method: 'CHECK', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
-    // { payment_method: 'MOBILE_PAYMENT', amount: 0 },
+    { payment_method: 'MOBILE_PAYMENT', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
     { payment_method: 'ON_CREDIT', amount: 0, payment_direction: "IN", payment_type: "ORDER" },
 ]
 
@@ -40,10 +40,9 @@ export const paymentMethodOpt = [
     { value: 'DEBIT_CARD', label: 'Tarjeta Débito', keyCode: 'F2' },
     { value: 'BANK_TRANSFER', label: 'Transferencia Bancaria', keyCode: 'F3' },
     { value: 'CREDIT_CARD', label: 'Tarjeta Crédito', keyCode: 'F4' },
-    // { value: 'MOBILE_PAYMENT', label: 'Pago Móvil', keyCode: 'F5' },
     { value: 'CHECK', label: 'Cheque', keyCode: 'F5' },
-    // { value: 'CRYPTO', label: 'Cripto', keyCode: 'F8' }
     { value: 'ON_CREDIT', label: 'Cuenta Corriente', keyCode: 'F6' },
+    { value: 'MOBILE_PAYMENT', label: 'Mercado Pago', keyCode: 'F7' },
     { value: 'OVERPAYMENT', label: 'Saldo a favor' },
 ];
 

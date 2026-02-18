@@ -11,6 +11,16 @@ import { listSerialPorts } from "./serialManager";
 import { listUsbDevices } from "./usbManager";
 import { getScreenSize } from "./windows";
 import { connectToScale } from "./scaleManager";
+import {
+  listPointDevices,
+  createPointIntent,
+  cancelPointIntent,
+  checkPointIntent,
+  createQROrder,
+  checkMerchantOrder,
+  deleteQROrder,
+} from "./mercadoPagoManager";
+import type { MpQRItem } from "./mercadoPagoManager";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -80,6 +90,19 @@ ipcMain.handle("print", (_event, vendorId, productId, printFunction, printConten
 ipcMain.handle("connect-scale", (_, portPath) => {
   connectToScale(portPath);
 });
+
+// Mercado Pago IPC Handlers
+ipcMain.handle("mp:list-point-devices", () => listPointDevices());
+ipcMain.handle("mp:create-point-intent", (_e, amount: number, description: string, externalRef: string) =>
+  createPointIntent(amount, description, externalRef),
+);
+ipcMain.handle("mp:cancel-point-intent", () => cancelPointIntent());
+ipcMain.handle("mp:check-point-intent", (_e, intentId: string) => checkPointIntent(intentId));
+ipcMain.handle("mp:create-qr-order", (_e, items: MpQRItem[], totalAmount: number, externalRef: string) =>
+  createQROrder(items, totalAmount, externalRef),
+);
+ipcMain.handle("mp:check-merchant-order", (_e, externalRef: string) => checkMerchantOrder(externalRef));
+ipcMain.handle("mp:delete-qr-order", () => deleteQROrder());
 
 // const openPorts = new Map<
 //   string,
