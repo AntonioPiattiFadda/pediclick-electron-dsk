@@ -83,10 +83,10 @@ export const print = (
 
     let buffer;
     try {
-        if (!printContent) {
+        if (!printContent && printFunction !== "printTest") {
             throw new Error("Print content is required");
         }
-        buffer = bufferFunctions[printFunction](printContent);
+        buffer = bufferFunctions[printFunction](printContent as PrintPayload);
     } catch (error) {
         console.error("Error building print buffer:", error);
         iface.release(true, () => {
@@ -109,6 +109,58 @@ export const print = (
 };
 
 
+
+export const checkPrinterConnection = (
+    vendorId: number,
+    productId: number
+): { success: boolean; error?: string } => {
+    const device = usb.findByIds(vendorId, productId);
+
+    if (!device) {
+        return { success: false, error: "USB printer not found" };
+    }
+
+    try {
+        device.open();
+    } catch (err) {
+        return { success: false, error: `Failed to open USB device: ${err}` };
+    }
+
+    if (!device.interfaces) {
+        device.close();
+        return { success: false, error: "No interfaces found" };
+    }
+
+    const iface = device.interfaces.find((iface) =>
+        iface.endpoints.some((e) => e.direction === "out")
+    );
+
+    if (!iface) {
+        device.close();
+        return { success: false, error: "No USB interface with OUT endpoint found" };
+    }
+
+    try {
+        if (iface.isKernelDriverActive?.()) {
+            iface.detachKernelDriver();
+        }
+    } catch {
+        // Continue without detaching
+    }
+
+    try {
+        iface.claim();
+    } catch (err) {
+        device.close();
+        return { success: false, error: `Failed to claim interface: ${err}` };
+    }
+
+    iface.release(true, () => {
+        device.close();
+    });
+
+    return { success: true };
+};
 
 //No asignados los siguientes al main ni al preload ni al renderer
 

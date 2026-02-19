@@ -16,6 +16,7 @@ declare global {
     };
     printer: {
       print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: PrintPayload) => Promise<void>;
+      checkConnection: (vendorId: number, productId: number) => Promise<{ success: boolean; error?: string }>;
     };
     scale: {
       connectScale: (portPath: string, config?: object) => Promise<void>;

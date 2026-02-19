@@ -2,16 +2,16 @@ import { RootState } from "@/stores/store";
 import { DeliveryOrderPayload, PrintTicketPayload } from "@/types/printer";
 import { useSelector } from "react-redux";
 import { useGetLocationData } from "./useGetLocationData";
+import { getPrinterConfig } from "./usePrinterConfig";
 
 const usePrinter = () => {
     const { handleGetLocation } = useGetLocationData();
     const userData = useSelector((state: RootState) => state.user);
     const location = handleGetLocation();
 
-
-    //TODO THis must be selected dinamically based on the printer selected in the settings, and the available printers in the system. For now, we will use hardcoded values for testing.
-    const VENDOR_ID = 1659;
-    const PRODUCT_ID = 8965;
+    const config = getPrinterConfig();
+    const VENDOR_ID = config?.vendorId ?? 0;
+    const PRODUCT_ID = config?.productId ?? 0;
 
     const handlePrintTest = () => {
         try {

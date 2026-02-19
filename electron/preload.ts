@@ -40,6 +40,7 @@ contextBridge.exposeInMainWorld("usb", {
 
 contextBridge.exposeInMainWorld("printer", {
   print: (vendorId: number, productId: number, printFunction: keyof typeof bufferFunctions, printContent?: PrintPayload) => ipcRenderer.invoke("print", vendorId, productId, printFunction, printContent),
+  checkConnection: (vendorId: number, productId: number) => ipcRenderer.invoke("check-printer", vendorId, productId),
 });
 
 contextBridge.exposeInMainWorld("scale", {

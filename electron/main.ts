@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 // Agregar estas importaciones al inicio de main.ts
-import { print } from "./printerManager";
+import { print, checkPrinterConnection } from "./printerManager";
 import { listSerialPorts } from "./serialManager";
 import { listUsbDevices } from "./usbManager";
 import { getScreenSize } from "./windows";
@@ -84,6 +84,9 @@ ipcMain.handle("list-usb-devices", () => listUsbDevices());
 // Printer IPC Handlers
 ipcMain.handle("print", (_event, vendorId, productId, printFunction, printContent) => {
   print(vendorId, productId, printFunction, printContent);
+});
+ipcMain.handle("check-printer", (_event, vendorId, productId) => {
+  return checkPrinterConnection(vendorId, productId);
 });
 
 // Scale IPC Handlers

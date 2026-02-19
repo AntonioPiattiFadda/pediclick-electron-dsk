@@ -16,6 +16,7 @@ import TerminalSessionClosure from "../teminalSessions/terminalSessionClosure/Te
 import OpenSessionsManager from "../teminalSessions/openSessionsManager/OpenSessionsManager";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import UserData from "./UserData";
+import PrinterStatusPopover from "@/components/printer/PrinterStatusPopover";
 import { useState } from "react";
 
 // const devices: { title: string; description: string; selector: React.ReactNode }[] = [
@@ -79,6 +80,7 @@ const Header = () => {
                     <div className="ml-auto">
                         <UserData />
                     </div>
+                    <PrinterStatusPopover />
                     <Menubar>
                         <MenubarMenu>
                             <MenubarTrigger>
