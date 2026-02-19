@@ -67,7 +67,7 @@ contextBridge.exposeInMainWorld("mercadoPago", {
   checkPointIntent: (intentId: string) => ipcRenderer.invoke("mp:check-point-intent", intentId),
   createQROrder: (items: unknown[], totalAmount: number, externalRef: string) =>
     ipcRenderer.invoke("mp:create-qr-order", items, totalAmount, externalRef),
-  checkMerchantOrder: (externalRef: string) => ipcRenderer.invoke("mp:check-merchant-order", externalRef),
-  deleteQROrder: () => ipcRenderer.invoke("mp:delete-qr-order"),
+  checkQROrder: (orderId: string) => ipcRenderer.invoke("mp:check-qr-order", orderId),
+  cancelQROrder: (orderId: string) => ipcRenderer.invoke("mp:cancel-qr-order", orderId),
 });
 

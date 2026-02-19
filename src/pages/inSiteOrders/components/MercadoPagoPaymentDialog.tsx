@@ -48,6 +48,7 @@ export default function MercadoPagoPaymentDialog({
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const paidAmountRef = useRef(amount);
   const currentModeRef = useRef<Mode>("point");
+  const currentOrderIdRef = useRef<string | null>(null);
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) {
@@ -86,6 +87,7 @@ export default function MercadoPagoPaymentDialog({
       setQrImage(null);
       setErrorMsg("");
       paidAmountRef.current = amount;
+      currentOrderIdRef.current = null;
     } else {
       stopPolling();
     }
@@ -100,7 +102,8 @@ export default function MercadoPagoPaymentDialog({
           if (currentModeRef.current === "point") {
             await window.mercadoPago.cancelPointIntent();
           } else {
-            await window.mercadoPago.deleteQROrder();
+            const orderId = currentOrderIdRef.current;
+            if (orderId) await window.mercadoPago.cancelQROrder(orderId);
           }
         } catch {
           // best-effort
@@ -161,25 +164,31 @@ export default function MercadoPagoPaymentDialog({
     try {
       const result = await window.mercadoPago.createQROrder(items, amount, ref);
 
-      if (!result.qr_image) {
+      console.log("QR Order result:", result);
+
+      if (!result.order_id || !result.qr_image) {
         handleError(
           (result.message as string) || "No se pudo generar el código QR",
         );
         return;
       }
 
+      currentOrderIdRef.current = result.order_id;
       setQrImage(result.qr_image);
       setStatus("waiting");
 
       pollRef.current = setInterval(async () => {
         try {
-          const check = await window.mercadoPago.checkMerchantOrder(ref);
-          const order = check.elements?.[0];
-          if (order) {
-            const approved = order.payments?.find((p) => p.status === "approved");
-            if (approved) {
-              handleSuccess(approved.amount ?? amount);
-            }
+          const mpOrderId = currentOrderIdRef.current;
+          if (!mpOrderId) return;
+          const order = await window.mercadoPago.checkQROrder(mpOrderId);
+          if (order.status === "processed") {
+            const paid = parseFloat(
+              order.transactions?.payments?.[0]?.amount ?? String(amount),
+            );
+            handleSuccess(paid);
+          } else if (order.status === "canceled" || order.status === "expired") {
+            handleError("El pago fue cancelado o venció");
           }
         } catch {
           // transient error — keep polling
@@ -196,11 +205,13 @@ export default function MercadoPagoPaymentDialog({
       if (currentModeRef.current === "point") {
         await window.mercadoPago.cancelPointIntent();
       } else {
-        await window.mercadoPago.deleteQROrder();
+        const orderId = currentOrderIdRef.current;
+        if (orderId) await window.mercadoPago.cancelQROrder(orderId);
       }
     } catch {
       // best-effort
     }
+    currentOrderIdRef.current = null;
     setStatus("idle");
     setQrImage(null);
   }, [stopPolling]);
@@ -222,11 +233,10 @@ export default function MercadoPagoPaymentDialog({
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setMode("point")}
-                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors cursor-pointer ${
-                  mode === "point"
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-muted hover:border-muted-foreground"
-                }`}
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors cursor-pointer ${mode === "point"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-muted hover:border-muted-foreground"
+                  }`}
               >
                 <Smartphone className="h-8 w-8" />
                 <span className="text-sm font-medium">Terminal Point</span>
@@ -237,11 +247,10 @@ export default function MercadoPagoPaymentDialog({
 
               <button
                 onClick={() => setMode("qr")}
-                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors cursor-pointer ${
-                  mode === "qr"
-                    ? "border-blue-500 bg-blue-50"
-                    : "border-muted hover:border-muted-foreground"
-                }`}
+                className={`flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-colors cursor-pointer ${mode === "qr"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-muted hover:border-muted-foreground"
+                  }`}
               >
                 <QrCode className="h-8 w-8" />
                 <span className="text-sm font-medium">QR en pantalla</span>

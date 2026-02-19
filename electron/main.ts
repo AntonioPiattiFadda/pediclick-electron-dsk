@@ -17,8 +17,8 @@ import {
   cancelPointIntent,
   checkPointIntent,
   createQROrder,
-  checkMerchantOrder,
-  deleteQROrder,
+  checkQROrder,
+  cancelQROrder,
 } from "./mercadoPagoManager";
 import type { MpQRItem } from "./mercadoPagoManager";
 
@@ -101,8 +101,8 @@ ipcMain.handle("mp:check-point-intent", (_e, intentId: string) => checkPointInte
 ipcMain.handle("mp:create-qr-order", (_e, items: MpQRItem[], totalAmount: number, externalRef: string) =>
   createQROrder(items, totalAmount, externalRef),
 );
-ipcMain.handle("mp:check-merchant-order", (_e, externalRef: string) => checkMerchantOrder(externalRef));
-ipcMain.handle("mp:delete-qr-order", () => deleteQROrder());
+ipcMain.handle("mp:check-qr-order", (_e, orderId: string) => checkQROrder(orderId));
+ipcMain.handle("mp:cancel-qr-order", (_e, orderId: string) => cancelQROrder(orderId));
 
 // const openPorts = new Map<
 //   string,

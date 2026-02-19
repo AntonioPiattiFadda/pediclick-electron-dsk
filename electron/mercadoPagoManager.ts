@@ -1,10 +1,12 @@
 import QRCode from 'qrcode';
+import { envConfig } from './config';
 
 const MP_BASE = 'https://api.mercadopago.com';
 
 function headers(): Record<string, string> {
+  const token = envConfig.VITE_APP_MP_ACCESS_TOKEN
   return {
-    Authorization: `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+    Authorization: `Bearer ${token}`,
     'Content-Type': 'application/json',
     'X-Idempotency-Key': `${Date.now()}-${Math.random()}`,
   };
@@ -77,63 +79,69 @@ export async function createQROrder(
   totalAmount: number,
   externalRef: string,
 ) {
-  const userId = process.env.MP_USER_ID;
-  const posId = process.env.MP_POS_EXTERNAL_ID;
-
-  const r = await fetch(
-    `${MP_BASE}/instore/orders/qr/seller/collectors/${userId}/pos/${posId}/qrs`,
-    {
-      method: 'PUT',
-      headers: headers(),
-      body: JSON.stringify({
-        external_reference: externalRef,
-        title: 'Venta',
-        description: 'Compra en tienda',
-        total_amount: totalAmount,
-        items: items.map((it) => ({
-          sku_number: String(it.product_id),
-          category: 'marketplace',
-          title: it.product_name,
-          description: it.product_name,
-          unit_price: it.price,
-          quantity: it.quantity,
-          unit_measure: 'unit',
-          total_amount: it.total_price,
-        })),
-        cash_out: { amount: 0 },
-      }),
-    },
-  );
-
-  const data = (await r.json()) as { qr_data?: string; [k: string]: unknown };
-
-  if (!data.qr_data) {
-    return { ...data, qr_image: null };
+  if (totalAmount < 15) {
+    return { order_id: null, qr_image: null, message: 'El monto mínimo para pago QR es $15.00' };
   }
 
-  const qr_image = await QRCode.toDataURL(data.qr_data as string, {
-    width: 280,
-    margin: 2,
+  const posId = envConfig.VITE_APP_MP_POS_EXTERNAL_ID;
+
+  const r = await fetch(`${MP_BASE}/v1/orders`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({
+      type: 'qr',
+      total_amount: totalAmount.toFixed(2),
+      description: 'Venta en tienda',
+      external_reference: externalRef,
+      expiration_time: 'PT10M',
+      config: {
+        qr: {
+          external_pos_id: posId,
+          mode: 'dynamic',
+        },
+      },
+      transactions: {
+        payments: [{ amount: totalAmount.toFixed(2) }],
+      },
+      items: items.map((it) => ({
+        title: it.product_name,
+        unit_price: it.price.toFixed(2),
+        quantity: it.quantity,
+        unit_measure: 'unit',
+        external_code: String(it.product_id),
+      })),
+    }),
   });
 
-  return { ...data, qr_image };
+  const data = (await r.json()) as {
+    id?: string;
+    type_response?: { qr_data?: string };
+    [k: string]: unknown;
+  };
+
+  console.log("Create QR Order response:", r.status, JSON.stringify(data));
+
+  const qrData = data.type_response?.qr_data;
+  if (!data.id || !qrData) {
+    return { ...data, order_id: null, qr_image: null };
+  }
+
+  const qr_image = await QRCode.toDataURL(qrData, { width: 280, margin: 2 });
+  return { ...data, order_id: data.id, qr_image };
 }
 
-export async function checkMerchantOrder(externalRef: string) {
-  const r = await fetch(
-    `${MP_BASE}/merchant_orders?external_reference=${encodeURIComponent(externalRef)}`,
-    { headers: headers() },
-  );
+export async function checkQROrder(orderId: string) {
+  const r = await fetch(`${MP_BASE}/v1/orders/${orderId}`, {
+    headers: headers(),
+  });
   return r.json();
 }
 
-export async function deleteQROrder() {
-  const userId = process.env.MP_USER_ID;
-  const posId = process.env.MP_POS_EXTERNAL_ID;
-  const r = await fetch(
-    `${MP_BASE}/instore/orders/qr/seller/collectors/${userId}/pos/${posId}/qrs`,
-    { method: 'DELETE', headers: headers() },
-  );
+export async function cancelQROrder(orderId: string) {
+  const r = await fetch(`${MP_BASE}/v1/orders/${orderId}/cancel`, {
+    method: 'POST',
+    headers: headers(),
+  });
   if (r.status === 204) return { success: true };
   return r.json();
 }

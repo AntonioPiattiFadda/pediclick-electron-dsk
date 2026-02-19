@@ -61,20 +61,21 @@ declare global {
         totalAmount: number,
         externalRef: string,
       ) => Promise<{
-        qr_data?: string;
+        order_id?: string | null;
         qr_image?: string | null;
         error?: string;
         message?: string;
         [k: string]: unknown;
       }>;
-      checkMerchantOrder: (externalRef: string) => Promise<{
-        elements?: {
-          order_status?: string;
-          payments?: { status?: string; amount?: number }[];
-        }[];
+      checkQROrder: (orderId: string) => Promise<{
+        id?: string;
+        status?: string;
+        transactions?: {
+          payments?: { id?: string; amount?: string; status?: string }[];
+        };
         [k: string]: unknown;
       }>;
-      deleteQROrder: () => Promise<{ success?: boolean; [k: string]: unknown }>;
+      cancelQROrder: (orderId: string) => Promise<{ success?: boolean; [k: string]: unknown }>;
     };
     // hotspot: {
     //   createHotspot: (options: {
