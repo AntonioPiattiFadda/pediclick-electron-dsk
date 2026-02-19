@@ -17,28 +17,9 @@ import OpenSessionsManager from "../teminalSessions/openSessionsManager/OpenSess
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import UserData from "./UserData";
 import PrinterStatusPopover from "@/components/printer/PrinterStatusPopover";
+import ScaleStatusPopover from "@/components/scales/ScaleStatusPopover";
 import { useState } from "react";
 
-// const devices: { title: string; description: string; selector: React.ReactNode }[] = [
-//     {
-//         title: "Balanza",
-//         description:
-//             "Allows users to select from a range of values by moving a slider thumb along a track.",
-//         selector: <ScaleFetcher />
-//     },
-//     {
-//         title: "Lector de Códigos de Barras",
-//         description:
-//             "Component that enables users to scan and read barcode information.",
-//         selector: <BarcodeFetcher />
-//     },
-//     {
-//         title: "Impresora",
-//         description:
-//             "Component that manages printing tasks and settings.",
-//         selector: <PrinterFetcher />
-//     },
-// ]
 
 const Header = () => {
     const { setClientPaymentModalOpen, setTerminalSessionClosure } = useModalsContext();
@@ -80,6 +61,7 @@ const Header = () => {
                     <div className="ml-auto">
                         <UserData />
                     </div>
+                    <ScaleStatusPopover />
                     <PrinterStatusPopover />
                     <Menubar>
                         <MenubarMenu>

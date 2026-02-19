@@ -8,6 +8,10 @@ type ScaleContextValue = {
     // Units selected by user when sell_measurement_mode === "QUANTITY"
     unitsCount: number | undefined;
     setUnitsCount: React.Dispatch<React.SetStateAction<number | undefined>>;
+
+    // Live connection status from IPC stream
+    isScaleConnected: boolean;
+    isScaleError: boolean;
 };
 
 const ScaleContext = createContext<ScaleContextValue>({
@@ -15,6 +19,8 @@ const ScaleContext = createContext<ScaleContextValue>({
     setWeightKg: () => { },
     unitsCount: 1,
     setUnitsCount: () => { },
+    isScaleConnected: false,
+    isScaleError: false,
 });
 
 export const ScaleProvider = ({ children }: { children: ReactNode }) => {
@@ -59,6 +65,8 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
                 setWeightKg,
                 unitsCount,
                 setUnitsCount,
+                isScaleConnected: scaleData?.isScaleConnected ?? false,
+                isScaleError: scaleData?.isScaleError ?? false,
             }}
         >
             {children}

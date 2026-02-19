@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { DevicesStatus, USBDeviceType } from "@/types/devices";
+import { toast } from "sonner";
 
 const STORAGE_KEY = "printer_config";
 
@@ -38,9 +39,18 @@ const usePrinterConfig = () => {
         setStatus("connecting");
         window.printer.checkConnection(config.vendorId, config.productId)
             .then((result) => {
-                setStatus(result.success ? "connected" : "error");
+                if (result.success) {
+                    setStatus("connected");
+                    toast.success("Impresora conectada");
+                } else {
+                    setStatus("error");
+                    toast.error("No se pudo conectar la impresora", { description: result.error });
+                }
             })
-            .catch(() => setStatus("error"));
+            .catch(() => {
+                setStatus("error");
+                toast.error("No se pudo conectar la impresora");
+            });
     }, []);
 
     // Auto-select saved device once device list loads
@@ -69,11 +79,14 @@ const usePrinterConfig = () => {
             if (result.success) {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify({ vendorId, productId }));
                 setStatus("connected");
+                toast.success("Impresora conectada", { description: `${vendorId}:${productId}` });
             } else {
                 setStatus("error");
+                toast.error("No se pudo conectar la impresora", { description: result.error });
             }
         } catch {
             setStatus("error");
+            toast.error("No se pudo conectar la impresora");
         }
     };
 
@@ -86,8 +99,10 @@ const usePrinterConfig = () => {
 
     const handleRefreshDevices = () => {
         window.usb.list().then((devices) => {
-            setAvailableDevices(devices as USBDeviceType[]);
-        }).catch(console.error);
+            const list = devices as USBDeviceType[];
+            setAvailableDevices(list);
+            toast.info(`${list.length} dispositivo${list.length !== 1 ? "s" : ""} USB encontrado${list.length !== 1 ? "s" : ""}`);
+        }).catch(() => toast.error("Error al listar dispositivos USB"));
     };
 
     return {

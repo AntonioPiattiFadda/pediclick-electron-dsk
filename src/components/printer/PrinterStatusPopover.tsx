@@ -61,7 +61,7 @@ const PrinterStatusPopover = () => {
                                 )}
                                 {availableDevices.map((device) => (
                                     <SelectItem key={deviceKey(device)} value={deviceKey(device)}>
-                                        <span className="font-mono">{deviceLabel(device)}</span>
+                                        <span className="font-mono">Usb: {deviceLabel(device)}</span>
                                     </SelectItem>
                                 ))}
                             </SelectContent>
