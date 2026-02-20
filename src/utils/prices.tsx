@@ -24,9 +24,6 @@ export const formatCurrency = (
     }).format(value);
 };
 
-
-
-
 export function resolveEffectivePrice(
     quantity: number,
     selectedPriceId: number | null,

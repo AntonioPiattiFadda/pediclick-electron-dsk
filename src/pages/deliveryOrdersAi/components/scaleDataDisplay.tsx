@@ -7,7 +7,7 @@ import { OrderT } from "@/types/orders";
 import type { PriceLogicType, PriceType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import { getLotsAndStockFromFirtsToLast } from "@/utils";
-import { resolveEffectivePrice } from "@/utils/prices";
+import { formatCurrency, resolveEffectivePrice } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "../../../components/ui/input-group";
@@ -441,7 +441,7 @@ const ScaleDataDisplay = ({ order }: {
                     <div className="flex flex-col">
                         <span className="text-xs text-slate-500">Subtotal</span>
                         <span className="text-lg font-bold text-blue-700 border rounded-lg px-3 py-2 bg-blue-50">
-                            ${Number(total).toFixed(2)}
+                            {formatCurrency(total)}
                         </span>
                     </div>
                 </div>
