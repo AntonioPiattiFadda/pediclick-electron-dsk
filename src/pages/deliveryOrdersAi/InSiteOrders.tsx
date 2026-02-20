@@ -56,18 +56,18 @@ export function DeliveryOrdersAi() {
               onClick={handleStartNewOrder}
               className="mt-4"
             >
-              New AI Order
+              Nueva orden AI
             </Button>
           )}
         </div>
 
         {!aiOrder && (
-          <div className="w-full flex items-center justify-center h-[80%] absolute top-0 left-0 bg-background/70 translate-y-18 z-10">
+          <div className="w-full flex items-center justify-center h-[80%] absolute top-0 left-0 bg-background/70 translate-y-24 z-10">
             <RefButton
               onClick={handleStartNewOrder}
               btnRef={initiateOrderBtnRef}
             >
-              Start AI Order
+              Iniciar nueva orden asistida por AI
             </RefButton>
           </div>
         )}
@@ -87,15 +87,15 @@ export function DeliveryOrdersAi() {
       <AlertDialog open={showReplaceDialog} onOpenChange={setShowReplaceDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Replace Current AI Order?</AlertDialogTitle>
+            <AlertDialogTitle>Reemplazar orden actual?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will discard your current AI-assisted order and all its items. This action cannot be undone.
+              Esto descartará tu orden asistida por AI actual y todos sus elementos. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmReplace}>
-              Replace & Start New
+              Reemplazar y comenzar nueva
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

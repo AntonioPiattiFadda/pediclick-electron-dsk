@@ -7,7 +7,7 @@ export interface TerminalSession {
     closed_at: string | null;
     opening_balance: number;
     closing_balance: number | null;
-    status: 'OPEN' | 'CLOSED';
+    status: 'OPEN' | 'CLOSED' | 'FORCE_CLOSED';
 }
 
 export interface OpenSessionDisplay extends Pick<TerminalSession, 'terminal_session_id' | 'opened_by_user_id' | 'opened_at'> {

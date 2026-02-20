@@ -13,7 +13,7 @@ export const entityConstraints: SubapaseConstrains[] = [{
 }
 ];
 
-export const openTerminalSession = async (locationId: number, userId: string, terminalId: number) => {
+export const openTerminalSession = async (locationId: number, userId: string, terminalId: number, openingBalance: number = 0) => {
     const organizationId = await getOrganizationId();
 
     const { data, error } = await supabase
@@ -25,6 +25,7 @@ export const openTerminalSession = async (locationId: number, userId: string, te
             organization_id: organizationId,
             status: "OPEN",
             opened_at: new Date().toISOString(),
+            opening_balance: openingBalance,
         })
         .select()
         .single();
@@ -36,13 +37,25 @@ export const openTerminalSession = async (locationId: number, userId: string, te
     return data;
 }
 
-export const closeTerminalSession = async (terminalSessionId: number) => {
+export const getOpenSessionByTerminalId = async (terminalId: number) => {
+    const { data, error } = await supabase
+        .from("terminal_sessions")
+        .select(`*, users(full_name, email)`)
+        .eq("terminal_id", terminalId)
+        .eq("status", "OPEN")
+        .maybeSingle();
+
+    if (error) throw error;
+    return data;
+}
+
+export const closeTerminalSession = async (terminalSessionId: number, options?: { forced?: boolean }) => {
     console.log("Closing terminal session with ID:", terminalSessionId);
 
     const { data, error } = await supabase
         .from("terminal_sessions")
         .update({
-            status: "CLOSED",
+            status: options?.forced ? "FORCE_CLOSED" : "CLOSED",
             closed_at: new Date().toISOString(),
         })
         .eq("terminal_session_id", terminalSessionId)

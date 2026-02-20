@@ -139,7 +139,7 @@ const RegisterClientPayment = ({ client }: {
                     Registrar pago de cliente
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="w-fit pr-16">
                 <DialogHeader className="flex flex-row justify-between">
                     <div>
                         <DialogTitle>Registrar pago de cliente</DialogTitle>

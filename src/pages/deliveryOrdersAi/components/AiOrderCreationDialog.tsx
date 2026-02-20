@@ -178,13 +178,13 @@ export function AiOrderCreationDialog({
               </ClientSelectorRoot>
 
               {/* Info Alert */}
-              <Alert>
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                 <Lightbulb className="h-4 w-4" />
                 <AlertDescription>
                   Seleccionar un cliente permite al AI analizar pedidos
                   anteriores y ser más eficiente en las sugerencias
                 </AlertDescription>
-              </Alert>
+              </div>
             </div>
 
             {/* Tabs */}

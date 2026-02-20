@@ -40,7 +40,7 @@ export function SignIn() {
       //Buscar al usuario en base de datos para ponerlo en la app
       dispatch(setUser(response.data));
 
-      navigate("/select-store");
+      navigate("/setup-session");
     },
     onError: (err: any) => {
       setError(err.message || "Error al iniciar sesión");

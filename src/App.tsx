@@ -5,7 +5,6 @@ import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./layout/layout";
 import { SignIn } from "./pages/auth/Login";
 import { InSiteOrders } from "./pages/inSiteOrders/InSiteOrders";
-import SelectStore from "./pages/selectStore/SelectStore";
 import { store } from "./stores/store";
 import { OrderProvider } from "./context/OrderContext";
 import { Toaster } from "sonner";
@@ -13,7 +12,7 @@ import { ShortCutProvider } from "./context/ShortCutContext";
 import { ModalsProvider } from "./context/ModalsContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 import { ScaleProvider } from "./context/ScaleContext";
-import SelectTerminalPage from "./pages/selectTerminal/SelectTerminal";
+import SetupSession from "./pages/setupSession/SetupSession";
 import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
 import { DeliveryOrderAiProvider } from "./context/DeliveryOrderAiContext";
 import { DeliveryOrdersAi } from "./pages/deliveryOrdersAi/InSiteOrders";
@@ -60,16 +59,8 @@ function App() {
                       />
 
                       <Route
-                        path="/select-terminal"
-                        element={
-                          <SelectTerminalPage />
-
-                        }
-                      />
-
-                      <Route
-                        path="/select-store"
-                        element={<SelectStore />}
+                        path="/setup-session"
+                        element={<SetupSession />}
                       />
 
                       <Route
