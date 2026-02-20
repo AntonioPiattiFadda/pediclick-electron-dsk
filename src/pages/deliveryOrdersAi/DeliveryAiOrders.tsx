@@ -13,10 +13,10 @@ import {
 import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext";
 import { Bot } from "lucide-react";
 import { useRef, useState } from "react";
-import Order from "./Order";
 import { AiOrderCreationDialog } from "./components/AiOrderCreationDialog";
+import DeliveryAiOrder from "./DeliveryAiOrder";
 
-export function DeliveryOrdersAi() {
+export function DeliveryAiOrders() {
   const { aiOrder, startAiOrder, clearAiOrder } = useDeliveryOrderAiContext();
   const [showReplaceDialog, setShowReplaceDialog] = useState(false);
   const [showAiDialog, setShowAiDialog] = useState(false);
@@ -73,7 +73,7 @@ export function DeliveryOrdersAi() {
         )}
 
         {aiOrder && (
-          <Order
+          <DeliveryAiOrder
             order={aiOrder}
             onChangeOrder={(updatedOrder) => {
               // Update order in context if needed

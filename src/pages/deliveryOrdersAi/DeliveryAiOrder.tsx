@@ -5,7 +5,7 @@ import SellingPointProductSelector from "./components/sellingPointProductSelecto
 import ScaleDataDisplay from "./components/scaleDataDisplay"
 import Cart from "./components/cart"
 
-const Order = ({ order, onChangeOrder }: {
+const DeliveryAiOrder = ({ order, onChangeOrder }: {
     order: OrderT,
     onChangeOrder: (order: OrderT) => void
 }) => {
@@ -47,4 +47,4 @@ const Order = ({ order, onChangeOrder }: {
     )
 }
 
-export default Order
+export default DeliveryAiOrder

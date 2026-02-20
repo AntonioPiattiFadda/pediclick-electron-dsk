@@ -15,7 +15,7 @@ import { ScaleProvider } from "./context/ScaleContext";
 import SetupSession from "./pages/setupSession/SetupSession";
 import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
 import { DeliveryOrderAiProvider } from "./context/DeliveryOrderAiContext";
-import { DeliveryOrdersAi } from "./pages/deliveryOrdersAi/InSiteOrders";
+import { DeliveryAiOrders } from "./pages/deliveryOrdersAi/DeliveryAiOrders";
 
 // ---- App raíz mínima con QueryClient local ----
 const queryClient = new QueryClient();
@@ -83,7 +83,7 @@ function App() {
                         path="/delivery-orders-ai"
                         element={
                           <DeliveryOrderAiProvider>
-                            <DeliveryOrdersAi />
+                            <DeliveryAiOrders />
                           </DeliveryOrderAiProvider>
                         }
                       />

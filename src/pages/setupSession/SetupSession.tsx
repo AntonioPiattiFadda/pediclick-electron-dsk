@@ -1,3 +1,4 @@
+import { MoneyInput } from "@/components/shared/MoneyInput";
 import { LocationSelectorRoot, SelectLocation } from "@/components/shared/selectors/locationSelector";
 import { SelectTerminal, TerminalSelectorRoot } from "@/components/shared/selectors/TerminalSelector";
 import { Button } from "@/components/ui/button";
@@ -198,20 +199,14 @@ const SetupSession = () => {
                 )}
 
                 <div className="flex flex-col gap-2">
-                    <Label htmlFor="opening-balance">Efectivo inicial en caja</Label>
-                    <div className="relative">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                        <Input
-                            id="opening-balance"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            className="pl-7"
-                            placeholder="0.00"
-                            value={openingBalance}
-                            onChange={(e) => setOpeningBalance(e.target.value)}
-                        />
-                    </div>
+                    <MoneyInput
+                        label='Efectivo inicial en caja'
+                        value={Number(openingBalance)}
+                        placeholder="0.00"
+                        disabled={false}
+                        onChange={(value) => setOpeningBalance(value)}
+                        id="opening-balance"
+                    />
                 </div>
 
                 <Button
