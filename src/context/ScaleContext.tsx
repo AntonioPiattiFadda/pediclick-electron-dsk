@@ -50,7 +50,7 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
             } else {
                 console.log("Updating scale connection/error status:", data);
 
-                setWeightKg(Number(data.weight));
+                setWeightKg(Number(Number(data.weight).toFixed(3)));
             }
 
 

@@ -22,7 +22,7 @@ const Cart = ({ order, onChangeOrder }: {
 }) => {
 
     const { resetAfterOrderCreation } = useOrderContext()
-    const { orderItems, setOrderItems, clearAiOrder } = useDeliveryOrderAiContext()
+    const { orderItems, clearAiOrder } = useDeliveryOrderAiContext()
 
     const queryClient = useQueryClient();
 

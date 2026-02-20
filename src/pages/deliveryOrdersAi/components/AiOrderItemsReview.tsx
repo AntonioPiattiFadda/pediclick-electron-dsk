@@ -33,7 +33,7 @@ export function AiOrderItemsReview({
         </div>
 
         {/* Items List */}
-        <div className="flex flex-col max-h-[400px] overflow-y-auto pb-[350px]">
+        <div className="flex flex-col max-h-[300px] overflow-y-auto pb-[350px]">
           {items.map((item, index) => (
             <AiOrderItemRow
               key={index}

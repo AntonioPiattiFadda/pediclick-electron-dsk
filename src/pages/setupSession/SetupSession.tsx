@@ -2,7 +2,6 @@ import { MoneyInput } from "@/components/shared/MoneyInput";
 import { LocationSelectorRoot, SelectLocation } from "@/components/shared/selectors/locationSelector";
 import { SelectTerminal, TerminalSelectorRoot } from "@/components/shared/selectors/TerminalSelector";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useTerminalData } from "@/hooks/useTerminalData";
@@ -204,7 +203,7 @@ const SetupSession = () => {
                         value={Number(openingBalance)}
                         placeholder="0.00"
                         disabled={false}
-                        onChange={(value) => setOpeningBalance(value)}
+                        onChange={(value) => setOpeningBalance(value ? value.toString() : '')}
                         id="opening-balance"
                     />
                 </div>

@@ -34,7 +34,7 @@ const ScaleStatusPopover = () => {
                     <StatusDisplay status={status} />
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-fit" align="end">
+            <PopoverContent className="w-fit min-w-100" align="end">
                 <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">Balanza</span>

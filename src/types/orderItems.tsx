@@ -36,6 +36,8 @@ export interface OrderItem {
   created_at: string;
 
   is_deleted: boolean;
+
+  is_ai_assisted?: boolean;
 }
 
 export interface OrderItemDisplay extends OrderItem {

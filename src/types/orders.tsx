@@ -40,6 +40,7 @@ export interface OrderT {
 
   client?: Client | null;
   is_delivery: boolean;
+
 }
 
 

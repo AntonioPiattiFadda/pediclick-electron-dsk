@@ -13,7 +13,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
 import {
   ClientSelectorRoot,
   SelectClient,
@@ -28,6 +27,7 @@ import { Client } from "@/types/clients";
 import { Info, Lightbulb } from "lucide-react";
 import { toast } from "sonner";
 import { AiOrderItemsReview } from "./AiOrderItemsReview";
+import { AiLoadingState } from "./AiLoadingState";
 
 type DialogState = "input" | "loading" | "review";
 
@@ -50,7 +50,6 @@ export function AiOrderCreationDialog({
   const [error, setError] = useState<string | null>(null);
 
   const handleClose = () => {
-    // Reset state when closing
     setDialogState("input");
     setTextInput("");
     setSelectedClient(null);
@@ -60,7 +59,6 @@ export function AiOrderCreationDialog({
   };
 
   const handleCreateOrder = async () => {
-    // Validation
     if (textInput.trim().length === 0) {
       setError("Por favor, describe el pedido que deseas crear");
       return;
@@ -70,8 +68,6 @@ export function AiOrderCreationDialog({
     setDialogState("loading");
 
     try {
-      // TODO: Get organizationId from user context/store
-
       const aiOrderItems = await createAiOrder({
         locationId: handleGetLocationId(),
         clientId: selectedClient?.client_id || null,
@@ -80,7 +76,6 @@ export function AiOrderCreationDialog({
 
       console.log("AI Order Creation Response:", aiOrderItems);
 
-      // Check if items were returned
       if (!aiOrderItems || aiOrderItems.length === 0) {
         setError(
           "No se detectaron productos en la descripción. Intenta ser más específico."
@@ -89,7 +84,6 @@ export function AiOrderCreationDialog({
         return;
       }
 
-      // Success - show review state
       setReviewItems(aiOrderItems);
       setDialogState("review");
     } catch (err) {
@@ -104,7 +98,6 @@ export function AiOrderCreationDialog({
   };
 
   const handleAcceptItems = () => {
-    // Add reviewed items to existing orderItems with AI flag
     const itemsToAdd = reviewItems.map((item) => ({
       ...item,
       order_id: aiOrder!.order_id,
@@ -114,7 +107,6 @@ export function AiOrderCreationDialog({
 
     setOrderItems([...orderItems, ...itemsToAdd]);
 
-    // Update order with client if selected
     if (selectedClient && aiOrder) {
       setAiOrder({
         ...aiOrder,
@@ -140,8 +132,8 @@ export function AiOrderCreationDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-fit max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="w-fit min-w-[480px] h-[620px] flex flex-col overflow-hidden">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {dialogState === "review"
               ? "Orden Generada por AI - Revisar y Confirmar"
@@ -156,93 +148,89 @@ export function AiOrderCreationDialog({
 
         {/* Error Alert */}
         {error && (
-          <Alert variant="destructive">
+          <Alert variant="destructive" className="shrink-0">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {/* INPUT STATE */}
-        {dialogState === "input" && (
-          <div className="flex flex-col gap-6">
-            {/* Client Selector */}
-            <div className="flex flex-col gap-2">
-              <Label>Cliente (opcional)</Label>
-              <ClientSelectorRoot
-                value={selectedClient}
-                onChange={(client) => setSelectedClient(client)}
-                showInfo={false}
-              >
-                <SelectClient />
-                <CancelClientSelection />
-                <CreateClient />
-              </ClientSelectorRoot>
+        {/* Scrollable content area */}
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
 
-              {/* Info Alert */}
-              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                <Lightbulb className="h-4 w-4" />
-                <AlertDescription>
-                  Seleccionar un cliente permite al AI analizar pedidos
-                  anteriores y ser más eficiente en las sugerencias
-                </AlertDescription>
+          {/* INPUT STATE */}
+          {dialogState === "input" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-2">
+                <Label>Cliente (opcional)</Label>
+                <ClientSelectorRoot
+                  value={selectedClient}
+                  onChange={(client) => setSelectedClient(client)}
+                  showInfo={false}
+                >
+                  <SelectClient />
+                  <CancelClientSelection />
+                  <CreateClient />
+                </ClientSelectorRoot>
+                <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                  <Lightbulb className="h-4 w-4" />
+                  <AlertDescription>
+                    Seleccionar un cliente permite al AI analizar pedidos
+                    anteriores y ser más eficiente en las sugerencias
+                  </AlertDescription>
+                </div>
               </div>
+
+              <Tabs defaultValue="texto" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="texto">Texto</TabsTrigger>
+                  <TabsTrigger value="imagen" disabled>
+                    Imagen
+                    <Badge variant="secondary" className="ml-2">
+                      Próximamente
+                    </Badge>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="texto" className="space-y-4">
+                  <div className="flex flex-col gap-2">
+                    <Label>Descripción del pedido</Label>
+                    <Textarea
+                      placeholder="Describe el pedido... (ej: 5kg de tomates, 3 cajas de lechuga...)"
+                      value={textInput}
+                      onChange={(e) => setTextInput(e.target.value)}
+                      rows={8}
+                      className="px-1 h-60"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="imagen">
+                  <div className="flex items-center justify-center h-40 text-muted-foreground">
+                    <Info className="mr-2 h-5 w-5" />
+                    Próximamente: Carga de imágenes para generar pedidos
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
+          )}
 
-            {/* Tabs */}
-            <Tabs defaultValue="texto" className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="texto">Texto</TabsTrigger>
-                <TabsTrigger value="imagen" disabled>
-                  Imagen
-                  <Badge variant="secondary" className="ml-2">
-                    Próximamente
-                  </Badge>
-                </TabsTrigger>
-              </TabsList>
+          {/* LOADING STATE */}
+          {dialogState === "loading" && (
+            <AiLoadingState userPrompt={textInput} />
+          )}
 
-              <TabsContent value="texto" className="space-y-4">
-                <div className="flex flex-col gap-2">
-                  <Label>Descripción del pedido</Label>
-                  <Textarea
-                    placeholder="Describe el pedido... (ej: 5kg de tomates, 3 cajas de lechuga...)"
-                    value={textInput}
-                    onChange={(e) => setTextInput(e.target.value)}
-                    rows={8}
-                    className="resize-none"
-                  />
-                </div>
-              </TabsContent>
+          {/* REVIEW STATE */}
+          {dialogState === "review" && (
+            <AiOrderItemsReview
+              items={reviewItems}
+              onUpdateItem={handleUpdateItem}
+              onRemoveItem={handleRemoveItem}
+            />
+          )}
 
-              <TabsContent value="imagen">
-                <div className="flex items-center justify-center h-40 text-muted-foreground">
-                  <Info className="mr-2 h-5 w-5" />
-                  Próximamente: Carga de imágenes para generar pedidos
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
-        )}
+        </div>
 
-        {/* LOADING STATE */}
-        {dialogState === "loading" && (
-          <div className="flex flex-col items-center justify-center py-12 gap-4 px-14">
-            <Spinner className="h-12 w-12" />
-            <p className="text-lg text-muted-foreground">
-              Generando orden con AI...
-            </p>
-          </div>
-        )}
-
-        {/* REVIEW STATE */}
-        {dialogState === "review" && (
-          <AiOrderItemsReview
-            items={reviewItems}
-            onUpdateItem={handleUpdateItem}
-            onRemoveItem={handleRemoveItem}
-          />
-        )}
-
-        {/* Footer Buttons */}
-        <DialogFooter>
+        {/* Footer */}
+        <DialogFooter className="shrink-0">
           <Button variant="outline" onClick={handleClose}>
             Cancelar
           </Button>

@@ -22,7 +22,7 @@
 //                 </div>
 
 //                 <div className='flex flex-col gap-2 text-center'>
-//                     <Label className='flex items-center justify-center'>Credito disponible</Label>
+//                     <Label className='flex items-center justify-center'>Lim disponible</Label>
 //                     <span>{formatCurrency(selectedClient.credit_limit || 0)}</span>
 //                 </div>
 

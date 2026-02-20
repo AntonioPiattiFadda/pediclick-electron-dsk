@@ -23,13 +23,13 @@ interface DeliveryOrderAiContextType {
 
 const DeliveryOrderAiContext = createContext<DeliveryOrderAiContextType>({
   aiOrder: null,
-  setAiOrder: () => {},
+  setAiOrder: () => { },
 
   orderItems: [],
-  setOrderItems: () => {},
+  setOrderItems: () => { },
 
-  startAiOrder: () => {},
-  clearAiOrder: () => {},
+  startAiOrder: () => { },
+  clearAiOrder: () => { },
 });
 
 export const DeliveryOrderAiProvider = ({ children }: { children: ReactNode }) => {
@@ -48,6 +48,14 @@ export const DeliveryOrderAiProvider = ({ children }: { children: ReactNode }) =
       terminal_session_id: 0, // Will be set properly at checkout
       client_id: null,
       total: 0,
+      client_type: "FINAL",
+      order_number: "",
+      order_status: "NEW",
+      payment_status: "PENDING",
+      subtotal: 0,
+      total_amount: 0,
+      currency: 'ARS',
+      is_delivery: true
     } as OrderT;
 
     setAiOrder(tempOrder);

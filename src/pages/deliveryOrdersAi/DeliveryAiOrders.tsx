@@ -66,6 +66,7 @@ export function DeliveryAiOrders() {
             <RefButton
               onClick={handleStartNewOrder}
               btnRef={initiateOrderBtnRef}
+              disabled={false}
             >
               Iniciar nueva orden asistida por AI
             </RefButton>

@@ -90,11 +90,7 @@ const Header = () => {
                                     Registrar pago de cliente
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
-                                <MenubarSeparator />
-                                <MenubarItem onClick={handleOpenSessionsManager}>
-                                    Sesiones abiertas (Dev)
-                                    {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
-                                </MenubarItem>
+
 
                                 {/* <MenubarItem disabled>New Incognito Window</MenubarItem>
                                 <MenubarSeparator />
