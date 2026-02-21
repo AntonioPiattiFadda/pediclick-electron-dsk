@@ -23,9 +23,10 @@ export function AiOrderItemsReview({
     <div className="flex flex-col gap-4 w-fit">
       <div className="flex flex-col gap-2">
         {/* Table Header */}
-        <div className="grid grid-cols-[2fr_1.5fr_80px_240px_100px_50px] gap-2 px-2 py-2 bg-muted/50 rounded-md text-sm font-medium text-muted-foreground">
+        <div className="grid grid-cols-[2fr_1.5fr_120px_80px_240px_100px_50px] gap-2 px-2 py-2 bg-muted/50 rounded-md text-sm font-medium text-muted-foreground">
           <div>Producto</div>
           <div>Presentación</div>
+          <div>Lote</div>
           <div className="text-center">Cantidad</div>
           <div>Precio</div>
           <div className="text-right">Total</div>

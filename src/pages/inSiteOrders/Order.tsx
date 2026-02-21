@@ -1,15 +1,33 @@
 import { CancelClientSelection, ClientSelectorRoot, CreateClient, SelectClient } from "@/components/shared/selectors/clientSelector"
 import { Label } from "@/components/ui/label"
+import Cart from "@/components/shared/Cart"
 import { OrderT } from "@/types/orders"
-import SellingPointProductSelector from "./components/sellingPointProductSelector"
-import ScaleDataDisplay from "./components/scaleDataDisplay"
-import Cart from "./components/cart"
+import { useOrderContext } from "@/context/OrderContext"
+import ProductSelectorOrder from "./components/ProductSelectorOrder"
+import PricingPanel from "./components/PricingPanel"
+import { DeleteOrderBtn } from "./components/deleteOrderBtn"
 
 const Order = ({ order, onChangeOrder }: {
     order: OrderT,
     onChangeOrder: (order: OrderT) => void
 }) => {
 
+    const {
+        orderItems,
+        setOrderItems,
+        orders,
+        setOrders,
+        setactiveOrder,
+        resetAfterOrderCreation,
+    } = useOrderContext()
+
+    const handleAfterCreate = () => {
+        const filteredOrders = orders.filter((o) => o.order_id !== order.order_id);
+        setOrders(filteredOrders);
+        setactiveOrder(filteredOrders[0]?.order_id.toString() || "");
+        setOrderItems(orderItems.filter(it => it.order_id !== order.order_id));
+        resetAfterOrderCreation();
+    }
 
     return (
         <div className="grid grid-cols-[1fr_1fr] space-x-4 p-4 h-[calc(100vh-7rem)] -mt-2">
@@ -34,14 +52,22 @@ const Order = ({ order, onChangeOrder }: {
 
 
 
-                    <SellingPointProductSelector />
+                    <ProductSelectorOrder />
 
                 </div>
 
-                <ScaleDataDisplay order={order} />
+                <PricingPanel order={order} />
 
             </div>
-            <Cart order={order} onChangeOrder={onChangeOrder} />
+            <Cart
+                order={order}
+                onChangeOrder={onChangeOrder}
+                orderItems={orderItems}
+                setOrderItems={setOrderItems}
+                onAfterCreate={handleAfterCreate}
+                deleteOrderBtn={<DeleteOrderBtn orderId={order?.order_id} />}
+                enableMercadoPago={true}
+            />
         </div>
 
     )

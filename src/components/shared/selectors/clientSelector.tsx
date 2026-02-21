@@ -191,7 +191,7 @@ import { Switch } from "@/components/ui/switch";
 import { taxConditionsOpt } from "@/constants";
 import { formatCurrency } from "@/utils/prices";
 import { formatDate } from "@/utils";
-import ClientHistoricalMvts from "@/pages/inSiteOrders/components/clientHistoricalMvts";
+import ClientHistoricalMvts from "@/components/shared/ClientHistoricalMvts";
 
 
 const CreateClient = ({ isShortCut = false }: {

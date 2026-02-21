@@ -17,14 +17,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
+import { useProductItemEditor } from "@/hooks/useProductItemEditor";
 import { OrderItem } from "@/types/orderItems";
-import { PriceType } from "@/types/prices";
 import { Product } from "@/types/products";
 import { ProductPresentation } from "@/types/productPresentation";
+import { Lot } from "@/types/lots";
 import { priceLogicTypeOpt } from "@/constants";
-import { resolveEffectivePrice } from "@/utils/prices";
+import { LotSelector } from "@/components/shared/LotSelector";
 import { Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 interface AiOrderItemRowProps {
   item: OrderItem;
@@ -54,47 +55,48 @@ export function AiOrderItemRow({
     product_presentation_name: item.product_presentation_name,
   });
 
-  const [quantity, setQuantity] = useState<number>(item.quantity);
-  const [price, setPrice] = useState<number>(item.price || 0);
-  const [sellPriceType, setSellPriceType] = useState<PriceType>(
-    item.price_type || "MINOR"
-  );
-  const [selectedPriceId, setSelectedPriceId] = useState<number | null>(null);
+  const editor = useProductItemEditor({
+    productId: selectedProduct.product_id ?? null,
+    productPresentationId:
+      productPresentation.product_presentation_id ?? null,
+    locationId,
+    prices: productPresentation.prices,
+    lots: productPresentation.lots as Lot[] | undefined,
+    unifyLots: false,
+    initialQuantity: item.quantity,
+    initialPrice: item.price,
+    initialPriceType: item.price_type ?? "MINOR",
+  });
 
-  const filteredPrices = useMemo(() => {
-    const allPrices = productPresentation.prices || [];
-    const somePriceHasLocationId = allPrices.some((p) => p.location_id);
-    const firstFiltered = somePriceHasLocationId
-      ? allPrices.filter((p) => p.location_id === locationId)
-      : allPrices;
-    return firstFiltered.filter((p) => p.price_type === sellPriceType);
-  }, [productPresentation, sellPriceType, locationId]);
-
-  // Auto-select first matching price when presentation or price type changes
+  // Emit update whenever relevant editor state or selection changes
   useEffect(() => {
-    const firstPrice = filteredPrices[0] || null;
-    setSelectedPriceId(firstPrice?.price_id ?? null);
-    setPrice(firstPrice ? firstPrice.price / (firstPrice.qty_per_price ?? 1) : 0);
-  }, [filteredPrices]);
-
-  // Emit update whenever relevant state changes
-  useEffect(() => {
-    const newSubtotal = quantity * price;
-    const selectedPrice = filteredPrices.find((p) => p.price_id === selectedPriceId);
+    const selectedPrice = editor.filteredPrices.find(
+      (p) => p.price_id === editor.selectedPriceId
+    );
     onUpdate({
       ...item,
       product_id: selectedProduct.product_id!,
       product_name: selectedProduct.product_name!,
       product_presentation_id: productPresentation.product_presentation_id!,
       product_presentation_name: productPresentation.product_presentation_name!,
-      quantity,
-      price,
-      price_type: sellPriceType,
+      quantity: editor.quantity,
+      price: editor.price,
+      price_type: editor.sellPriceType,
       logic_type: selectedPrice?.logic_type ?? item.logic_type,
-      subtotal: newSubtotal,
-      total: newSubtotal,
+      lot_id: editor.selectedLotId,
+      stock_id: editor.selectedStockId,
+      subtotal: editor.subtotal,
+      total: editor.subtotal,
     });
-  }, [quantity, price, selectedProduct, productPresentation, sellPriceType]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    editor.quantity,
+    editor.price,
+    editor.sellPriceType,
+    editor.selectedLotId,
+    selectedProduct,
+    productPresentation,
+  ]);
 
   const handleProductChange = (product: Partial<Product>) => {
     setSelectedProduct(product as Product);
@@ -107,31 +109,10 @@ export function AiOrderItemRow({
     setProductPresentation(presentation ?? {});
   };
 
-  const handleQuantityChange = (newQty: number) => {
-    setQuantity(newQty);
-    const { effectivePrice, price_id } = resolveEffectivePrice(
-      newQty,
-      selectedPriceId,
-      filteredPrices
-    );
-    if (price_id) {
-      setPrice(effectivePrice);
-      setSelectedPriceId(price_id);
-    }
-  };
-
-  const handleSelectPrice = (priceId: number) => {
-    const found = filteredPrices.find((p) => p.price_id === priceId);
-    if (found) {
-      setSelectedPriceId(priceId);
-      setPrice(found.price / (found.qty_per_price ?? 1));
-    }
-  };
-
   const productId = selectedProduct.product_id!;
 
   return (
-    <div className="grid grid-cols-[2fr_1.5fr_80px_240px_100px_50px] gap-2 items-center py-2 border-b">
+    <div className="grid grid-cols-[2fr_1.5fr_120px_80px_240px_100px_50px] gap-2 items-center py-2 border-b">
       {/* Product Selector */}
       <div className="min-w-[300px]">
         <ProductSelector
@@ -157,12 +138,21 @@ export function AiOrderItemRow({
         )}
       </div>
 
+      {/* Lot Selector */}
+      <div>
+        <LotSelector
+          lots={editor.lots}
+          selectedLotId={editor.selectedLotId}
+          onSelectLot={editor.setSelectedLotId}
+        />
+      </div>
+
       {/* Quantity Input */}
       <Input
         type="number"
         min="1"
-        value={quantity}
-        onChange={(e) => handleQuantityChange(Number(e.target.value))}
+        value={editor.quantity}
+        onChange={(e) => editor.handleQuantityChange(Number(e.target.value))}
         className="text-center"
       />
 
@@ -172,18 +162,18 @@ export function AiOrderItemRow({
         <div className="flex gap-3 items-center text-xs text-muted-foreground">
           <label className="flex items-center gap-1 cursor-pointer select-none">
             <Checkbox
-              checked={sellPriceType === "MAYOR"}
+              checked={editor.sellPriceType === "MAYOR"}
               onCheckedChange={(checked) =>
-                setSellPriceType(checked ? "MAYOR" : "MINOR")
+                editor.setSellPriceType(checked ? "MAYOR" : "MINOR")
               }
             />
             Mayorista
           </label>
           <label className="flex items-center gap-1 cursor-pointer select-none">
             <Checkbox
-              checked={sellPriceType === "MINOR"}
+              checked={editor.sellPriceType === "MINOR"}
               onCheckedChange={(checked) =>
-                setSellPriceType(checked ? "MINOR" : "MAYOR")
+                editor.setSellPriceType(checked ? "MINOR" : "MAYOR")
               }
             />
             Minorista
@@ -191,10 +181,10 @@ export function AiOrderItemRow({
         </div>
 
         {/* Price Select */}
-        {filteredPrices.length > 0 ? (
+        {editor.filteredPrices.length > 0 ? (
           <Select
-            value={selectedPriceId?.toString() || ""}
-            onValueChange={(value) => handleSelectPrice(Number(value))}
+            value={editor.selectedPriceId?.toString() || ""}
+            onValueChange={(value) => editor.handleSelectPrice(Number(value))}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Seleccionar precio" />
@@ -202,13 +192,14 @@ export function AiOrderItemRow({
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Precios</SelectLabel>
-                {filteredPrices.map((p) => (
+                {editor.filteredPrices.map((p) => (
                   <SelectItem
                     key={p.price_id}
                     value={p.price_id?.toString() || ""}
                   >
                     <span className="text-xs">
-                      #{p.price_number} — ${p.price / (p.qty_per_price ?? 1)} —{" "}
+                      #{p.price_number} — ${p.price / (p.qty_per_price ?? 1)}{" "}
+                      —{" "}
                       {priceLogicTypeOpt.find((o) => o.value === p.logic_type)
                         ?.label ?? p.logic_type}{" "}
                       — &gt;={p.qty_per_price}
@@ -226,18 +217,15 @@ export function AiOrderItemRow({
 
         {/* Manual price override */}
         <MoneyInput
-          value={price || undefined}
-          onChange={(value) => {
-            setPrice(value ?? 0);
-            setSelectedPriceId(null);
-          }}
-          resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}-${sellPriceType}`}
+          value={editor.price || undefined}
+          onChange={(value) => editor.setPrice(value ?? 0)}
+          resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}-${editor.sellPriceType}`}
         />
       </div>
 
       {/* Total (read-only) */}
       <div className="text-right font-medium text-sm">
-        ${(quantity * price).toFixed(2)}
+        ${editor.subtotal.toFixed(2)}
       </div>
 
       {/* Actions */}
@@ -247,9 +235,7 @@ export function AiOrderItemRow({
           size="icon"
           onClick={onRemove}
           disabled={!canRemove}
-          title={
-            canRemove ? "Eliminar" : "Debe haber al menos un producto"
-          }
+          title={canRemove ? "Eliminar" : "Debe haber al menos un producto"}
           className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
         >
           <Trash2 className="h-4 w-4" />

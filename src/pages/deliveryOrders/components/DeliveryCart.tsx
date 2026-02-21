@@ -4,7 +4,7 @@ import { getDeliveryOrderItems } from "@/service";
 import { OrderT } from "@/types/orders";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { EmptyCart } from "../../inSiteOrders/components/EmptyCart";
+import { EmptyCart } from "@/components/shared/EmptyCart";
 import { DeliveryCheckout } from "./DeliveryCheckout";
 import { MarkAsDeliveredButton } from "./MarkAsDelivered";
 import { MarkAsDeliveringButton } from "./MarkAsDeliveringButton";

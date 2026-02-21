@@ -16,8 +16,8 @@ import TerminalSessionClosure from "../teminalSessions/terminalSessionClosure/Te
 import OpenSessionsManager from "../teminalSessions/openSessionsManager/OpenSessionsManager";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import UserData from "./UserData";
-import PrinterStatusPopover from "@/components/printer/PrinterStatusPopover";
-import ScaleStatusPopover from "@/components/scales/ScaleStatusPopover";
+import PrinterStatusPopover from "@/components/hardware/printer/PrinterStatusPopover";
+import ScaleStatusPopover from "@/components/hardware/scales/ScaleStatusPopover";
 import { useState } from "react";
 
 
@@ -34,9 +34,9 @@ const Header = () => {
         setTerminalSessionClosure(true);
     }
 
-    const handleOpenSessionsManager = () => {
-        setOpenSessionsManagerOpen(true);
-    }
+    // const handleOpenSessionsManager = () => {
+    //     setOpenSessionsManagerOpen(true);
+    // }
 
     const handleNavigateTo = (path: string) => {
         navigate(path);

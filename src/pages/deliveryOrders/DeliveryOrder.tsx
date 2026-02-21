@@ -6,10 +6,10 @@ import {
 } from "@/components/shared/selectors/clientSelector";
 import { Label } from "@/components/ui/label";
 import { OrderT } from "@/types/orders";
-import { DeliveryProductSelector } from "./components/DeliveryProductSelector";
-import { DeliveryScaleDataDisplay } from "./components/DeliveryScaleDataDisplay";
+import { ProductSelectorDeliveryOrder } from "./components/ProductSelectorDeliveryOrder";
 import { DeliveryCart } from "./components/DeliveryCart";
 import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
+import { PricingPanel } from "./components/PricingPanel";
 
 const DeliveryOrder = ({
   order,
@@ -46,10 +46,10 @@ const DeliveryOrder = ({
             </ClientSelectorRoot>
           </div>
 
-          <DeliveryProductSelector />
+          <ProductSelectorDeliveryOrder />
         </div>
 
-        <DeliveryScaleDataDisplay order={order} />
+        <PricingPanel order={order} />
       </div>
       <DeliveryCart order={order} />
     </div>
