@@ -23,10 +23,10 @@ const userSlice = createSlice({
   initialState,
   reducers: {
     setUser: (_state, action: PayloadAction<UserProfile>) => {
-      return action.payload; // reemplaza el user actual por el nuevo
+      return action.payload;
     },
     clearUser: () => {
-      return initialState; // resetea al estado inicial
+      return initialState;
     },
   },
 });

@@ -7,7 +7,9 @@ import {
     MenubarSeparator,
     MenubarTrigger
 } from "@/components/ui/menubar";
-import { useModalsContext } from "@/context/ModalsContext";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/stores/store";
+import { setClientPaymentModalOpen, setTerminalSessionClosure } from "@/stores/modalsSlice";
 import { Menu, Sparkle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
@@ -22,16 +24,16 @@ import { useState } from "react";
 
 
 const Header = () => {
-    const { setClientPaymentModalOpen, setTerminalSessionClosure } = useModalsContext();
+    const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const [openSessionsManagerOpen, setOpenSessionsManagerOpen] = useState(false);
 
     const handleOpenClientPaymentModal = () => {
-        setClientPaymentModalOpen(true);
+        dispatch(setClientPaymentModalOpen(true));
     }
 
     const handleOpenTerminalSessionClosureModal = () => {
-        setTerminalSessionClosure(true);
+        dispatch(setTerminalSessionClosure(true));
     }
 
     // const handleOpenSessionsManager = () => {

@@ -8,7 +8,9 @@ import {
     DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { useModalsContext } from "@/context/ModalsContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setTerminalSessionClosure as setTerminalSessionClosureAction } from "@/stores/modalsSlice";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
 import { getTerminalSessionClosureData } from "@/service/terminalSessions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,7 +24,9 @@ import { formatCurrency } from "@/utils/prices";
 import { paymentMethodOpt } from "@/constants";
 
 const TerminalSessionClosure = () => {
-    const { terminalSessionClosure, setTerminalSessionClosure } = useModalsContext();
+    const dispatch = useDispatch<AppDispatch>();
+    const terminalSessionClosure = useSelector((state: RootState) => state.modals.terminalSessionClosure);
+    const setTerminalSessionClosure = (v: boolean) => dispatch(setTerminalSessionClosureAction(v));
     const { handleGetTerminalSessionId } = useTerminalSessionData();
     const queryClient = useQueryClient();
 

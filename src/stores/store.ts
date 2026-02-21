@@ -2,11 +2,13 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./userSlice";
 import scaleReducer from "./scaleSlice";
+import modalsReducer from "./modalsSlice";
 
 export const store = configureStore({
   reducer: {
     user: userReducer,
     scale: scaleReducer,
+    modals: modalsReducer,
   },
 });
 

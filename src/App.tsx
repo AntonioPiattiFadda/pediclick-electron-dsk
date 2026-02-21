@@ -9,7 +9,6 @@ import { store } from "./stores/store";
 import { OrderProvider } from "./context/OrderContext";
 import { Toaster } from "sonner";
 import { ShortCutProvider } from "./context/ShortCutContext";
-import { ModalsProvider } from "./context/ModalsContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 import { ScaleIpcBridge } from "./context/ScaleContext";
 import SetupSession from "./pages/setupSession/SetupSession";
@@ -30,7 +29,6 @@ function App() {
         <Toaster />
         <ScaleIpcBridge />
         <ShortCutProvider>
-          <ModalsProvider>
             <OrderProvider >
 
               <HashRouter>
@@ -86,7 +84,6 @@ function App() {
                 </Layout>
               </HashRouter>
             </OrderProvider>
-          </ModalsProvider>
         </ShortCutProvider>
       </Provider>
     </QueryClientProvider>

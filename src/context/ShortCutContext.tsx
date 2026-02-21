@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 
 type FocusItem = {
     id: string;
@@ -22,18 +22,23 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
 
     const itemsRef = useRef<FocusItem[]>([]);
 
-
-    const register = (item: FocusItem) => {
+    // Stable callbacks — itemsRef.current is mutable, no deps needed
+    const register = useCallback((item: FocusItem) => {
         itemsRef.current = [
             ...itemsRef.current.filter(i => i.id !== item.id),
             item,
-        ]
-        // .sort((a, b) => a.order - b.order);
-    };
+        ];
+    }, []);
 
-    const unregister = (id: string) => {
+    const unregister = useCallback((id: string) => {
         itemsRef.current = itemsRef.current.filter(i => i.id !== id);
-    };
+    }, []);
+
+    const handleFocusWithOrderNumber = useCallback((order: number) => {
+        const item = itemsRef.current.find(i => i.order === order);
+        item?.ref.current?.focus();
+        item?.ref.current?.select();
+    }, []);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,36 +52,20 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
                 e.preventDefault();
                 console.log("itemsRef.current", itemsRef.current.length);
                 console.log("itemsRef.current", itemsRef.current);
-                // const first = itemsRef.current[0]?.ref.current;
-                // first?.focus();
-                // first?.select();
                 return;
             }
 
-
-            // 🟢 NUEVO: si no hay ningún input enfocado
             if (index === -1) {
-
                 if (itemsRef.current.length === 0) return;
-                console.log("itemsRef.current", itemsRef.current.length);
-                console.log("itemsRef.current", itemsRef.current);
                 if (e.key === "ArrowDown") {
                     e.preventDefault();
-                    console.log("itemsRef.current", itemsRef.current.length);
-                    console.log("itemsRef.current", itemsRef.current);
                     const first = itemsRef.current[0]?.ref.current;
                     first?.focus();
                     first?.select();
                 }
-
                 return;
             }
 
-
-            console.log("itemsRef.current", itemsRef.current.length);
-            console.log("itemsRef.current", itemsRef.current);
-
-            // 🔽 navegación normal
             if (e.key === "ArrowDown") {
                 e.preventDefault();
                 const next = itemsRef.current[index + 1]?.ref.current;
@@ -86,7 +75,6 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
 
             if (e.key === "ArrowUp") {
                 e.preventDefault();
-
                 const prev = itemsRef.current[index - 1]?.ref.current;
                 prev?.focus();
                 prev?.select();
@@ -97,14 +85,14 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    const handleFocusWithOrderNumber = (order: number) => {
-        const item = itemsRef.current.find(i => i.order === order);
-        item?.ref.current?.focus();
-        item?.ref.current?.select();
-    };
+    // Stable value — only changes if the callbacks above change (they never do)
+    const value = useMemo(
+        () => ({ register, unregister, handleFocusWithOrderNumber }),
+        [register, unregister, handleFocusWithOrderNumber]
+    );
 
     return (
-        <ShortCutContext.Provider value={{ register, unregister, handleFocusWithOrderNumber }}>
+        <ShortCutContext.Provider value={value}>
             {children}
         </ShortCutContext.Provider>
     );
@@ -112,4 +100,3 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const useShortCutContext = () => useContext(ShortCutContext);
-//

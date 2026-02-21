@@ -13,7 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { emptyPayments, paymentMethodOpt } from "@/constants";
-import { useModalsContext } from "@/context/ModalsContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setClientPaymentModalOpen as setClientPaymentModalOpenAction } from "@/stores/modalsSlice";
 import { registerClientPayment } from "@/service/payments";
 import { CheckOutOptions } from '@/types';
 import type { Client } from '@/types/clients';
@@ -29,7 +31,9 @@ import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
 const RegisterClientPayment = ({ client }: {
     client?: Client;
 }) => {
-    const { clientPaymentModalOpen, setClientPaymentModalOpen } = useModalsContext();
+    const dispatch = useDispatch<AppDispatch>();
+    const clientPaymentModalOpen = useSelector((state: RootState) => state.modals.clientPaymentModalOpen);
+    const setClientPaymentModalOpen = (v: boolean) => dispatch(setClientPaymentModalOpenAction(v));
 
     const [selectedClient, setSelectedClient] = useState<Client | null>(client || null);
 
