@@ -11,7 +11,7 @@ import { Toaster } from "sonner";
 import { ShortCutProvider } from "./context/ShortCutContext";
 import { ModalsProvider } from "./context/ModalsContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
-import { ScaleProvider } from "./context/ScaleContext";
+import { ScaleIpcBridge } from "./context/ScaleContext";
 import SetupSession from "./pages/setupSession/SetupSession";
 import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
 import { DeliveryOrderAiProvider } from "./context/DeliveryOrderAiContext";
@@ -23,81 +23,73 @@ const queryClient = new QueryClient();
 
 function App() {
 
-  // const handleLogout = () => {
-  //   setSession(null);
-  // };
-
   return (
 
     <QueryClientProvider client={queryClient}>
-      {/* <ReactHotToast
-        position="bottom-right" /> */}
-      <Toaster />
-      <ScaleProvider>
+      <Provider store={store}>
+        <Toaster />
+        <ScaleIpcBridge />
         <ShortCutProvider>
           <ModalsProvider>
             <OrderProvider >
 
-              <Provider store={store}>
-
-                <HashRouter>
-                  <Layout>
+              <HashRouter>
+                <Layout>
 
 
-                    <Routes>
-                      <Route
-                        path="/"
-                        element={<SignIn />}
-                      />
+                  <Routes>
+                    <Route
+                      path="/"
+                      element={<SignIn />}
+                    />
 
-                      <Route
-                        path="/login"
-                        element={
-                          <SignIn />
+                    <Route
+                      path="/login"
+                      element={
+                        <SignIn />
 
-                        }
-                      />
+                      }
+                    />
 
-                      <Route
-                        path="/setup-session"
-                        element={<SetupSession />}
-                      />
+                    <Route
+                      path="/setup-session"
+                      element={<SetupSession />}
+                    />
 
-                      <Route
-                        path="/in-site-orders"
-                        element={
-                          <InSiteOrders />
-                        }
-                      />
+                    <Route
+                      path="/in-site-orders"
+                      element={
+                        <InSiteOrders />
+                      }
+                    />
 
-                      <Route
-                        path="/delivery-orders"
-                        element={
-                          <DeliveryOrderProvider>
-                            <DeliveryOrders />
-                          </DeliveryOrderProvider>
-                        }
-                      />
+                    <Route
+                      path="/delivery-orders"
+                      element={
+                        <DeliveryOrderProvider>
+                          <DeliveryOrders />
+                        </DeliveryOrderProvider>
+                      }
+                    />
 
-                      <Route
-                        path="/delivery-orders-ai"
-                        element={
-                          <DeliveryOrderAiProvider>
-                            <DeliveryAiOrders />
-                          </DeliveryOrderAiProvider>
-                        }
-                      />
+                    <Route
+                      path="/delivery-orders-ai"
+                      element={
+                        <DeliveryOrderAiProvider>
+                          <DeliveryAiOrders />
+                        </DeliveryOrderAiProvider>
+                      }
+                    />
 
-                      <Route path="*" element={<Navigate to="/" />} />
-                    </Routes>
-                  </Layout>
-                </HashRouter>
-              </Provider>
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </Layout>
+              </HashRouter>
             </OrderProvider>
           </ModalsProvider>
         </ShortCutProvider>
-      </ScaleProvider >
-    </QueryClientProvider >
+      </Provider>
+    </QueryClientProvider>
   );
 }
 

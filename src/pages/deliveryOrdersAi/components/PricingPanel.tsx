@@ -1,7 +1,9 @@
 import { Switch } from "@/components/ui/switch";
 import { useOrderContext } from "@/context/OrderContext";
 import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext";
-import { useScaleContext } from "@/context/ScaleContext";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "@/stores/store";
+import { setWeight, setUnitsCount } from "@/stores/scaleSlice";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { OrderT } from "@/types/orders";
 import type { PriceLogicType, PriceType } from "@/types/prices";
@@ -53,7 +55,9 @@ const PricingPanel = ({ order }: {
     const [allowedToOverSelling] = useState(true);
 
 
-    const { weightKg, setWeightKg, unitsCount, setUnitsCount, } = useScaleContext();
+    const weightKg = useSelector((state: RootState) => state.scale.weightKg);
+    const unitsCount = useSelector((state: RootState) => state.scale.unitsCount);
+    const dispatch = useDispatch();
 
     const { handleGetLocationId } = useGetLocationData()
 
@@ -367,9 +371,9 @@ const PricingPanel = ({ order }: {
                                     } = resolveEffectivePrice(Number(newValue), selectedPriceId, filteredPrices);
 
                                     if (selectedProductPresentation?.sell_type === "WEIGHT") {
-                                        setWeightKg(newValue === '' ? undefined : Number(newValue))
+                                        dispatch(setWeight(newValue === '' ? undefined : Number(newValue)));
                                     } else {
-                                        setUnitsCount(newValue === '' ? undefined : Number(newValue))
+                                        dispatch(setUnitsCount(newValue === '' ? undefined : Number(newValue)));
                                     }
 
                                     if (!calculatedPriceId) {

@@ -1,5 +1,7 @@
 import { Switch } from "@/components/ui/switch";
-import { useScaleContext } from "@/context/ScaleContext";
+import { useSelector, useDispatch } from "react-redux";
+import type { RootState } from "@/stores/store";
+import { setWeight, setUnitsCount } from "@/stores/scaleSlice";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useProductItemEditor } from "@/hooks/useProductItemEditor";
 import { OrderItem } from "@/types/orderItems";
@@ -43,7 +45,9 @@ const PricingPanel = ({
 
     const [allowedToOverSelling] = useState(true);
 
-    const { weightKg, setWeightKg, unitsCount, setUnitsCount } = useScaleContext();
+    const weightKg = useSelector((state: RootState) => state.scale.weightKg);
+    const unitsCount = useSelector((state: RootState) => state.scale.unitsCount);
+    const dispatch = useDispatch();
     const { handleGetLocationId } = useGetLocationData();
     const locationId = handleGetLocationId();
 
@@ -248,9 +252,9 @@ const PricingPanel = ({
                                     const numValue = newValue === '' ? undefined : Number(newValue);
 
                                     if (productPresentation.sell_type === "WEIGHT") {
-                                        setWeightKg(numValue);
+                                        dispatch(setWeight(numValue));
                                     } else {
-                                        setUnitsCount(numValue);
+                                        dispatch(setUnitsCount(numValue));
                                     }
 
                                     if (numValue !== undefined) {

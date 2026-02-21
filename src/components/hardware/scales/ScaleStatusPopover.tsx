@@ -2,13 +2,15 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusDisplay } from "@/components/hardware/statusDisplay";
-import { useScaleContext } from "@/context/ScaleContext";
 import useScaleConfig from "@/hooks/useScaleConfig";
 import { DevicesStatus } from "@/types/devices";
 import { Scale, RefreshCw } from "lucide-react";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/stores/store";
 
 const ScaleStatusPopover = () => {
-    const { isScaleConnected, isScaleError } = useScaleContext();
+    const isScaleConnected = useSelector((state: RootState) => state.scale.isScaleConnected);
+    const isScaleError = useSelector((state: RootState) => state.scale.isScaleError);
     const {
         availablePorts,
         selectedPort,
