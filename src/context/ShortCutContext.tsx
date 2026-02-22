@@ -44,22 +44,20 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
         const handleKeyDown = (e: KeyboardEvent) => {
             const active = document.activeElement as HTMLElement | null;
 
-            const index = itemsRef.current.findIndex(
-                i => i.ref.current === active
-            );
+            // Always navigate in ascending order, regardless of registration order
+            const sorted = [...itemsRef.current].sort((a, b) => a.order - b.order);
+            const index = sorted.findIndex(i => i.ref.current === active);
 
             if (e.key === "Enter") {
                 e.preventDefault();
-                console.log("itemsRef.current", itemsRef.current.length);
-                console.log("itemsRef.current", itemsRef.current);
                 return;
             }
 
             if (index === -1) {
-                if (itemsRef.current.length === 0) return;
+                if (sorted.length === 0) return;
                 if (e.key === "ArrowDown") {
                     e.preventDefault();
-                    const first = itemsRef.current[0]?.ref.current;
+                    const first = sorted[0]?.ref.current;
                     first?.focus();
                     first?.select();
                 }
@@ -68,14 +66,14 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
 
             if (e.key === "ArrowDown") {
                 e.preventDefault();
-                const next = itemsRef.current[index + 1]?.ref.current;
+                const next = sorted[index + 1]?.ref.current;
                 next?.focus();
                 next?.select();
             }
 
             if (e.key === "ArrowUp") {
                 e.preventDefault();
-                const prev = itemsRef.current[index - 1]?.ref.current;
+                const prev = sorted[index - 1]?.ref.current;
                 prev?.focus();
                 prev?.select();
             }

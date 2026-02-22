@@ -23,6 +23,8 @@ import { PricesSelector } from "@/components/shared/PricesSelector";
 import StockAvailability from "@/components/shared/StockAvailability";
 import StockAvailabilityUnified from "@/components/shared/StockAvailabilityUnified";
 import { MoneyInput } from "@/components/shared/MoneyInput";
+import { useFocusableInput } from "@/hooks/useFocus"
+import { FOCUS_ORDER } from "@/constants/focusOrder"
 
 const hasProduct = (p: Product) => Boolean(p?.product_id);
 
@@ -41,6 +43,10 @@ const PricingPanel = ({
     orderItems: OrderItem[];
     onAddItems: (items: OrderItem[]) => void | Promise<void>;
 }) => {
+
+
+    const quantityShortCodeRef = useFocusableInput("quantity-shortcode", FOCUS_ORDER.QUANTITY);
+
     const [unifyLots, setUnifyLots] = useState(true);
 
     const [allowedToOverSelling] = useState(true);
@@ -243,8 +249,10 @@ const PricingPanel = ({
                             resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}`}
                         />
 
+
                         <InputGroup>
-                            <InputGroupInput
+                            <input
+                                ref={quantityShortCodeRef}
                                 type="number"
                                 value={productPresentation.sell_type === "WEIGHT" ? weightKg : unitsCount || undefined}
                                 onChange={(e) => {
@@ -262,7 +270,29 @@ const PricingPanel = ({
                                     }
                                 }}
                                 placeholder="--"
+                                className="border-none focus:ring-0 outline-none"
                             />
+
+                            {/* <InputGroupInput
+                                ref={quantityShortCodeRef}
+                                type="number"
+                                value={productPresentation.sell_type === "WEIGHT" ? weightKg : unitsCount || undefined}
+                                onChange={(e) => {
+                                    const newValue = e.target.value;
+                                    const numValue = newValue === '' ? undefined : Number(newValue);
+
+                                    if (productPresentation.sell_type === "WEIGHT") {
+                                        dispatch(setWeight(numValue));
+                                    } else {
+                                        dispatch(setUnitsCount(numValue));
+                                    }
+
+                                    if (numValue !== undefined) {
+                                        editor.handleQuantityChange(numValue);
+                                    }
+                                }}
+                                placeholder="--"
+                            /> */}
                             <InputGroupAddon align="inline-start">
                                 <InputGroupButton>{'x'}</InputGroupButton>
                             </InputGroupAddon>

@@ -7,6 +7,7 @@ import { Fraction } from '../../../components/shared/transformation/Fraction'
 import { Label } from '../../../components/ui/label'
 import { useGetLocationData } from "@/hooks/useGetLocationData"
 import { useFocusableInput } from "@/hooks/useFocus"
+import { FOCUS_ORDER } from "@/constants/focusOrder"
 
 const ProductSelectorOrder = () => {
     const dispatch = useDispatch<AppDispatch>()
@@ -18,8 +19,8 @@ const ProductSelectorOrder = () => {
     const noProductNorProductPresentationSelected =
         !selectedProduct.product_id || !productPresentation?.product_presentation_id;
 
-    const productShortCodeRef = useFocusableInput("product-shortcode", 1);
-    const productPresentationShortCodeRef = useFocusableInput("product-presentation-shortcode", 2);
+    const productShortCodeRef = useFocusableInput("product-shortcode", FOCUS_ORDER.PRODUCT);
+    const productPresentationShortCodeRef = useFocusableInput("product-presentation-shortcode", FOCUS_ORDER.PRODUCT_PRESENTATION);
 
     return (
         <>

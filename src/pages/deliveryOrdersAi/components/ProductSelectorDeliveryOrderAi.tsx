@@ -15,6 +15,7 @@ import { Fraction } from '../../../components/shared/transformation/Fraction'
 import { Label } from '../../../components/ui/label'
 import { useGetLocationData } from "@/hooks/useGetLocationData"
 import { useFocusableInput } from "@/hooks/useFocus"
+import { FOCUS_ORDER } from "@/constants/focusOrder"
 
 const ProductSelectorDeliveryOrderAi = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -45,8 +46,8 @@ const ProductSelectorDeliveryOrderAi = () => {
 
     const noProductNorProductPresentationSelected = !selectedProduct.product_id || !productPresentation?.product_presentation_id || selectedStock?.quantity === 0;
 
-    const productShortCodeRef = useFocusableInput("product-shortcode", 1);
-    const productPresentationShortCodeRef = useFocusableInput("product-presentation-shortcode", 2);
+    const productShortCodeRef = useFocusableInput("product-shortcode", FOCUS_ORDER.PRODUCT);
+    const productPresentationShortCodeRef = useFocusableInput("product-presentation-shortcode", FOCUS_ORDER.PRODUCT_PRESENTATION);
 
     return (<>
         <div className='flex flex-col gap-2'>

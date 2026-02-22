@@ -27,6 +27,8 @@ import { PricesSelector } from "@/components/shared/PricesSelector";
 import StockAvailability from "@/components/shared/StockAvailability";
 import StockAvailabilityUnified from "@/components/shared/StockAvailabilityUnified";
 import { MoneyInput } from "@/components/shared/MoneyInput";
+import { useFocusableInput } from "@/hooks/useFocus";
+import { FOCUS_ORDER } from "@/constants/focusOrder";
 
 const hasProduct = (p: Product) => Boolean(p?.product_id);
 
@@ -34,6 +36,8 @@ const PricingPanel = ({ order }: {
     order: OrderT;
 }) => {
     const [unifyLots, setUnifyLots] = useState(true);
+
+    const quantityShortCodeRef = useFocusableInput("quantity-shortcode", FOCUS_ORDER.QUANTITY);
 
     const dispatch = useDispatch<AppDispatch>();
 
@@ -319,6 +323,7 @@ const PricingPanel = ({ order }: {
 
                         <InputGroup>
                             <InputGroupInput
+                                ref={quantityShortCodeRef}
                                 type="number"
                                 value={selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount || undefined}
                                 onChange={(e) => {

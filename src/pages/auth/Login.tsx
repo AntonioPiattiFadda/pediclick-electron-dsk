@@ -87,7 +87,7 @@ export function SignIn() {
     //   description="Ingresa tus credenciales para acceder a tu cuenta"
     // >
     <div className="w-screen flex items-center justify-center relative">
-      <div className="absolute top-14 right-14 text-black">V: 0.0.8</div>
+      <div className="absolute top-14 right-14 text-black">V: 0.1.0</div>
       {/* <div className="absolute top-24 right-14 text-black hover:bg-gray-200"><button onClick={handlePrintTest}>Print Test</button></div> */}
       {/* <div className="absolute -top-40 right-[50%] text-black">
 
