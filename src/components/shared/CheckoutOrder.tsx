@@ -14,7 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RefButton } from "@/components/ui/refButton";
 import { emptyPayments, paymentMethodOpt, } from "@/constants";
-import { useOrderContext } from "@/context/OrderContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setIsCheckOutOpen as setIsCheckOutOpenAction } from "@/stores/orderSlice";
 import { CheckOutOptions } from "@/types";
 import { OrderItem } from "@/types/orderItems";
 import { Payment } from "@/types/payments";
@@ -52,7 +54,9 @@ export default function CheckoutOrder({
   enableMercadoPago?: boolean;
 }) {
 
-  const { isCheckOutOpen, setIsCheckOutOpen } = useOrderContext();
+  const dispatch = useDispatch<AppDispatch>();
+  const isCheckOutOpen = useSelector((state: RootState) => state.order.isCheckOutOpen);
+  const setIsCheckOutOpen = (v: boolean) => dispatch(setIsCheckOutOpenAction(v));
 
   const items = useMemo(
     () =>

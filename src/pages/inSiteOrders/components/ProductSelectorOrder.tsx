@@ -1,4 +1,6 @@
-import { useOrderContext } from "@/context/OrderContext"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState, AppDispatch } from "@/stores/store"
+import { setSelectedProduct, setProductPresentation } from "@/stores/orderSlice"
 import { ProductPresentationSelectorRoot, SelectProductPresentation } from '../../../components/shared/selectors/productPresentationSelector'
 import ProductSelector from '../../../components/shared/selectors/productSelector'
 import { Fraction } from '../../../components/shared/transformation/Fraction'
@@ -7,12 +9,9 @@ import { useGetLocationData } from "@/hooks/useGetLocationData"
 import { useFocusableInput } from "@/hooks/useFocus"
 
 const ProductSelectorOrder = () => {
-    const {
-        selectedProduct,
-        setSelectedProduct,
-        productPresentation,
-        setProductPresentation,
-    } = useOrderContext();
+    const dispatch = useDispatch<AppDispatch>()
+    const selectedProduct = useSelector((state: RootState) => state.order.selectedProduct)
+    const productPresentation = useSelector((state: RootState) => state.order.productPresentation)
 
     const { handleGetLocationId } = useGetLocationData();
 
@@ -32,7 +31,7 @@ const ProductSelectorOrder = () => {
                             focusRef={productShortCodeRef}
                             value={selectedProduct}
                             onChange={(value) =>
-                                setSelectedProduct({ ...selectedProduct, ...value })
+                                dispatch(setSelectedProduct({ ...selectedProduct, ...value }))
                             }
                         />
                     </div>
@@ -43,7 +42,7 @@ const ProductSelectorOrder = () => {
                             productId={selectedProduct.product_id!}
                             value={productPresentation}
                             onChange={(value) => {
-                                if (value) setProductPresentation(value);
+                                if (value) dispatch(setProductPresentation(value));
                             }}
                             isFetchWithLots={true}
                             isFetchWithLotContainersLocation={false}

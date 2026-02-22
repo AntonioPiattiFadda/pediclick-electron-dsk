@@ -1,23 +1,33 @@
 import SharedPricingPanel from "@/components/shared/PricingPanel";
-import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
-import { getDeliveryOrderItems } from "@/service";
+import { addDeliveryOrderItem, getDeliveryOrderItems } from "@/service";
 import { OrderItem } from "@/types/orderItems";
 import { OrderT } from "@/types/orders";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/stores/store";
 
 export const PricingPanel = ({ order }: { order: OrderT }) => {
-    const {
-        selectedProduct,
-        productPresentation,
-        isCheckOutOpen,
-        addItemToOrder,
-    } = useDeliveryOrderContext();
+    const selectedProduct = useSelector((state: RootState) => state.deliveryOrder.selectedProduct);
+    const productPresentation = useSelector((state: RootState) => state.deliveryOrder.productPresentation);
+    const isCheckOutOpen = useSelector((state: RootState) => state.deliveryOrder.isCheckOutOpen);
+
+    const queryClient = useQueryClient();
 
     const { data: orderItems = [] } = useQuery({
         queryKey: ["delivery-order-items", order.order_id],
         queryFn: async () => getDeliveryOrderItems(order.order_id!),
         enabled: !!order.order_id,
         refetchOnWindowFocus: true,
+    });
+
+    const addItemMutation = useMutation({
+        mutationFn: async (itemData: Omit<OrderItem, "order_item_id">) => {
+            if (!order.order_id) throw new Error("No active delivery order");
+            return addDeliveryOrderItem(order.order_id, itemData as OrderItem);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["delivery-order-items", order.order_id] });
+        },
     });
 
     const handleAddItems = async (items: OrderItem[]) => {
@@ -42,7 +52,7 @@ export const PricingPanel = ({ order }: { order: OrderT }) => {
                 is_deleted: item.is_deleted,
                 created_at: item.created_at,
             };
-            await addItemToOrder(itemToAdd);
+            await addItemMutation.mutateAsync(itemToAdd);
         }
     };
 

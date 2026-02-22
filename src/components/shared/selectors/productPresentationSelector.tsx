@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/select";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useOrderContext } from "@/context/OrderContext";
+import { useDispatch } from "react-redux";
+import { setProductPresentations } from "@/stores/orderSlice";
 import { createProductPresentation, getProductPresentations } from "@/service/productPresentations";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Product } from "@/types/products";
@@ -97,7 +98,7 @@ const ProductPresentationSelectorRoot = ({
 
     console.log("Rendering ProductPresentationSelectorRoot with productId:", productId, "isFetchWithLots:", isFetchWithLots, "isFetchWithLotContainersLocation:", isFetchWithLotContainersLocation, "locationId:", locationId);
 
-    const { setProductPresentations } = useOrderContext();
+    const dispatch = useDispatch();
 
     const [shortCode, setShortCode] = useState<number | null>(null);
 
@@ -110,7 +111,7 @@ const ProductPresentationSelectorRoot = ({
         queryKey: ["product_presentations", Number(productId)],
         queryFn: async () => {
             const presentations = await getProductPresentations(productId, isFetchWithLots, isFetchWithLotContainersLocation, locationId);
-            setProductPresentations(presentations as any);
+            dispatch(setProductPresentations(presentations as any));
             return presentations;
         },
         enabled: !!productId,

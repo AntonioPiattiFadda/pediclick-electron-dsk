@@ -1,11 +1,17 @@
 import { Switch } from "@/components/ui/switch";
-import { useOrderContext } from "@/context/OrderContext";
-import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext";
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "@/stores/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import {
+    setSelectedPriceId,
+    setSellPriceType,
+    setEffectivePrice,
+    setSelectedLotId,
+} from "@/stores/orderSlice";
+import { setAiOrderItems } from "@/stores/deliveryOrderAiSlice";
 import { setWeight, setUnitsCount } from "@/stores/scaleSlice";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { OrderT } from "@/types/orders";
+import { OrderItem } from "@/types/orderItems";
 import type { PriceLogicType, PriceType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import { getLotsAndStockFromFirtsToLast } from "@/utils";
@@ -21,9 +27,6 @@ import { PricesSelector } from "@/components/shared/PricesSelector";
 import StockAvailability from "@/components/shared/StockAvailability";
 import StockAvailabilityUnified from "@/components/shared/StockAvailabilityUnified";
 import { MoneyInput } from "@/components/shared/MoneyInput";
-// TODO PREGUNTAR AL ERIC SI EN ALGUNA SITUACION SE TIENEN QUE ELEGIR LOS PRECIOS DE DESCUENTO MANUALMENTE
-// TODO O SI SIEMPRE SE ELIGEN AUTOMATICAMENTE SEGUN LA CANTIDAD
-// TODO LOS PRECIOS DE LIMITED_OFFER TMB ES POR CANTIDAD?
 
 const hasProduct = (p: Product) => Boolean(p?.product_id);
 
@@ -32,32 +35,26 @@ const PricingPanel = ({ order }: {
 }) => {
     const [unifyLots, setUnifyLots] = useState(true);
 
-    const {
-        selectedProduct,
-        productPresentations,
-        productPresentation,
-        selectedPriceId,
-        setSelectedPriceId,
-        sellPriceType,
-        setSellPriceType,
-        setEffectivePrice,
-        effectivePrice,
-        selectedLotId,
-        setSelectedLotId,
-        isCheckOutOpen
-    } = useOrderContext();
+    const dispatch = useDispatch<AppDispatch>();
 
-    const {
-        orderItems,
-        setOrderItems
-    } = useDeliveryOrderAiContext();
-
-    const [allowedToOverSelling] = useState(true);
-
-
+    const selectedProduct = useSelector((state: RootState) => state.order.selectedProduct);
+    const productPresentations = useSelector((state: RootState) => state.order.productPresentations);
+    const productPresentation = useSelector((state: RootState) => state.order.productPresentation);
+    const selectedPriceId = useSelector((state: RootState) => state.order.selectedPriceId);
+    const sellPriceType = useSelector((state: RootState) => state.order.sellPriceType);
+    const effectivePrice = useSelector((state: RootState) => state.order.effectivePrice);
+    const selectedLotId = useSelector((state: RootState) => state.order.selectedLotId);
+    const isCheckOutOpen = useSelector((state: RootState) => state.order.isCheckOutOpen);
     const weightKg = useSelector((state: RootState) => state.scale.weightKg);
     const unitsCount = useSelector((state: RootState) => state.scale.unitsCount);
-    const dispatch = useDispatch();
+    const orderItems = useSelector((state: RootState) => state.deliveryOrderAi.orderItems);
+
+    const setOrderItems = (updater: OrderItem[] | ((prev: OrderItem[]) => OrderItem[])) => {
+        const next = typeof updater === 'function' ? updater(orderItems) : updater;
+        dispatch(setAiOrderItems(next));
+    };
+
+    const [allowedToOverSelling] = useState(true);
 
     const { handleGetLocationId } = useGetLocationData()
 
@@ -173,14 +170,11 @@ const PricingPanel = ({ order }: {
     const selectedPrice = filteredPrices.find((p) => p.price_id === selectedPriceId) || null;
 
     const handleSelectPrice = (priceId: number) => {
-        setSelectedPriceId(priceId);
+        dispatch(setSelectedPriceId(priceId));
     }
 
-    // TODO Esta funcion me tiene que devolver un selectedPrice porque necesito sus datos
     const total = effectivePrice * (selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg ?? 0 : unitsCount ?? 0);
-    // Try to resolve the price_id based on the selected unit price (if coming from an existing lot price)
 
-    // TODO El can add va a depender de si unificamos el stock o no
     const canAdd =
         hasProduct(selectedProduct) &&
         Number(effectivePrice) > 0 &&
@@ -199,8 +193,6 @@ const PricingPanel = ({ order }: {
 
 
     const handleAddItem = () => {
-        // TODO logica de seleccionar los stocks de los lotes mas viejos primeros en caso de unified y unificar la ui en el cart entonces al eliminar productos del cart tendremos que hacer los mismo.
-        // FIXME en el calculo de items tengo que pasar la logica de generar stock negativo en el ultimo stock cuando tenga permitida la overselling
         const itemsCalculated = getLotsAndStockFromFirtsToLast({
             lots: lots || [],
             product_id: selectedProduct.product_id as number,
@@ -224,30 +216,6 @@ const PricingPanel = ({ order }: {
 
         console.log("itemsCalculated:", itemsCalculated);
 
-
-        // const item: OrderItem = {
-        //     product_id: selectedProduct.product_id as number,
-        //     product_name: selectedProduct.product_name,
-        //     product_presentation_id: productPresentation.product_presentation_id as number,
-        //     product_presentation_name: productPresentation.product_presentation_name as string,
-        //     stock_id: selectedStock?.stock_id as number,
-        //     price_type: selectedPrice?.price_type as PriceType,
-        //     logic_type: selectedPrice?.logic_type as PriceLogicType,
-        //     quantity: Number(quantity),
-        //     price: selectedPrice ? selectedPrice.price / (selectedPrice.qty_per_price ?? 1) : 0,
-        //     subtotal: Number(total),
-        //     total: Number(total),
-        //     created_at: new Date().toISOString(),
-        //     order_id: order.order_id as number,
-        //     is_deleted: false,
-        //     lot_id: selectedLotId as number,
-        //     status: 'COMPLETED',
-        //     location_id: handleGetLocationId(),
-        // };
-
-
-
-        // Push new item to order
         setOrderItems((prev) => [...prev, ...itemsCalculated]);
     };
 
@@ -259,7 +227,6 @@ const PricingPanel = ({ order }: {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter" && !isCheckOutOpen) {
                 e.preventDefault();
-                // Si ya hay una acción pendiente → segundo Enter = CANCELA
                 if (pendingActionRef.current) {
                     if (pendingTimeoutRef.current) {
                         clearTimeout(pendingTimeoutRef.current);
@@ -268,16 +235,13 @@ const PricingPanel = ({ order }: {
                     pendingTimeoutRef.current = null;
                     return;
                 }
-                // Primer Enter → queda pendiente
                 pendingActionRef.current = true;
 
                 pendingTimeoutRef.current = setTimeout(() => {
                     pendingActionRef.current = false;
                     pendingTimeoutRef.current = null;
-
-
                     addButtonRef.current?.click();
-                }, 300); // ventana de cancelación
+                }, 300);
                 return;
             }
         };
@@ -311,11 +275,11 @@ const PricingPanel = ({ order }: {
                     <div className="flex gap-2 items-center mt-1 ml-auto">
                         <label >Mayorista</label>
                         <Checkbox checked={sellPriceType === 'MAYOR'} onCheckedChange={(checked) => {
-                            setSellPriceType(checked ? 'MAYOR' : 'MINOR');
+                            dispatch(setSellPriceType(checked ? 'MAYOR' : 'MINOR'));
                         }} />
                         <label >Minorista</label>
                         <Checkbox checked={sellPriceType === 'MINOR'} onCheckedChange={(checked) => {
-                            setSellPriceType(checked ? 'MINOR' : 'MAYOR');
+                            dispatch(setSellPriceType(checked ? 'MINOR' : 'MAYOR'));
                         }} />
                     </div>
                 </div>
@@ -331,13 +295,12 @@ const PricingPanel = ({ order }: {
                                     Sin precios
                                 </span>
                             ) : (
-                                // FIXME los precios estan siendo mal calculados.
                                 <PricesSelector
                                     prices={filteredPrices}
                                     selectedPriceId={selectedPriceId}
                                     onSelectPrice={(priceId) => {
                                         const pricePrice = filteredPrices.find(p => p.price_id === priceId)?.price || 0;
-                                        setEffectivePrice(pricePrice);
+                                        dispatch(setEffectivePrice(pricePrice));
                                         handleSelectPrice(priceId)
                                     }} />
                             )}
@@ -348,15 +311,11 @@ const PricingPanel = ({ order }: {
                             value={effectivePrice || undefined}
                             onChange={(value) => {
                                 console.log("Manual price change:", value);
-                                setEffectivePrice(value ?? 0);
-                                setSelectedPriceId(null);
+                                dispatch(setEffectivePrice(value ?? 0));
+                                dispatch(setSelectedPriceId(null));
                             }}
                             resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}`}
-
                         />
-
-
-
 
                         <InputGroup>
                             <InputGroupInput
@@ -380,13 +339,10 @@ const PricingPanel = ({ order }: {
                                         return;
                                     }
 
-                                    setEffectivePrice(calculatedPrice);
-                                    setSelectedPriceId(calculatedPriceId);
+                                    dispatch(setEffectivePrice(calculatedPrice));
+                                    dispatch(setSelectedPriceId(calculatedPriceId));
                                 }}
                                 placeholder="--" />
-                            {/* <InputGroupAddon>
-                            <SearchIcon />
-                        </InputGroupAddon> */}
                             <InputGroupAddon align="inline-start">
                                 <InputGroupButton>{'x'}</InputGroupButton>
                             </InputGroupAddon>
@@ -400,15 +356,6 @@ const PricingPanel = ({ order }: {
                     <div className="flex flex-col">
                         <div className="flex gap-2 justify-center items-center h-10">
                             <span className="text-base font-semibold text-transparent">Precio</span>
-                            {/* {filteredPrices && filteredPrices.length === 0 ? (
-                                <span className="text-base font-semibold text-blue-600">
-                                Sin precios
-                                </span>
-                                ) : (
-                                    <PricesSelector
-                                    prices={filteredPrices}
-                                    onSelectPrice={(priceId) => handleSelectPrice(priceId)} />
-                                    )} */}
                         </div>
                         <div className="flex gap-2 justify-center items-center h-10">
                             <Switch
@@ -424,19 +371,15 @@ const PricingPanel = ({ order }: {
                                     lots={lots || []}
                                     selectedLotId={selectedLotId}
                                     onSelectLot={(lotId) => {
-                                        setSelectedLotId(lotId);
+                                        dispatch(setSelectedLotId(lotId));
                                     }}
                                 />
                             )}
-
-
-
                         </div>
 
                         {unifyLots ?
                             <StockAvailabilityUnified unifyedStock={unifyedStock!} remainingUnifyedStock={remainingUnifyedStock} /> :
                             <StockAvailability selectedStock={selectedStock!} remainingStock={remainingStock} />}
-
 
                     </div>
 
@@ -454,7 +397,6 @@ const PricingPanel = ({ order }: {
                         onClick={handleAddItem}
                         btnRef={addButtonRef}
                     >
-
                         {!hasProduct(selectedProduct)
                             ? "Seleccioná un producto"
                             : Number(remainingStock) <= 0
@@ -462,7 +404,6 @@ const PricingPanel = ({ order }: {
                                 : Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) > Number(unifyLots ? remainingUnifyedStock : remainingStock)
                                     ? "Cantidad supera el stock disponible"
                                     : "Agregar al pedido"}
-
                     </RefButton>
                 </div>
             </div>

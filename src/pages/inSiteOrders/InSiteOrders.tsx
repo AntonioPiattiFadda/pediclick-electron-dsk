@@ -3,19 +3,23 @@ import { Button } from "@/components/ui/button";
 import { RefButton } from "@/components/ui/refButton";
 import { Spinner } from "@/components/ui/spinner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useOrderContext } from "@/context/OrderContext";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { startEmptyOrder } from "@/service/orders";
+import { setActiveOrder, setOrders } from "@/stores/orderSlice";
 import { OrderT } from "@/types/orders";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PlusCircle } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Order from "./Order";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
+import type { RootState, AppDispatch } from "@/stores/store";
 
 
 export function InSiteOrders() {
-    const { orders, setOrders, activeOrder, setactiveOrder } = useOrderContext();
+    const dispatch = useDispatch<AppDispatch>();
+    const orders = useSelector((state: RootState) => state.order.orders);
+    const activeOrder = useSelector((state: RootState) => state.order.activeOrder);
 
     const { handleGetLocationId } = useGetLocationData();
 
@@ -30,8 +34,8 @@ export function InSiteOrders() {
         },
         onSuccess: (data) => {
             if (import.meta.env.DEV) console.log("Orden iniciada:", data)
-            setOrders([...orders, { ...data, order_type: "DIRECT_SALE" } as OrderT])
-            setactiveOrder((data as OrderT).order_id.toString());
+            dispatch(setOrders([...orders, { ...data, order_type: "DIRECT_SALE" } as OrderT]));
+            dispatch(setActiveOrder((data as OrderT).order_id.toString()));
             queryClient.invalidateQueries({ queryKey: ["orders"] })
         },
         onError: (e) => {
@@ -49,9 +53,9 @@ export function InSiteOrders() {
         if (orderIndex !== -1) {
             const updatedOrders = [...orders];
             updatedOrders[orderIndex] = updatedOrder;
-            setOrders(updatedOrders);
+            dispatch(setOrders(updatedOrders));
         } else {
-            setOrders([...orders, updatedOrder]);
+            dispatch(setOrders([...orders, updatedOrder]));
         }
     };
 
@@ -78,7 +82,7 @@ export function InSiteOrders() {
 
         <Tabs value={activeOrder} onValueChange={(newValue) => {
             if (startOrderMutation.isPending) return;
-            setactiveOrder(newValue);
+            dispatch(setActiveOrder(newValue));
         }} className="w-full">
             <div className="w-full  flex justify-between items-center px-4">
                 <h1 className="text-2xl">Ordenes de compra</h1>
@@ -123,11 +127,6 @@ export function InSiteOrders() {
                             "Iniciar orden"
                         }
                     </RefButton>
-                    {/* <Button
-                            ref={initiateOrderBtnRef}
-                            onClick={() => startOrderMutation.mutate()} disabled={startOrderMutation.isPending}>
-
-                        </Button> */}
                 </div>
             )}
 

@@ -8,7 +8,9 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import DeliveryOrder from "./DeliveryOrder";
 import { DeliveryOrderSelector } from "./components/DeliveryOrderSelector";
-import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
+import { useDispatch } from "react-redux";
+import type { AppDispatch } from "@/stores/store";
+import { setActiveDeliveryOrderId } from "@/stores/deliveryOrderSlice";
 
 export function DeliveryOrders() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -19,12 +21,12 @@ export function DeliveryOrders() {
   const { handleGetLocationId } = useGetLocationData();
   const { handleGetTerminalSessionId } = useTerminalSessionData();
   const queryClient = useQueryClient();
-  const { setActiveDeliveryOrderId } = useDeliveryOrderContext();
+  const dispatch = useDispatch<AppDispatch>();
 
-  // Update active delivery order ID in context when URL changes
+  // Sync active delivery order ID to Redux when URL changes
   useEffect(() => {
-    setActiveDeliveryOrderId(selectedOrderId);
-  }, [selectedOrderId, setActiveDeliveryOrderId]);
+    dispatch(setActiveDeliveryOrderId(selectedOrderId));
+  }, [selectedOrderId, dispatch]);
 
   // Fetch selected order from database
   const {

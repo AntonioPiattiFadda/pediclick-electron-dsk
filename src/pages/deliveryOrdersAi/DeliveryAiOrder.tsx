@@ -2,23 +2,31 @@ import { CancelClientSelection, ClientSelectorRoot, CreateClient, SelectClient }
 import { Label } from "@/components/ui/label"
 import Cart from "@/components/shared/Cart"
 import { OrderT } from "@/types/orders"
-import { useOrderContext } from "@/context/OrderContext"
-import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext"
+import { OrderItem } from "@/types/orderItems"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState, AppDispatch } from "@/stores/store"
+import { resetAfterOrderCreation } from "@/stores/orderSlice"
+import { setAiOrderItems, clearAiOrder } from "@/stores/deliveryOrderAiSlice"
 import ProductSelectorDeliveryOrderAi from "./components/ProductSelectorDeliveryOrderAi"
 import { DeleteOrderBtn } from "./components/deleteOrderBtn"
 import PricingPanel from "./components/PricingPanel"
+import React from "react"
 
 const DeliveryAiOrder = ({ order, onChangeOrder }: {
     order: OrderT,
     onChangeOrder: (order: OrderT) => void
 }) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const orderItems = useSelector((state: RootState) => state.deliveryOrderAi.orderItems);
 
-    const { resetAfterOrderCreation } = useOrderContext()
-    const { orderItems, setOrderItems, clearAiOrder } = useDeliveryOrderAiContext()
+    const setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>> = (updater) => {
+        const next = typeof updater === 'function' ? updater(orderItems) : updater;
+        dispatch(setAiOrderItems(next));
+    };
 
     const handleAfterCreate = () => {
-        clearAiOrder();
-        resetAfterOrderCreation();
+        dispatch(clearAiOrder());
+        dispatch(resetAfterOrderCreation());
     }
 
     return (
@@ -41,8 +49,6 @@ const DeliveryAiOrder = ({ order, onChangeOrder }: {
                             <CreateClient />
                         </ClientSelectorRoot>
                     </div>
-
-
 
                     <ProductSelectorDeliveryOrderAi />
 

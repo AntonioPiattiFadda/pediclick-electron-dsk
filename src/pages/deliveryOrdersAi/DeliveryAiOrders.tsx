@@ -10,14 +10,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { startAiOrder, clearAiOrder } from "@/stores/deliveryOrderAiSlice";
 import { Bot } from "lucide-react";
 import { useRef, useState } from "react";
 import { AiOrderCreationDialog } from "./components/AiOrderCreationDialog";
 import DeliveryAiOrder from "./DeliveryAiOrder";
 
 export function DeliveryAiOrders() {
-  const { aiOrder, startAiOrder, clearAiOrder } = useDeliveryOrderAiContext();
+  const dispatch = useDispatch<AppDispatch>();
+  const aiOrder = useSelector((state: RootState) => state.deliveryOrderAi.aiOrder);
   const [showReplaceDialog, setShowReplaceDialog] = useState(false);
   const [showAiDialog, setShowAiDialog] = useState(false);
 
@@ -29,14 +32,14 @@ export function DeliveryAiOrders() {
       setShowReplaceDialog(true);
     } else {
       // Start new order and open AI dialog
-      startAiOrder();
+      dispatch(startAiOrder());
       setShowAiDialog(true);
     }
   };
 
   const handleConfirmReplace = () => {
-    clearAiOrder();
-    startAiOrder();
+    dispatch(clearAiOrder());
+    dispatch(startAiOrder());
     setShowReplaceDialog(false);
     setShowAiDialog(true);
   };

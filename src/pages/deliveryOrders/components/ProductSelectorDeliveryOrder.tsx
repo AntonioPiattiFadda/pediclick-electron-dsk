@@ -1,4 +1,6 @@
-import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setDeliverySelectedProduct, setDeliveryProductPresentation } from "@/stores/deliveryOrderSlice";
 import {
   ProductPresentationSelectorRoot,
   SelectProductPresentation,
@@ -10,12 +12,9 @@ import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useFocusableInput } from "@/hooks/useFocus";
 
 export const ProductSelectorDeliveryOrder = () => {
-  const {
-    selectedProduct,
-    setSelectedProduct,
-    productPresentation,
-    setProductPresentation,
-  } = useDeliveryOrderContext();
+  const dispatch = useDispatch<AppDispatch>();
+  const selectedProduct = useSelector((state: RootState) => state.deliveryOrder.selectedProduct);
+  const productPresentation = useSelector((state: RootState) => state.deliveryOrder.productPresentation);
 
   const { handleGetLocationId } = useGetLocationData();
 
@@ -38,7 +37,7 @@ export const ProductSelectorDeliveryOrder = () => {
               focusRef={productShortCodeRef}
               value={selectedProduct}
               onChange={(value) =>
-                setSelectedProduct({ ...selectedProduct, ...value })
+                dispatch(setDeliverySelectedProduct({ ...selectedProduct, ...value }))
               }
             />
           </div>
@@ -49,7 +48,7 @@ export const ProductSelectorDeliveryOrder = () => {
               productId={selectedProduct.product_id!}
               value={productPresentation}
               onChange={(value) => {
-                if (value) setProductPresentation(value);
+                if (value) dispatch(setDeliveryProductPresentation(value));
               }}
               isFetchWithLots={true}
               isFetchWithLotContainersLocation={false}

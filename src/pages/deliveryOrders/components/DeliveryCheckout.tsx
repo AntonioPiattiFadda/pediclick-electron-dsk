@@ -12,7 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import { RefButton } from "@/components/ui/refButton";
 import { emptyPayments } from "@/constants";
-import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setDeliveryIsCheckOutOpen } from "@/stores/deliveryOrderSlice";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
 import { completeDeliveryOrder, getDeliveryOrderItems } from "@/service";
 import { CheckOutOptions } from "@/types";
@@ -34,7 +36,9 @@ export function DeliveryCheckout({
   order: OrderT;
   hasClient: boolean;
 }) {
-  const { isCheckOutOpen, setIsCheckOutOpen } = useDeliveryOrderContext();
+  const dispatch = useDispatch<AppDispatch>();
+  const isCheckOutOpen = useSelector((state: RootState) => state.deliveryOrder.isCheckOutOpen);
+  const setIsCheckOutOpen = (v: boolean) => dispatch(setDeliveryIsCheckOutOpen(v));
   const queryClient = useQueryClient();
 
   const [checkOutOptions, setCheckOutOptions] = useState<CheckOutOptions>({

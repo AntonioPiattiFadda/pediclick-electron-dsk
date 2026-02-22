@@ -1,44 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { useDeliveryOrderContext } from "@/context/DeliveryOrderContext";
-import { getDeliveryOrderItems } from "@/service";
+import { removeDeliveryOrderItem, getDeliveryOrderItems } from "@/service";
 import { OrderT } from "@/types/orders";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { EmptyCart } from "@/components/shared/EmptyCart";
 import { DeliveryCheckout } from "./DeliveryCheckout";
 import { MarkAsDeliveredButton } from "./MarkAsDelivered";
 import { MarkAsDeliveringButton } from "./MarkAsDeliveringButton";
 
-// const [isLoading, setIsLoading] = useState(true);
-// const [isError, setIsError] = useState(false);
-// const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
-
-// const fetchOrderItems = async () => {
-//   try {
-//     setIsLoading(true);
-//     const items = await getDeliveryOrderItems(order.order_id);
-//     console.log("Fetched order items:", items);
-//     setIsLoading(false);
-//     setIsError(false);
-//     setOrderItems(items);
-//   } catch (error) {
-//     console.error("Error fetching order items:", error);
-//     setIsError(true);
-//     setIsLoading(false);
-//     setOrderItems([]);
-//   }
-// };
-
-// useEffect(() => {
-//   fetchOrderItems();
-// }, [order.order_id]);
-
 export const DeliveryCart = ({
   order,
 }: {
   order: OrderT;
 }) => {
-  const { removeItemFromOrder, isRemovingItem } = useDeliveryOrderContext();
   const queryClient = useQueryClient();
 
   // Clear stale cache on mount (one-time fix for format change)
@@ -53,11 +27,19 @@ export const DeliveryCart = ({
     queryKey: ["delivery-order-items", order.order_id],
     queryFn: async () => getDeliveryOrderItems(order.order_id!),
     enabled: !!order.order_id,
-    refetchOnWindowFocus: true, // Refetch when window regains focus
+    refetchOnWindowFocus: true,
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: ({ orderItemId, stockId }: { orderItemId: number; stockId: number }) =>
+      removeDeliveryOrderItem(orderItemId, stockId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["delivery-order-items", order.order_id] });
+    },
   });
 
   const filteredOrderItems = orderItems.sort((a, b) => {
-    if (!a?.product_name || !b?.product_name) return 0; // Keep original order if product names are missing
+    if (!a?.product_name || !b?.product_name) return 0;
     return a?.product_name.localeCompare(b?.product_name, "es", {
       sensitivity: "base",
     });
@@ -67,7 +49,6 @@ export const DeliveryCart = ({
     (sum, it) => sum + Number(it.total || it.subtotal || 0),
     0
   );
-
 
   if (isLoading) {
     return (
@@ -124,8 +105,8 @@ export const DeliveryCart = ({
 
               {it.status !== "CANCELLED" && (
                 <button
-                  disabled={isRemovingItem}
-                  onClick={() => removeItemFromOrder(it.order_item_id!, it.stock_id!)}
+                  disabled={removeMutation.isPending}
+                  onClick={() => removeMutation.mutate({ orderItemId: it.order_item_id!, stockId: it.stock_id! })}
                   className="text-red-500 hover:text-red-700 ml-1"
                   title="Eliminar producto"
                 >
@@ -148,7 +129,6 @@ export const DeliveryCart = ({
 
         {order.payment_status === "PAID" ? (
           <>
-
             <Button
               className="text-green-600 bg-transparent"
               disabled

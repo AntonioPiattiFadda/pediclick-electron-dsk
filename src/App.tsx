@@ -6,14 +6,11 @@ import { Layout } from "./layout/layout";
 import { SignIn } from "./pages/auth/Login";
 import { InSiteOrders } from "./pages/inSiteOrders/InSiteOrders";
 import { store } from "./stores/store";
-import { OrderProvider } from "./context/OrderContext";
 import { Toaster } from "sonner";
 import { ShortCutProvider } from "./context/ShortCutContext";
 import { DeliveryOrders } from "./pages/deliveryOrders/DeliveryOrders";
 import { ScaleIpcBridge } from "./context/ScaleContext";
 import SetupSession from "./pages/setupSession/SetupSession";
-import { DeliveryOrderProvider } from "./context/DeliveryOrderContext";
-import { DeliveryOrderAiProvider } from "./context/DeliveryOrderAiContext";
 import { DeliveryAiOrders } from "./pages/deliveryOrdersAi/DeliveryAiOrders";
 
 // ---- App raíz mínima con QueryClient local ----
@@ -29,61 +26,43 @@ function App() {
         <Toaster />
         <ScaleIpcBridge />
         <ShortCutProvider>
-            <OrderProvider >
+          <HashRouter>
+            <Layout>
+              <Routes>
+                <Route
+                  path="/"
+                  element={<SignIn />}
+                />
 
-              <HashRouter>
-                <Layout>
+                <Route
+                  path="/login"
+                  element={<SignIn />}
+                />
 
+                <Route
+                  path="/setup-session"
+                  element={<SetupSession />}
+                />
 
-                  <Routes>
-                    <Route
-                      path="/"
-                      element={<SignIn />}
-                    />
+                <Route
+                  path="/in-site-orders"
+                  element={<InSiteOrders />}
+                />
 
-                    <Route
-                      path="/login"
-                      element={
-                        <SignIn />
+                <Route
+                  path="/delivery-orders"
+                  element={<DeliveryOrders />}
+                />
 
-                      }
-                    />
+                <Route
+                  path="/delivery-orders-ai"
+                  element={<DeliveryAiOrders />}
+                />
 
-                    <Route
-                      path="/setup-session"
-                      element={<SetupSession />}
-                    />
-
-                    <Route
-                      path="/in-site-orders"
-                      element={
-                        <InSiteOrders />
-                      }
-                    />
-
-                    <Route
-                      path="/delivery-orders"
-                      element={
-                        <DeliveryOrderProvider>
-                          <DeliveryOrders />
-                        </DeliveryOrderProvider>
-                      }
-                    />
-
-                    <Route
-                      path="/delivery-orders-ai"
-                      element={
-                        <DeliveryOrderAiProvider>
-                          <DeliveryAiOrders />
-                        </DeliveryOrderAiProvider>
-                      }
-                    />
-
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Layout>
-              </HashRouter>
-            </OrderProvider>
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Layout>
+          </HashRouter>
         </ShortCutProvider>
       </Provider>
     </QueryClientProvider>

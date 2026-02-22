@@ -2,7 +2,9 @@ import { CancelClientSelection, ClientSelectorRoot, CreateClient, SelectClient }
 import { Label } from "@/components/ui/label"
 import Cart from "@/components/shared/Cart"
 import { OrderT } from "@/types/orders"
-import { useOrderContext } from "@/context/OrderContext"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState, AppDispatch } from "@/stores/store"
+import { setActiveOrder, setOrderItems, setOrders, resetAfterOrderCreation } from "@/stores/orderSlice"
 import ProductSelectorOrder from "./components/ProductSelectorOrder"
 import PricingPanel from "./components/PricingPanel"
 import { DeleteOrderBtn } from "./components/deleteOrderBtn"
@@ -12,21 +14,16 @@ const Order = ({ order, onChangeOrder }: {
     onChangeOrder: (order: OrderT) => void
 }) => {
 
-    const {
-        orderItems,
-        setOrderItems,
-        orders,
-        setOrders,
-        setactiveOrder,
-        resetAfterOrderCreation,
-    } = useOrderContext()
+    const dispatch = useDispatch<AppDispatch>()
+    const orders = useSelector((state: RootState) => state.order.orders)
+    const orderItems = useSelector((state: RootState) => state.order.orderItems)
 
     const handleAfterCreate = () => {
         const filteredOrders = orders.filter((o) => o.order_id !== order.order_id);
-        setOrders(filteredOrders);
-        setactiveOrder(filteredOrders[0]?.order_id.toString() || "");
-        setOrderItems(orderItems.filter(it => it.order_id !== order.order_id));
-        resetAfterOrderCreation();
+        dispatch(setOrders(filteredOrders));
+        dispatch(setActiveOrder(filteredOrders[0]?.order_id.toString() || ""));
+        dispatch(setOrderItems(orderItems.filter(it => it.order_id !== order.order_id)));
+        dispatch(resetAfterOrderCreation());
     }
 
     return (
@@ -63,7 +60,7 @@ const Order = ({ order, onChangeOrder }: {
                 order={order}
                 onChangeOrder={onChangeOrder}
                 orderItems={orderItems}
-                setOrderItems={setOrderItems}
+                setOrderItems={(items) => dispatch(setOrderItems(typeof items === "function" ? items(orderItems) : items))}
                 onAfterCreate={handleAfterCreate}
                 deleteOrderBtn={<DeleteOrderBtn orderId={order?.order_id} />}
                 enableMercadoPago={true}

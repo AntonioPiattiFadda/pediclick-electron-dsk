@@ -9,7 +9,9 @@ import {
     AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { useOrderContext } from "@/context/OrderContext"
+import { useDispatch, useSelector } from "react-redux"
+import type { RootState, AppDispatch } from "@/stores/store"
+import { setOrders, setOrderItems, setActiveOrder, resetAfterOrderCreation } from "@/stores/orderSlice"
 import { cancelOrder } from "@/service/orders"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useState } from "react"
@@ -18,12 +20,12 @@ import { toast } from "sonner"
 export function DeleteOrderBtn({ orderId }: {
     orderId: number;
 }) {
-    const { orderItems, setOrderItems, orders, setOrders, setactiveOrder, resetAfterOrderCreation } = useOrderContext()
+    const dispatch = useDispatch<AppDispatch>()
+    const orders = useSelector((state: RootState) => state.order.orders)
+    const orderItems = useSelector((state: RootState) => state.order.orderItems)
     const [open, setOpen] = useState(false)
 
-
     const queryClient = useQueryClient();
-
 
     const cancelOrderMutation = useMutation({
         mutationFn: async () => {
@@ -41,11 +43,10 @@ export function DeleteOrderBtn({ orderId }: {
                 description: "Se notificara la cancelación de la orden",
             })
             const filteredOrders = orders.filter(o => o.order_id !== orderId);
-            setOrders(filteredOrders);
-            setactiveOrder(filteredOrders[0]?.order_id.toString() || "");
-            const filteredOrderItems = orderItems.filter(oi => oi.order_id !== orderId);
-            setOrderItems(filteredOrderItems);
-            resetAfterOrderCreation();
+            dispatch(setOrders(filteredOrders));
+            dispatch(setActiveOrder(filteredOrders[0]?.order_id.toString() || ""));
+            dispatch(setOrderItems(orderItems.filter(oi => oi.order_id !== orderId)));
+            dispatch(resetAfterOrderCreation());
             setOpen(false);
         },
         onError: (e) => {

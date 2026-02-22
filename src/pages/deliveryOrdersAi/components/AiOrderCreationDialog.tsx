@@ -19,7 +19,9 @@ import {
   CancelClientSelection,
   CreateClient,
 } from "@/components/shared/selectors/clientSelector";
-import { useDeliveryOrderAiContext } from "@/context/DeliveryOrderAiContext";
+import { useDispatch, useSelector } from "react-redux";
+import type { RootState, AppDispatch } from "@/stores/store";
+import { setAiOrderItems, setAiOrder as setAiOrderAction } from "@/stores/deliveryOrderAiSlice";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { createAiOrder } from "@/service/aiOrders";
 import { OrderItem } from "@/types/orderItems";
@@ -40,7 +42,11 @@ export function AiOrderCreationDialog({
   open,
   onOpenChange,
 }: AiOrderCreationDialogProps) {
-  const { aiOrder, orderItems, setOrderItems, setAiOrder } = useDeliveryOrderAiContext();
+  const dispatch = useDispatch<AppDispatch>();
+  const aiOrder = useSelector((state: RootState) => state.deliveryOrderAi.aiOrder);
+  const orderItems = useSelector((state: RootState) => state.deliveryOrderAi.orderItems);
+  const setOrderItems = (items: OrderItem[]) => dispatch(setAiOrderItems(items));
+  const dispatchSetAiOrder = (order: typeof aiOrder) => dispatch(setAiOrderAction(order));
   const { handleGetLocationId } = useGetLocationData();
 
   const [dialogState, setDialogState] = useState<DialogState>("input");
@@ -108,7 +114,7 @@ export function AiOrderCreationDialog({
     setOrderItems([...orderItems, ...itemsToAdd]);
 
     if (selectedClient && aiOrder) {
-      setAiOrder({
+      dispatchSetAiOrder({
         ...aiOrder,
         client_id: selectedClient.client_id,
         client: selectedClient,
