@@ -51,6 +51,7 @@ const PricingPanel = ({ order }: {
     const isCheckOutOpen = useSelector((state: RootState) => state.order.isCheckOutOpen);
     const weightKg = useSelector((state: RootState) => state.scale.weightKg);
     const unitsCount = useSelector((state: RootState) => state.scale.unitsCount);
+    const clientPaymentModalOpen = useSelector((state: RootState) => state.modals.clientPaymentModalOpen);
     const orderItems = useSelector((state: RootState) => state.deliveryOrderAi.orderItems);
 
     const setOrderItems = (updater: OrderItem[] | ((prev: OrderItem[]) => OrderItem[])) => {
@@ -229,7 +230,7 @@ const PricingPanel = ({ order }: {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter" && !isCheckOutOpen) {
+            if (e.key === "Enter" && !isCheckOutOpen && !clientPaymentModalOpen) {
                 e.preventDefault();
                 if (pendingActionRef.current) {
                     if (pendingTimeoutRef.current) {
@@ -254,7 +255,7 @@ const PricingPanel = ({ order }: {
 
         return () => window.removeEventListener("keydown", handleKeyDown);
 
-    }, [isCheckOutOpen]);
+    }, [isCheckOutOpen, clientPaymentModalOpen]);
 
     if (!order?.order_id) {
         return null

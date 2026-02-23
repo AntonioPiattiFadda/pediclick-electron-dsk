@@ -1,6 +1,8 @@
-import { SellType } from ".";
+import { SellType, SellUnit } from ".";
 import type { Lot } from "./lots";
 import { Price } from "./prices";
+
+//TODO Actualizar las funciónes en base de datos para que el sellType sea de la presentación
 
 export type ProductPresentation = {
     product_presentation_id: number;
@@ -10,8 +12,13 @@ export type ProductPresentation = {
     created_at: string;
     updated_at: string;
 
-    bulk_quantity_equivalence: number | null;
+    //Esto es mayor o menor
     sell_type: SellType;
+    bulk_quantity_equivalence: number | null;
+
+    //Esto es kilo o unidad
+    sell_unit: SellUnit;
+
 
     lots?: Lot[];
 

@@ -6,4 +6,6 @@ export type CheckOutOptions = {
 };
 
 
-export type SellType = "WEIGHT" | "UNIT";
+export type SellType = 'MINOR' | 'MAYOR';
+
+export type SellUnit = 'BY_UNIT' | 'BY_WEIGHT';

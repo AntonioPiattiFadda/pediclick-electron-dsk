@@ -56,6 +56,7 @@ export default function CheckoutOrder({
 
   const dispatch = useDispatch<AppDispatch>();
   const isCheckOutOpen = useSelector((state: RootState) => state.order.isCheckOutOpen);
+  const clientPaymentModalOpen = useSelector((state: RootState) => state.modals.clientPaymentModalOpen);
   const setIsCheckOutOpen = (v: boolean) => dispatch(setIsCheckOutOpenAction(v));
 
   const items = useMemo(
@@ -144,6 +145,8 @@ export default function CheckoutOrder({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
 
+      // Client payment modal takes priority over all checkout shortcuts
+      if (clientPaymentModalOpen) return;
 
       if (e.key === "Enter") {
         e.preventDefault();
@@ -194,7 +197,7 @@ export default function CheckoutOrder({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
 
-  }, [handleAssignRest, isCheckOutOpen]);
+  }, [handleAssignRest, isCheckOutOpen, clientPaymentModalOpen]);
 
   const isDelivery = order.order_type === 'DELIVERY';
 

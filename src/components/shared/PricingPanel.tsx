@@ -53,6 +53,7 @@ const PricingPanel = ({
 
     const weightKg = useSelector((state: RootState) => state.scale.weightKg);
     const unitsCount = useSelector((state: RootState) => state.scale.unitsCount);
+    const clientPaymentModalOpen = useSelector((state: RootState) => state.modals.clientPaymentModalOpen);
     const dispatch = useDispatch();
     const { handleGetLocationId } = useGetLocationData();
     const locationId = handleGetLocationId();
@@ -174,7 +175,7 @@ const PricingPanel = ({
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Enter" && !isCheckOutOpen) {
+            if (e.key === "Enter" && !isCheckOutOpen && !clientPaymentModalOpen) {
                 e.preventDefault();
                 if (pendingActionRef.current) {
                     if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
@@ -193,7 +194,7 @@ const PricingPanel = ({
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [isCheckOutOpen]);
+    }, [isCheckOutOpen, clientPaymentModalOpen]);
 
     if (!order?.order_id) return null;
 

@@ -1,5 +1,5 @@
 import { MovementStatus } from ".";
-import { PriceLogicType, PriceType } from "./prices";
+import { PriceLogicType } from "./prices";
 
 // FIXME VERIFICAR SI LOT ID Y STOCK ID PUEDEN SER NULL
 export interface OrderItem {
@@ -21,7 +21,6 @@ export interface OrderItem {
   over_sell_quantity: number;
   price: number;
 
-  price_type: PriceType;
   logic_type: PriceLogicType;
 
   subtotal: number;

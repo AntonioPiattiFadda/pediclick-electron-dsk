@@ -44,6 +44,9 @@ export const ShortCutProvider = ({ children }: { children: React.ReactNode }) =>
         const handleKeyDown = (e: KeyboardEvent) => {
             const active = document.activeElement as HTMLElement | null;
 
+            // If focus is inside any dialog, let the dialog handle its own keyboard events
+            if (active?.closest?.('[role="dialog"]')) return;
+
             // Always navigate in ascending order, regardless of registration order
             const sorted = [...itemsRef.current].sort((a, b) => a.order - b.order);
             const index = sorted.findIndex(i => i.ref.current === active);

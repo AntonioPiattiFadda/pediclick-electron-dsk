@@ -21,7 +21,7 @@ import { CheckOutOptions } from '@/types';
 import type { Client } from '@/types/clients';
 import { Payment } from "@/types/payments";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { MoneyInput } from "../shared/MoneyInput";
 import { CancelClientSelection, ClientSelectorRoot, SelectClient } from "../shared/selectors/clientSelector";
@@ -132,8 +132,56 @@ const RegisterClientPayment = ({ client }: {
         },
     })
 
+    // Keep a ref that always holds the latest submit guard so the keyboard
+    // effect (registered once when the modal opens) never has a stale closure.
+    const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const pendingActionRef = useRef(false);
+    const canSubmitRef = useRef(false);
+    canSubmitRef.current =
+        payments.length > 0 &&
+        !registerClientPaymentMutation.isPending &&
+        totalPayment > 0 &&
+        selectedClient !== null;
 
+    useEffect(() => {
+        if (!clientPaymentModalOpen) return;
 
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+
+                if (pendingActionRef.current) {
+                    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+                    pendingActionRef.current = false;
+                    pendingTimeoutRef.current = null;
+                    if (canSubmitRef.current) registerClientPaymentMutation.mutate();
+                    return;
+                }
+
+                pendingActionRef.current = true;
+                pendingTimeoutRef.current = setTimeout(() => {
+                    pendingActionRef.current = false;
+                    pendingTimeoutRef.current = null;
+                }, 300);
+                return;
+            }
+
+            const match = paymentMethodOpt.find(opt => opt.keyCode === e.key);
+            if (match) {
+                e.preventDefault();
+                const el = document.getElementById(`client-payment-${match.value}`);
+                el?.focus();
+                (el as HTMLInputElement | null)?.select();
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
+            pendingActionRef.current = false;
+        };
+    }, [clientPaymentModalOpen]);
 
     return (
         <Dialog open={clientPaymentModalOpen} onOpenChange={setClientPaymentModalOpen} >
@@ -217,6 +265,7 @@ const RegisterClientPayment = ({ client }: {
 
                                     <div className="col-span-4">
                                         <MoneyInput
+                                            id={`client-payment-${p.payment_method}`}
                                             value={p.amount || undefined}
                                             onChange={(v) => {
                                                 const numberValue = Number(v);
