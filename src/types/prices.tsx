@@ -32,6 +32,6 @@ export type Price = {
   created_at?: string;
   updated_at?: string | null;
 
-  enabled_prices_clients?: { client_id: number }[]; // Only populated for SPECIAL prices; empty = all clients
-
+  enabled_prices_clients?: { client_id: number }[]; // Only for SPECIAL prices; empty = all clients
+  disabled_prices?: { location_id: number }[];       // Universal prices only; row = suppressed at that location
 };

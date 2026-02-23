@@ -6,14 +6,13 @@ import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useProductItemEditor } from "@/hooks/useProductItemEditor";
 import { OrderItem } from "@/types/orderItems";
 import { OrderT } from "@/types/orders";
-import type { PriceLogicType, PriceType } from "@/types/prices";
+import type { PriceLogicType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Lot } from "@/types/lots";
 import { getLotsAndStockFromFirtsToLast } from "@/utils";
 import { formatCurrency } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "@/components/ui/input-group";
 import { Label } from "@/components/ui/label";
 import { RefButton } from "@/components/ui/refButton";
@@ -62,6 +61,7 @@ const PricingPanel = ({
         productId: selectedProduct.product_id ?? null,
         productPresentationId: productPresentation.product_presentation_id ?? null,
         locationId,
+        clientId: order.client_id,
         prices: productPresentation.prices,
         lots: productPresentation.lots as Lot[] | undefined,
         unifyLots,
@@ -151,7 +151,6 @@ const PricingPanel = ({
             product_name: selectedProduct.product_name,
             product_presentation_name: productPresentation.product_presentation_name || "",
             product_presentation_id: productPresentation.product_presentation_id || 0,
-            price_type: selectedPrice?.price_type as PriceType,
             logic_type: selectedPrice?.logic_type as PriceLogicType,
             quantity: Number(qty),
             price: editor.price,
@@ -204,26 +203,6 @@ const PricingPanel = ({
 
     return (
         <div className="col-span-1 flex flex-col gap-2 mt-auto">
-            <div className="w-full grid grid-cols-2 gap-2">
-                <div>
-                    <label className="text-sm text-slate-600">Resumen</label>
-                </div>
-                <div className="flex flex-row gap-2 items-center">
-                    <label className="text-sm text-slate-600 ml-auto">Tipo de venta</label>
-                    <div className="flex gap-2 items-center mt-1 ml-auto">
-                        <label>Mayorista</label>
-                        <Checkbox
-                            checked={editor.sellPriceType === 'MAYOR'}
-                            onCheckedChange={(checked) => editor.setSellPriceType(checked ? 'MAYOR' : 'MINOR')}
-                        />
-                        <label>Minorista</label>
-                        <Checkbox
-                            checked={editor.sellPriceType === 'MINOR'}
-                            onCheckedChange={(checked) => editor.setSellPriceType(checked ? 'MINOR' : 'MAYOR')}
-                        />
-                    </div>
-                </div>
-            </div>
 
             <div className="border rounded-lg p-4 shadow-sm bg-white">
                 <div className="grid grid-cols-3 gap-4 text-center items-center">

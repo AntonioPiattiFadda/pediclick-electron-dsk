@@ -1,5 +1,4 @@
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { MoneyInput } from "@/components/shared/MoneyInput";
 import ProductSelector from "@/components/shared/selectors/productSelector";
@@ -65,7 +64,6 @@ export function AiOrderItemRow({
     unifyLots: false,
     initialQuantity: item.quantity,
     initialPrice: item.price,
-    initialPriceType: item.price_type ?? "MINOR",
   });
 
   // Emit update whenever relevant editor state or selection changes
@@ -81,7 +79,6 @@ export function AiOrderItemRow({
       product_presentation_name: productPresentation.product_presentation_name!,
       quantity: editor.quantity,
       price: editor.price,
-      price_type: editor.sellPriceType,
       logic_type: selectedPrice?.logic_type ?? item.logic_type,
       lot_id: editor.selectedLotId,
       stock_id: editor.selectedStockId,
@@ -92,7 +89,6 @@ export function AiOrderItemRow({
   }, [
     editor.quantity,
     editor.price,
-    editor.sellPriceType,
     editor.selectedLotId,
     selectedProduct,
     productPresentation,
@@ -156,30 +152,8 @@ export function AiOrderItemRow({
         className="text-center"
       />
 
-      {/* Price Area: type checkboxes + select + manual input */}
+      {/* Price Area: select + manual input */}
       <div className="flex flex-col gap-1">
-        {/* MINOR / MAYOR checkboxes */}
-        <div className="flex gap-3 items-center text-xs text-muted-foreground">
-          <label className="flex items-center gap-1 cursor-pointer select-none">
-            <Checkbox
-              checked={editor.sellPriceType === "MAYOR"}
-              onCheckedChange={(checked) =>
-                editor.setSellPriceType(checked ? "MAYOR" : "MINOR")
-              }
-            />
-            Mayorista
-          </label>
-          <label className="flex items-center gap-1 cursor-pointer select-none">
-            <Checkbox
-              checked={editor.sellPriceType === "MINOR"}
-              onCheckedChange={(checked) =>
-                editor.setSellPriceType(checked ? "MINOR" : "MAYOR")
-              }
-            />
-            Minorista
-          </label>
-        </div>
-
         {/* Price Select */}
         {editor.filteredPrices.length > 0 ? (
           <Select
@@ -219,7 +193,7 @@ export function AiOrderItemRow({
         <MoneyInput
           value={editor.price || undefined}
           onChange={(value) => editor.setPrice(value ?? 0)}
-          resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}-${editor.sellPriceType}`}
+          resetKey={`${selectedProduct?.product_id}-${productPresentation?.product_presentation_id}`}
         />
       </div>
 

@@ -1,7 +1,6 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Product } from "@/types/products";
-import type { PriceType } from "@/types/prices";
 
 // Note: mutations (addItemToOrder, removeItemFromOrder, updateOrderClient) live
 // in the components that use them — they are async side-effects, not state.
@@ -10,7 +9,6 @@ interface DeliveryOrderState {
     selectedProduct: Product;
     productPresentation: Partial<ProductPresentation>;
     selectedPriceId: number | null;
-    sellPriceType: PriceType;
     effectivePrice: number;
     selectedLotId: number | null;
     selectedStockId: number | null;
@@ -22,7 +20,6 @@ const initialState: DeliveryOrderState = {
     selectedProduct: {} as Product,
     productPresentation: {},
     selectedPriceId: null,
-    sellPriceType: "MINOR",
     effectivePrice: 0,
     selectedLotId: null,
     selectedStockId: null,
@@ -42,9 +39,6 @@ const deliveryOrderSlice = createSlice({
         },
         setDeliverySelectedPriceId(state, action: PayloadAction<number | null>) {
             state.selectedPriceId = action.payload;
-        },
-        setDeliverySellPriceType(state, action: PayloadAction<PriceType>) {
-            state.sellPriceType = action.payload;
         },
         setDeliveryEffectivePrice(state, action: PayloadAction<number>) {
             state.effectivePrice = action.payload;
@@ -68,7 +62,6 @@ export const {
     setDeliverySelectedProduct,
     setDeliveryProductPresentation,
     setDeliverySelectedPriceId,
-    setDeliverySellPriceType,
     setDeliveryEffectivePrice,
     setDeliverySelectedLotId,
     setDeliverySelectedStockId,

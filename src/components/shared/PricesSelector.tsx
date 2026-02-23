@@ -7,7 +7,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { priceLogicTypeOpt, priceTypeOpt } from "@/constants";
+import { priceLogicTypeOpt } from "@/constants";
 import { Price } from "@/types/prices";
 
 export function PricesSelector({
@@ -37,7 +37,7 @@ export function PricesSelector({
                         >
                             <div className="flex flex-col gap-2">
                                 <div className="w-full flex justify-between items-center">
-                                    {price.price_number} - ${price.price / (price.qty_per_price ?? 1)} - {priceTypeOpt.find(opt => opt.value === price.price_type)?.label} - {priceLogicTypeOpt.find(opt => opt.value === price.logic_type)?.label} - {`>=`}{price.qty_per_price}
+                                    {price.price_number} - ${price.price / (price.qty_per_price ?? 1)} - {priceLogicTypeOpt.find(opt => opt.value === price.logic_type)?.label} - {`>=`}{price.qty_per_price}
                                 </div>
                                 {price.observations && (
                                     <div className="w-full text-xs text-slate-500 italic">

@@ -24,7 +24,6 @@ const ProductSelectorDeliveryOrderAi = () => {
     const productPresentation = useSelector((state: RootState) => state.order.productPresentation);
     const selectedStockId = useSelector((state: RootState) => state.order.selectedStockId);
     const selectedLotId = useSelector((state: RootState) => state.order.selectedLotId);
-    const sellPriceType = useSelector((state: RootState) => state.order.sellPriceType);
 
     const { handleGetLocationId } = useGetLocationData();
 
@@ -75,12 +74,7 @@ const ProductSelectorDeliveryOrderAi = () => {
                         onChange={(value) => {
                             const firstLotId = value?.lots?.[0]?.lot_id || null;
                             const firstStockOfFirstLotId = value?.lots?.[0]?.stock?.[0]?.stock_id || null;
-
-                            const prices = value?.prices || [];
-                            const somePriceHasLocationId = prices.some((p) => p.location_id);
-                            const firstFilteredPrices = somePriceHasLocationId ? prices.filter((p) => p.location_id === handleGetLocationId()) : prices;
-                            const filteredPrices = firstFilteredPrices.filter((p) => p.price_type === sellPriceType);
-                            const firstPrice = filteredPrices?.[0] || null;
+                            const firstPrice = value?.prices?.[0] || null;
 
                             if (value) {
                                 dispatch(setProductPresentation(value));

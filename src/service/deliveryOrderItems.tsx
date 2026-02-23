@@ -71,7 +71,6 @@ export const getDeliveryOrderItems = async (orderId: number): Promise<OrderItemD
       quantity,
       over_sell_quantity,
       price,
-      price_type,
       logic_type,
       subtotal,
       discount,

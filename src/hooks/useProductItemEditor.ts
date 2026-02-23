@@ -2,13 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProductPresentations } from "@/service/productPresentations";
 import { resolveEffectivePrice } from "@/utils/prices";
-import type { Price, PriceType } from "@/types/prices";
+import type { Price } from "@/types/prices";
 import type { Lot } from "@/types/lots";
 
 export interface UseProductItemEditorOptions {
   productId: number | null;
   productPresentationId: number | null;
   locationId: number;
+  clientId?: number | null;
 
   // Optional data override — when provided, skips internal fetch
   prices?: Price[];
@@ -20,17 +21,12 @@ export interface UseProductItemEditorOptions {
   // Seed values (only applied on first render)
   initialQuantity?: number;
   initialPrice?: number;
-  initialPriceType?: PriceType;
 }
 
 export interface UseProductItemEditorReturn {
   // Quantity
   quantity: number;
   handleQuantityChange: (qty: number) => void; // auto-recalculates price
-
-  // Price type (MINOR / MAYOR)
-  sellPriceType: PriceType;
-  setSellPriceType: (type: PriceType) => void;
 
   // Prices
   filteredPrices: Price[];
@@ -57,15 +53,14 @@ export function useProductItemEditor({
   productId,
   productPresentationId,
   locationId,
+  clientId,
   prices: externalPrices,
   lots: externalLots,
   unifyLots = false,
   initialQuantity = 1,
   initialPrice,
-  initialPriceType = "MINOR",
 }: UseProductItemEditorOptions): UseProductItemEditorReturn {
   const [quantity, setQuantity] = useState<number>(initialQuantity);
-  const [sellPriceType, setSellPriceType] = useState<PriceType>(initialPriceType);
   const [selectedPriceId, setSelectedPriceId] = useState<number | null>(null);
   const [price, setPrice] = useState<number>(initialPrice ?? 0);
   const [selectedLotId, setSelectedLotId] = useState<number | null>(null);
@@ -104,16 +99,40 @@ export function useProductItemEditor({
     return (fetchedPresentation?.lots as Lot[]) ?? [];
   }, [externalLots, fetchedPresentation]);
 
-  // Filter prices by price type and location
+  // Apply the 4-step price resolution from PRICES.md
   const filteredPrices = useMemo(() => {
-    const somePriceHasLocationId = allPrices.some((p) => p.location_id);
-    const locationFiltered = somePriceHasLocationId
-      ? allPrices.filter((p) => p.location_id === locationId)
-      : allPrices;
-    return locationFiltered.filter((p) => p.price_type === sellPriceType);
-  }, [allPrices, sellPriceType, locationId]);
+    const now = new Date();
 
-  // Auto-select first price when available prices change (new presentation or price type)
+    return allPrices.filter((p) => {
+      // Step 1: Universal (location_id = null) not suppressed at this location,
+      //         OR local price for this location exactly.
+      if (p.location_id === null) {
+        if (p.disabled_prices?.some((d) => d.location_id === locationId)) {
+          return false;
+        }
+      } else if (p.location_id !== locationId) {
+        return false;
+      }
+
+      // Step 2: Filter out expired LIMITED_OFFER prices
+      if (p.logic_type === "LIMITED_OFFER" && p.valid_until) {
+        if (new Date(p.valid_until) < now) return false;
+      }
+
+      // Step 3: SPECIAL prices — check client restriction
+      if (p.logic_type === "SPECIAL") {
+        const clients = p.enabled_prices_clients ?? [];
+        if (clients.length > 0) {
+          if (!clientId) return false;
+          if (!clients.some((ec) => ec.client_id === clientId)) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [allPrices, locationId, clientId]);
+
+  // Auto-select first price when available prices change (new presentation)
   useEffect(() => {
     const first = filteredPrices[0] ?? null;
     setSelectedPriceId(first?.price_id ?? null);
@@ -186,9 +205,6 @@ export function useProductItemEditor({
   return {
     quantity,
     handleQuantityChange,
-
-    sellPriceType,
-    setSellPriceType,
 
     filteredPrices,
     selectedPriceId,

@@ -46,11 +46,6 @@ export const paymentMethodOpt = [
     { value: 'OVERPAYMENT', label: 'Saldo a favor' },
 ];
 
-export const priceTypeOpt = [
-    { value: 'MINOR', label: 'Minorista' },
-    { value: 'MAJOR', label: 'Mayorista' },
-];
-
 export const priceLogicTypeOpt = [
     { value: 'QUANTITY_DISCOUNT', label: 'Descuento por Cantidad' },
     { value: 'SPECIAL', label: 'Precio Especial' },

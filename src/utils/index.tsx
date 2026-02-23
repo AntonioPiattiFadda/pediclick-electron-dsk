@@ -1,7 +1,7 @@
 import { MovementStatus } from "@/types";
 import { Lot } from "@/types/lots";
 import { OrderItem } from "@/types/orderItems";
-import { PriceLogicType, PriceType } from "@/types/prices";
+import { PriceLogicType } from "@/types/prices";
 
 export const formatDateToHours = (dateString: string) => {
   const date = new Date(dateString);
@@ -41,7 +41,6 @@ export const getLotsAndStockFromFirtsToLast = ({
   product_presentation_name,
   product_presentation_id,
   price,
-  price_type,
   logic_type,
   subtotal,
   total,
@@ -60,7 +59,6 @@ export const getLotsAndStockFromFirtsToLast = ({
   product_presentation_name: string;
   product_presentation_id: number;
   price: number;
-  price_type: PriceType;
   logic_type: PriceLogicType;
   order_id: number;
   is_deleted: boolean;
@@ -89,7 +87,6 @@ export const getLotsAndStockFromFirtsToLast = ({
         product_presentation_name,
         product_presentation_id,
         price,
-        price_type,
         logic_type,
         quantity: 0,
         over_sell_quantity: quantity,
@@ -129,7 +126,6 @@ export const getLotsAndStockFromFirtsToLast = ({
         product_presentation_name,
         product_presentation_id,
         price,
-        price_type,
         logic_type,
         quantity,
         over_sell_quantity: 0,
@@ -168,7 +164,6 @@ export const getLotsAndStockFromFirtsToLast = ({
       product_presentation_name,
       product_presentation_id,
       price,
-      price_type,
       logic_type,
       quantity: qtyToTake,
       over_sell_quantity: 0,

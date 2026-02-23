@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/stores/store";
 import {
     setSelectedPriceId,
-    setSellPriceType,
     setEffectivePrice,
     setSelectedLotId,
 } from "@/stores/orderSlice";
@@ -12,12 +11,11 @@ import { setWeight, setUnitsCount } from "@/stores/scaleSlice";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { OrderT } from "@/types/orders";
 import { OrderItem } from "@/types/orderItems";
-import type { PriceLogicType, PriceType } from "@/types/prices";
+import type { PriceLogicType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import { getLotsAndStockFromFirtsToLast } from "@/utils";
 import { formatCurrency, resolveEffectivePrice } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Checkbox } from "../../../components/ui/checkbox";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "../../../components/ui/input-group";
 import { Label } from "../../../components/ui/label";
 import { RefButton } from "../../../components/ui/refButton";
@@ -45,7 +43,6 @@ const PricingPanel = ({ order }: {
     const productPresentations = useSelector((state: RootState) => state.order.productPresentations);
     const productPresentation = useSelector((state: RootState) => state.order.productPresentation);
     const selectedPriceId = useSelector((state: RootState) => state.order.selectedPriceId);
-    const sellPriceType = useSelector((state: RootState) => state.order.sellPriceType);
     const effectivePrice = useSelector((state: RootState) => state.order.effectivePrice);
     const selectedLotId = useSelector((state: RootState) => state.order.selectedLotId);
     const isCheckOutOpen = useSelector((state: RootState) => state.order.isCheckOutOpen);
@@ -61,74 +58,64 @@ const PricingPanel = ({ order }: {
 
     const [allowedToOverSelling] = useState(true);
 
-    const { handleGetLocationId } = useGetLocationData()
+    const { handleGetLocationId } = useGetLocationData();
+    const locationId = handleGetLocationId();
+    const clientId = order.client_id;
 
     const productPresentationId = productPresentation?.product_presentation_id;
-
-    console.log("productPresentationId:", productPresentationId);
 
     const selectedProductPresentation = useMemo(() => {
         return productPresentations.find(pp => pp.product_presentation_id === productPresentationId) || null;
     }, [productPresentations, productPresentationId]);
 
-    console.log("selectedProductPresentation:", selectedProductPresentation);
-
     const selectedLot = useMemo(() => {
         if (!selectedProductPresentation?.lots) return null;
-
-        return (
-            selectedProductPresentation?.lots.find(
-                (lot) => lot.lot_id === selectedLotId
-            ) ?? null
-        );
+        return selectedProductPresentation?.lots.find(lot => lot.lot_id === selectedLotId) ?? null;
     }, [selectedProductPresentation?.lots, selectedLotId]);
-
-    console.log("selectedLot:", selectedLot);
-
-    //FIXME aca estoy buscando por locationId asumiendo que el lot solo tienen un stock en esa location
 
     const selectedStock = useMemo(() => {
         if (!selectedLot?.stock) return null;
-
-        return (
-            selectedLot.stock.find(
-                (stock) => stock.location_id === handleGetLocationId()
-            ) ?? null
-        );
-    }, [selectedLot]);
+        return selectedLot.stock.find(stock => stock.location_id === locationId) ?? null;
+    }, [selectedLot, locationId]);
 
     const unifyedStock = useMemo(() => {
         if (!selectedProductPresentation?.lots) return null;
+        return selectedProductPresentation.lots.reduce((acc, lot) => {
+            const stock = lot?.stock?.find((s) => s.location_id === locationId);
+            if (stock) {
+                acc.quantity += stock?.quantity ?? 0;
+                acc.reserved_for_selling_quantity += stock?.reserved_for_selling_quantity ?? 0;
+                acc.reserved_for_transferring_quantity += stock?.reserved_for_transferring_quantity ?? 0;
+            }
+            return acc;
+        }, { quantity: 0, reserved_for_selling_quantity: 0, reserved_for_transferring_quantity: 0 });
+    }, [selectedProductPresentation, locationId]);
 
-        return (
-            selectedProductPresentation.lots.reduce((acc, lot) => {
-                const stock = lot?.stock?.find((stock) => stock.location_id === handleGetLocationId());
-                console.log("stock:", stock);
-                if (stock) {
-                    acc.quantity += stock?.quantity ?? 0;
-                    acc.reserved_for_selling_quantity += stock?.reserved_for_selling_quantity ?? 0;
-                    acc.reserved_for_transferring_quantity += stock?.reserved_for_transferring_quantity ?? 0;
-                }
-                return acc;
-            }, { quantity: 0, reserved_for_selling_quantity: 0, reserved_for_transferring_quantity: 0 })
-        );
-    }, [selectedProductPresentation]);
-
-    console.log("unifyedStock:", unifyedStock);
-
-    const prices = selectedProductPresentation?.prices ?? [];
-
+    const allPrices = selectedProductPresentation?.prices ?? [];
     const lots = selectedProductPresentation?.lots ?? [];
 
-    const somePriceHasLocationId = prices.some((p) => p.location_id);
-
-    const firstFilteredPrices = somePriceHasLocationId ? prices.filter((p) => p.location_id === handleGetLocationId()) : prices;
-
-    const filteredPrices = firstFilteredPrices.filter((p) => p.price_type === sellPriceType);
-
-    console.log("selectedProductPresentation:", selectedProductPresentation);
-
-    console.log("orderItems:", orderItems);
+    // Apply 4-step price resolution
+    const filteredPrices = useMemo(() => {
+        const now = new Date();
+        return allPrices.filter((p) => {
+            if (p.location_id === null) {
+                if (p.disabled_prices?.some((d) => d.location_id === locationId)) return false;
+            } else if (p.location_id !== locationId) {
+                return false;
+            }
+            if (p.logic_type === "LIMITED_OFFER" && p.valid_until) {
+                if (new Date(p.valid_until) < now) return false;
+            }
+            if (p.logic_type === "SPECIAL") {
+                const clients = p.enabled_prices_clients ?? [];
+                if (clients.length > 0) {
+                    if (!clientId) return false;
+                    if (!clients.some((ec) => ec.client_id === clientId)) return false;
+                }
+            }
+            return true;
+        });
+    }, [allPrices, locationId, clientId]);
 
     const allocatedQty = useMemo(() => {
         if (!hasProduct(selectedProduct)) return 0;
@@ -139,12 +126,7 @@ const PricingPanel = ({ order }: {
             .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
     }, [orderItems, selectedProduct, selectedLotId, selectedProductPresentation]);
 
-    console.log("allocatedQty:", allocatedQty);
-
     const remainingStock = (selectedStock?.quantity || 0) - allocatedQty;
-
-    console.log("remainingStock:", remainingStock);
-
 
     const allocatedQtyUnified = useMemo(() => {
         if (!hasProduct(selectedProduct)) return 0;
@@ -154,48 +136,32 @@ const PricingPanel = ({ order }: {
             .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
     }, [orderItems, selectedProduct, selectedProductPresentation]);
 
-    console.log("allocatedQtyUnified:", allocatedQtyUnified);
-
     const totalUnifyedAvailable = useMemo(() => {
         if (!selectedProductPresentation?.lots) return 0;
         return selectedProductPresentation.lots.reduce((acc, lot) => {
-            const stock = lot?.stock?.find((stock) => stock.location_id === handleGetLocationId());
-            if (stock) {
-                acc += stock?.quantity ?? 0;
-            }
+            const stock = lot?.stock?.find((s) => s.location_id === locationId);
+            if (stock) acc += stock?.quantity ?? 0;
             return acc;
         }, 0);
-    }, [selectedProductPresentation]);
+    }, [selectedProductPresentation, locationId]);
 
     const remainingUnifyedStock = totalUnifyedAvailable - allocatedQtyUnified;
-
-    console.log("selectedProductPresentation?.sell_type:", selectedProductPresentation?.sell_type);
-
 
     const selectedPrice = filteredPrices.find((p) => p.price_id === selectedPriceId) || null;
 
     const handleSelectPrice = (priceId: number) => {
         dispatch(setSelectedPriceId(priceId));
-    }
+    };
 
-    const total = effectivePrice * (selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg ?? 0 : unitsCount ?? 0);
+    const qty = selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg ?? 0 : unitsCount ?? 0;
+    const total = effectivePrice * qty;
 
     const canAdd =
         hasProduct(selectedProduct) &&
         Number(effectivePrice) > 0 &&
-        Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) > 0 &&
-        (allowedToOverSelling ? true : Number(unifyLots ? remainingUnifyedStock : remainingStock) > 0)
-        && (allowedToOverSelling ? true : Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) <= Number(unifyLots ? remainingUnifyedStock : remainingStock));
-
-    console.log("canAdd:", canAdd);
-    console.log("canAdd:", selectedProduct);
-
-    console.log("Number(quantity) > 0:", Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) > 0);
-    console.log("effectivePrice:", effectivePrice);
-    console.log("quantity:", allowedToOverSelling ? true : Number(unifyLots ? remainingUnifyedStock : remainingStock));
-    console.log("canAdd:", (allowedToOverSelling ? true : Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) <= Number(unifyLots ? remainingUnifyedStock : remainingStock)));
-    console.log("allowedToOverSelling:", allowedToOverSelling);
-
+        Number(qty) > 0 &&
+        (allowedToOverSelling ? true : Number(unifyLots ? remainingUnifyedStock : remainingStock) > 0) &&
+        (allowedToOverSelling ? true : Number(qty) <= Number(unifyLots ? remainingUnifyedStock : remainingStock));
 
     const handleAddItem = () => {
         const itemsCalculated = getLotsAndStockFromFirtsToLast({
@@ -204,9 +170,8 @@ const PricingPanel = ({ order }: {
             product_name: selectedProduct.product_name,
             product_presentation_name: selectedProductPresentation?.product_presentation_name || "",
             product_presentation_id: selectedProductPresentation?.product_presentation_id || 0,
-            price_type: selectedPrice?.price_type as PriceType,
             logic_type: selectedPrice?.logic_type as PriceLogicType,
-            quantity: Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount),
+            quantity: Number(qty),
             price: selectedPrice ? selectedPrice.price / (selectedPrice.qty_per_price ?? 1) : 0,
             subtotal: Number(total),
             total: Number(total),
@@ -214,12 +179,10 @@ const PricingPanel = ({ order }: {
             order_id: order.order_id as number,
             is_deleted: false,
             status: 'COMPLETED',
-            location_id: handleGetLocationId(),
+            location_id: locationId,
             lot_id: unifyLots ? null : selectedLotId,
-            allowOverSelling: allowedToOverSelling
+            allowOverSelling: allowedToOverSelling,
         });
-
-        console.log("itemsCalculated:", itemsCalculated);
 
         setOrderItems((prev) => [...prev, ...itemsCalculated]);
     };
@@ -233,72 +196,39 @@ const PricingPanel = ({ order }: {
             if (e.key === "Enter" && !isCheckOutOpen && !clientPaymentModalOpen) {
                 e.preventDefault();
                 if (pendingActionRef.current) {
-                    if (pendingTimeoutRef.current) {
-                        clearTimeout(pendingTimeoutRef.current);
-                    }
+                    if (pendingTimeoutRef.current) clearTimeout(pendingTimeoutRef.current);
                     pendingActionRef.current = false;
                     pendingTimeoutRef.current = null;
                     return;
                 }
                 pendingActionRef.current = true;
-
                 pendingTimeoutRef.current = setTimeout(() => {
                     pendingActionRef.current = false;
                     pendingTimeoutRef.current = null;
                     addButtonRef.current?.click();
                 }, 300);
-                return;
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
-
         return () => window.removeEventListener("keydown", handleKeyDown);
-
     }, [isCheckOutOpen, clientPaymentModalOpen]);
 
-    if (!order?.order_id) {
-        return null
-    }
+    if (!order?.order_id) return null;
 
     if (!hasProduct(selectedProduct)) {
-        return (
-            <>
-                <NotSelectedProduct />
-            </>
-        );
+        return <NotSelectedProduct />;
     }
 
     return (
         <div className="col-span-1 flex flex-col gap-2 mt-auto">
-            <div className="w-full grid grid-cols-2 gap-2">
-                <div>
-                    <label className="text-sm text-slate-600">Resumen</label>
-                </div>
-                <div className=" flex flex-row gap-2 items-center ">
-                    <label className="text-sm text-slate-600  ml-auto">Tipo de venta</label>
-                    <div className="flex gap-2 items-center mt-1 ml-auto">
-                        <label >Mayorista</label>
-                        <Checkbox checked={sellPriceType === 'MAYOR'} onCheckedChange={(checked) => {
-                            dispatch(setSellPriceType(checked ? 'MAYOR' : 'MINOR'));
-                        }} />
-                        <label >Minorista</label>
-                        <Checkbox checked={sellPriceType === 'MINOR'} onCheckedChange={(checked) => {
-                            dispatch(setSellPriceType(checked ? 'MINOR' : 'MAYOR'));
-                        }} />
-                    </div>
-                </div>
-
-            </div>
             <div className="border rounded-lg p-4 shadow-sm bg-white">
                 <div className="grid grid-cols-3 gap-4 text-center items-center">
                     <div className="flex flex-col gap-2 justify-center">
-                        <div className="flex gap-2 items-center ">
+                        <div className="flex gap-2 items-center">
                             <span className="text-base font-semibold text-slate-500">Precio</span>
-                            {filteredPrices && filteredPrices.length === 0 ? (
-                                <span className="text-base font-semibold text-blue-600">
-                                    Sin precios
-                                </span>
+                            {filteredPrices.length === 0 ? (
+                                <span className="text-base font-semibold text-blue-600">Sin precios</span>
                             ) : (
                                 <PricesSelector
                                     prices={filteredPrices}
@@ -306,8 +236,9 @@ const PricingPanel = ({ order }: {
                                     onSelectPrice={(priceId) => {
                                         const pricePrice = filteredPrices.find(p => p.price_id === priceId)?.price || 0;
                                         dispatch(setEffectivePrice(pricePrice));
-                                        handleSelectPrice(priceId)
-                                    }} />
+                                        handleSelectPrice(priceId);
+                                    }}
+                                />
                             )}
                         </div>
 
@@ -315,7 +246,6 @@ const PricingPanel = ({ order }: {
                             label=""
                             value={effectivePrice || undefined}
                             onChange={(value) => {
-                                console.log("Manual price change:", value);
                                 dispatch(setEffectivePrice(value ?? 0));
                                 dispatch(setSelectedPriceId(null));
                             }}
@@ -329,11 +259,8 @@ const PricingPanel = ({ order }: {
                                 value={selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount || undefined}
                                 onChange={(e) => {
                                     const newValue = e.target.value;
-
-                                    const {
-                                        effectivePrice: calculatedPrice,
-                                        price_id: calculatedPriceId,
-                                    } = resolveEffectivePrice(Number(newValue), selectedPriceId, filteredPrices);
+                                    const { effectivePrice: calculatedPrice, price_id: calculatedPriceId } =
+                                        resolveEffectivePrice(Number(newValue), selectedPriceId, filteredPrices);
 
                                     if (selectedProductPresentation?.sell_type === "WEIGHT") {
                                         dispatch(setWeight(newValue === '' ? undefined : Number(newValue)));
@@ -341,14 +268,13 @@ const PricingPanel = ({ order }: {
                                         dispatch(setUnitsCount(newValue === '' ? undefined : Number(newValue)));
                                     }
 
-                                    if (!calculatedPriceId) {
-                                        return;
+                                    if (calculatedPriceId) {
+                                        dispatch(setEffectivePrice(calculatedPrice));
+                                        dispatch(setSelectedPriceId(calculatedPriceId));
                                     }
-
-                                    dispatch(setEffectivePrice(calculatedPrice));
-                                    dispatch(setSelectedPriceId(calculatedPriceId));
                                 }}
-                                placeholder="--" />
+                                placeholder="--"
+                            />
                             <InputGroupAddon align="inline-start">
                                 <InputGroupButton>{'x'}</InputGroupButton>
                             </InputGroupAddon>
@@ -369,24 +295,19 @@ const PricingPanel = ({ order }: {
                                 checked={unifyLots}
                                 onCheckedChange={(checked) => setUnifyLots(checked)}
                             />
-
-                            <Label>{unifyLots ? "Unificados" : " Lote:"}</Label>
-
+                            <Label>{unifyLots ? "Unificados" : "Lote:"}</Label>
                             {!unifyLots && (
                                 <LotSelector
                                     lots={lots || []}
                                     selectedLotId={selectedLotId}
-                                    onSelectLot={(lotId) => {
-                                        dispatch(setSelectedLotId(lotId));
-                                    }}
+                                    onSelectLot={(lotId) => dispatch(setSelectedLotId(lotId))}
                                 />
                             )}
                         </div>
 
-                        {unifyLots ?
-                            <StockAvailabilityUnified unifyedStock={unifyedStock!} remainingUnifyedStock={remainingUnifyedStock} /> :
-                            <StockAvailability selectedStock={selectedStock!} remainingStock={remainingStock} />}
-
+                        {unifyLots
+                            ? <StockAvailabilityUnified unifyedStock={unifyedStock!} remainingUnifyedStock={remainingUnifyedStock} />
+                            : <StockAvailability selectedStock={selectedStock!} remainingStock={remainingStock} />}
                     </div>
 
                     {/* Total */}
@@ -407,14 +328,14 @@ const PricingPanel = ({ order }: {
                             ? "Seleccioná un producto"
                             : Number(remainingStock) <= 0
                                 ? "Sin stock disponible"
-                                : Number(selectedProductPresentation?.sell_type === "WEIGHT" ? weightKg : unitsCount) > Number(unifyLots ? remainingUnifyedStock : remainingStock)
+                                : Number(qty) > Number(unifyLots ? remainingUnifyedStock : remainingStock)
                                     ? "Cantidad supera el stock disponible"
                                     : "Agregar al pedido"}
                     </RefButton>
                 </div>
             </div>
-
-        </div >);
+        </div>
+    );
 };
 
 export default PricingPanel;

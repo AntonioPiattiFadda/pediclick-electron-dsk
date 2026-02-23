@@ -45,7 +45,6 @@ export const PricingPanel = ({ order }: { order: OrderT }) => {
                 stock_id: item.stock_id,
                 lot_id: item.lot_id,
                 status: "PENDING",
-                price_type: item.price_type,
                 logic_type: item.logic_type,
                 order_id: item.order_id,
                 location_id: item.location_id,

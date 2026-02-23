@@ -3,8 +3,6 @@ import type { OrderItem } from "@/types/orderItems";
 import type { OrderT } from "@/types/orders";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Product } from "@/types/products";
-import type { PriceType } from "@/types/prices";
-
 interface OrderState {
     // In-site orders list & cart
     orders: OrderT[];
@@ -16,7 +14,6 @@ interface OrderState {
     productPresentations: ProductPresentation[];
     productPresentation: Partial<ProductPresentation>;
     selectedPriceId: number | null;
-    sellPriceType: PriceType;
     effectivePrice: number;
     selectedLotId: number | null;
     selectedStockId: number | null;
@@ -33,7 +30,6 @@ const initialState: OrderState = {
     productPresentations: [],
     productPresentation: {},
     selectedPriceId: null,
-    sellPriceType: "MINOR",
     effectivePrice: 0,
     selectedLotId: null,
     selectedStockId: null,
@@ -65,9 +61,6 @@ const orderSlice = createSlice({
         setSelectedPriceId(state, action: PayloadAction<number | null>) {
             state.selectedPriceId = action.payload;
         },
-        setSellPriceType(state, action: PayloadAction<PriceType>) {
-            state.sellPriceType = action.payload;
-        },
         setEffectivePrice(state, action: PayloadAction<number>) {
             state.effectivePrice = action.payload;
         },
@@ -84,7 +77,6 @@ const orderSlice = createSlice({
             state.selectedProduct = {} as Product;
             state.productPresentation = {};
             state.selectedPriceId = null;
-            state.sellPriceType = "MINOR";
             state.selectedStockId = null;
             state.effectivePrice = 0;
             state.selectedLotId = null;
@@ -100,7 +92,6 @@ export const {
     setProductPresentations,
     setProductPresentation,
     setSelectedPriceId,
-    setSellPriceType,
     setEffectivePrice,
     setSelectedLotId,
     setSelectedStockId,

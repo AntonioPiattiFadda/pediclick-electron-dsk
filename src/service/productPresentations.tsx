@@ -54,7 +54,7 @@ export const getProductPresentations = async (
         short_code,
         sell_type,
         bulk_quantity_equivalence,
-        prices(*),
+        prices(*, disabled_prices(location_id), enabled_prices_clients(client_id)),
         lots(lot_id,
           created_at,
           is_sold_out,
@@ -77,9 +77,8 @@ export const getProductPresentations = async (
         product_presentation_name,
         short_code,
         sell_type,
-        bulk_quantity_equivalence
-        prices(*),
-
+        bulk_quantity_equivalence,
+        prices(*, disabled_prices(location_id), enabled_prices_clients(client_id))
       `;
 
   const query = supabase
