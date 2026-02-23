@@ -172,7 +172,7 @@ const PricingPanel = ({ order }: {
             product_presentation_id: selectedProductPresentation?.product_presentation_id || 0,
             logic_type: selectedPrice?.logic_type as PriceLogicType,
             quantity: Number(qty),
-            price: selectedPrice ? selectedPrice.price / (selectedPrice.qty_per_price ?? 1) : 0,
+            price: selectedPrice ? selectedPrice.price : 0,
             subtotal: Number(total),
             total: Number(total),
             created_at: new Date().toISOString(),
@@ -233,6 +233,7 @@ const PricingPanel = ({ order }: {
                                 <PricesSelector
                                     prices={filteredPrices}
                                     selectedPriceId={selectedPriceId}
+                                    isWeight={selectedProductPresentation?.sell_unit === "BY_WEIGHT"}
                                     onSelectPrice={(priceId) => {
                                         const pricePrice = filteredPrices.find(p => p.price_id === priceId)?.price || 0;
                                         dispatch(setEffectivePrice(pricePrice));

@@ -6,23 +6,14 @@ import {
   ProductPresentationSelectorRoot,
   SelectProductPresentation,
 } from "@/components/shared/selectors/productPresentationSelector";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useGetLocationData } from "@/hooks/useGetLocationData";
 import { useProductItemEditor } from "@/hooks/useProductItemEditor";
 import { OrderItem } from "@/types/orderItems";
 import { Product } from "@/types/products";
 import { ProductPresentation } from "@/types/productPresentation";
 import { Lot } from "@/types/lots";
-import { priceLogicTypeOpt } from "@/constants";
 import { LotSelector } from "@/components/shared/LotSelector";
+import { PricesSelector } from "@/components/shared/PricesSelector";
 import { Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -154,35 +145,13 @@ export function AiOrderItemRow({
 
       {/* Price Area: select + manual input */}
       <div className="flex flex-col gap-1">
-        {/* Price Select */}
         {editor.filteredPrices.length > 0 ? (
-          <Select
-            value={editor.selectedPriceId?.toString() || ""}
-            onValueChange={(value) => editor.handleSelectPrice(Number(value))}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar precio" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Precios</SelectLabel>
-                {editor.filteredPrices.map((p) => (
-                  <SelectItem
-                    key={p.price_id}
-                    value={p.price_id?.toString() || ""}
-                  >
-                    <span className="text-xs">
-                      #{p.price_number} — ${p.price / (p.qty_per_price ?? 1)}{" "}
-                      —{" "}
-                      {priceLogicTypeOpt.find((o) => o.value === p.logic_type)
-                        ?.label ?? p.logic_type}{" "}
-                      — &gt;={p.qty_per_price}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+          <PricesSelector
+            prices={editor.filteredPrices}
+            selectedPriceId={editor.selectedPriceId}
+            onSelectPrice={editor.handleSelectPrice}
+            isWeight={productPresentation.sell_unit === "BY_WEIGHT"}
+          />
         ) : (
           <span className="text-xs text-muted-foreground italic">
             Sin precios disponibles

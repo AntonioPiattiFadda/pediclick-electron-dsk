@@ -218,6 +218,7 @@ const PricingPanel = ({
                                     prices={editor.filteredPrices}
                                     selectedPriceId={editor.selectedPriceId}
                                     onSelectPrice={editor.handleSelectPrice}
+                                    isWeight={productPresentation.sell_unit === "BY_WEIGHT"}
                                 />
                             )}
                         </div>

@@ -136,7 +136,7 @@ export function useProductItemEditor({
   useEffect(() => {
     const first = filteredPrices[0] ?? null;
     setSelectedPriceId(first?.price_id ?? null);
-    setPrice(first ? first.price / (first.qty_per_price ?? 1) : 0);
+    setPrice(first ? first.price : 0);
   }, [filteredPrices]);
 
   // Auto-select first lot/stock when lots change
@@ -182,7 +182,7 @@ export function useProductItemEditor({
     const found = filteredPrices.find((p) => p.price_id === priceId);
     if (found) {
       setSelectedPriceId(priceId);
-      setPrice(found.price / (found.qty_per_price ?? 1));
+      setPrice(found.price);
     }
   };
 
