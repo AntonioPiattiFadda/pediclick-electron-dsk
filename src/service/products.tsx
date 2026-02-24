@@ -4,79 +4,6 @@ import { supabase } from ".";
 import { getOrganizationId } from "./profiles";
 
 
-export const getAllProducts = async () => {
-  const organizationId = await getOrganizationId();
-  const { data: dbProducts, error } = await supabase
-    .from("products")
-    .select(`
-  *,
-  public_images(public_image_src),
-  categories(category_name),
-  sub_categories(sub_category_name),
-  brands(brand_name),
-  product_presentations!inner (
-    *,
-    lots(
-      *,
-      lot_containers_location(*),
-      stock(*)
-    )
-  )
-`)
-    .is("product_presentations.deleted_at", null)
-    .is("deleted_at", null)
-    .eq("organization_id", organizationId)
-    .order("product_name", { ascending: true });
-
-
-
-  console.log("dbProducts", dbProducts, error);
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-
-  const products = adaptProductsForClient(dbProducts);
-  console.log("adaptedProducts", products);
-
-
-  return { products, error };
-};
-
-export const getProduct = async (productId: number) => {
-  const { data: dbProduct, error } = await supabase
-    .from("products")
-    .select(
-      `
-      *,
-      public_images(public_image_src),
-      categories(category_name),
-      sub_categories(sub_category_name),
-      brands(brand_name),
-      lots(
-        *,
-        stock(*)
-      )
-      `
-    )
-    .eq("product_id", productId)
-    .is("deleted_at", null) // ✅ Solo productos activos
-    .single();
-
-  if (error) {
-    console.log("getProduct error", error);
-    throw new Error(error.message);
-  }
-  console.log("XAtaptar", dbProduct);
-
-  const product = adaptProductsForClient([dbProduct])[0];
-
-  console.log("adaptedProductSingle", product);
-
-  return { product, error };
-};
-
 export const updateProduct = async (
   productId: number,
   productData: Partial<Product>
@@ -128,29 +55,6 @@ export const deleteProduct = async (productId: string | number) => {
   }
 
   return { success: true };
-};
-
-export const getProductsByShortCode = async (
-  shortCode: string
-) => {
-  const organizationId = await getOrganizationId();
-
-  const { data: dbProducts, error } = await supabase
-    .from("products")
-    .select("*")
-    .is("deleted_at", null)
-    .eq("organization_id", organizationId)
-    .order("product_name", { ascending: true })
-    .eq("short_code", shortCode);
-
-  // .ilike("short_code", `%${shortCode}%`);
-
-  console.log(dbProducts, error);
-
-  if (error) throw new Error(error.message);
-
-  const products = adaptProductsForClient(dbProducts || []);
-  return { products, error: null };
 };
 
 // function escapeLike(s: string) {

@@ -85,13 +85,11 @@ export async function getTerminalSessionClosureData(
      * ----------------------------- */
     const { data: orders, error: ordersError } = await supabase
         .from("orders")
-        .select(`*,
+        .select(`order_id,
       payments (
-        payment_id,
         amount,
         payment_method,
-        payment_direction,
-        created_at
+        payment_direction
       )
     `)
         .eq("terminal_session_id", terminalSessionId)
@@ -106,7 +104,7 @@ export async function getTerminalSessionClosureData(
     const { data: standalonePayments, error: paymentsError } =
         await supabase
             .from("payments")
-            .select(`*`)
+            .select("amount, payment_method, payment_direction, payment_type")
             .eq("terminal_session_id", terminalSessionId)
             .is("order_id", null)
 
@@ -115,9 +113,7 @@ export async function getTerminalSessionClosureData(
     const { data: terminalSession, error: terminalSessionError } =
         await supabase
             .from("terminal_sessions")
-            .select(`*,
-        users ( *
-        )`)
+            .select("terminal_session_id, opening_balance, opened_at, users(email)")
             .eq("terminal_session_id", terminalSessionId)
             .single();
 
@@ -139,13 +135,9 @@ export async function getTerminalSessionClosureData(
 export async function getOpenTerminalSessions(organizationId: string): Promise<OpenSessionDisplay[]> {
     const { data, error } = await supabase
         .from("terminal_sessions")
-        .select(`*,
-            terminals (
-                name
-            ),
-                users (
-                    *
-                )
+        .select(`terminal_session_id, opened_by_user_id, opened_at,
+            terminals (name),
+            users (full_name, email)
         `)
         .eq("status", "OPEN")
         .eq("organization_id", organizationId);

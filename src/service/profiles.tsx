@@ -133,7 +133,7 @@ export const getOrganizationId = async () => {
   const userId = await getUserId();
   const { data: userData, error } = await supabase
     .from("users")
-    .select("*")
+    .select("organization_id")
     .eq("id", userId)
     .single();
 

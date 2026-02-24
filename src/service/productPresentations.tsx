@@ -46,7 +46,7 @@ export const getProductPresentations = async (
             lot_containers_stock(*)
           )
         )
-        
+
       `
       : `
         product_presentation_id,
@@ -54,22 +54,17 @@ export const getProductPresentations = async (
         short_code,
         sell_type,
         bulk_quantity_equivalence,
-        prices(*, disabled_prices(location_id), enabled_prices_clients(client_id)),
+        prices(price_id, location_id, price, qty_per_price, logic_type, observations, valid_until, disabled_prices(location_id), enabled_prices_clients(client_id)),
         lots(lot_id,
           created_at,
-          is_sold_out,
-          final_cost_per_unit,
-          final_cost_per_bulk,
-          final_cost_total,
-          stock!inner(lot_id,
+          initial_stock_quantity,
+          stock!inner(
             quantity,
             stock_id,
             location_id,
-            stock_type,
             reserved_for_transferring_quantity,
-            reserved_for_selling_quantity,
-            lot_containers_stock(*)
-            )
+            reserved_for_selling_quantity
+          )
         )
       `
     : `
@@ -78,7 +73,7 @@ export const getProductPresentations = async (
         short_code,
         sell_type,
         bulk_quantity_equivalence,
-        prices(*, disabled_prices(location_id), enabled_prices_clients(client_id))
+        prices(price_id, location_id, price, qty_per_price, logic_type, observations, valid_until, disabled_prices(location_id), enabled_prices_clients(client_id))
       `;
 
   const query = supabase
@@ -101,29 +96,6 @@ export const getProductPresentations = async (
   if (error) throw new Error(error.message);
 
   return presentations;
-};
-
-export const getProductPresentation = async (productPresentationId: number | null) => {
-  const organizationId = await getOrganizationId();
-  const { data: presentation, error } = await supabase
-    .from("product_presentations")
-    .select(`
-      *,
-      products(product_name),
-      lots(*
-      , stock(*)
-      )
-        `)
-    .is("deleted_at", null) // Exclude soft-deleted providers
-    .eq("organization_id", organizationId)
-    .eq("product_presentation_id", productPresentationId)
-    .single();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return { presentation, error };
 };
 
 export const createProductPresentation = async (name: string, shortCode: number | null, productId: number, bulkQuantityEquivalence: number | null) => {

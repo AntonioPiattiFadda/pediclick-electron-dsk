@@ -169,7 +169,7 @@ export async function generateOrderNumber(locationId: number) {
   // 1) Buscar secuencia existente
   const { data: seq, error: fetchError } = await supabase
     .from("store_order_sequences")
-    .select("*")
+    .select("last_number")
     .eq("location_id", locationId)
     .single();
 

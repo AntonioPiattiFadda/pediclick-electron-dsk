@@ -16,7 +16,7 @@ export async function updateDeliveryOrderClient(
     .from("orders")
     .update({ client_id: clientId })
     .eq("order_id", orderId)
-    .select("*, client:clients(*)")
+    .select("*, client:clients(client_id, full_name, phone, address, current_balance, available_credit, credit_limit, short_code, tax_condition, last_transaction_date)")
     .single();
 
   if (error) throw error;
@@ -35,7 +35,7 @@ export async function updateDeliveryOrderStatus(
     .from("orders")
     .update({ order_status: status })
     .eq("order_id", orderId)
-    .select("*, client:clients(*)")
+    .select("*, client:clients(client_id, full_name, phone, address, current_balance, available_credit, credit_limit, short_code, tax_condition, last_transaction_date)")
     .single();
 
   if (error) throw error;
@@ -66,7 +66,7 @@ export async function updateDeliveryOrderNotes(
     .from("orders")
     .update({ notes })
     .eq("order_id", orderId)
-    .select("*, client:clients(*)")
+    .select("*, client:clients(client_id, full_name, phone, address, current_balance, available_credit, credit_limit, short_code, tax_condition, last_transaction_date)")
     .single();
 
   if (error) throw error;
@@ -89,7 +89,7 @@ export async function completeDeliveryOrder(
       payment_status: "PAID",
     })
     .eq("order_id", orderId)
-    .select("*, client:clients(*)")
+    .select("*, client:clients(client_id, full_name, phone, address, current_balance, available_credit, credit_limit, short_code, tax_condition, last_transaction_date)")
     .single();
 
   if (error) throw error;
@@ -163,7 +163,8 @@ export async function getDeliveryOrdersByDateRange(
     .from("orders")
     .select(`
       *,
-      client:clients(full_name)
+      client:clients(full_name),
+      order_items(order_item_id)
     `)
     .eq("order_type", "DELIVERY")
     .eq("location_id", locationId)
@@ -172,25 +173,14 @@ export async function getDeliveryOrdersByDateRange(
     .is("deleted_at", null)
     .order("created_at", { ascending: false });
 
-  console.log("Fetched delivery orders:", orders, ordersError);
-
   if (ordersError) throw ordersError;
   if (!orders) return [];
 
-  const ordersWithMetadata: OrderWithMetadata[] = await Promise.all(
-    orders.map(async (order) => {
-      const { data } = await supabase
-        .from("order_items")
-        .select(`*`)
-        .eq("order_id", Number(order.order_id));
-
-      return {
-        ...order,
-        client_full_name: order.client?.full_name || null,
-        item_count: data?.length || 0,
-      };
-    })
-  );
+  const ordersWithMetadata: OrderWithMetadata[] = orders.map((order) => ({
+    ...order,
+    client_full_name: order.client?.full_name || null,
+    item_count: order.order_items?.length || 0,
+  }));
 
   return ordersWithMetadata;
 }
