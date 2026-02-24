@@ -21,7 +21,6 @@ Prices are defined at the **product presentation** level (not product). Each pri
 | `profit_percentage` | numeric | Margin over cost: `(price / (cost_per_unit * qty)) - 1) * 100` |
 | `logic_type` | enum | `QUANTITY_DISCOUNT` \| `SPECIAL` \| `LIMITED_OFFER` |
 | `observations` | text \| null | Free-text label shown at sale (e.g. "Precio jubilados") |
-| `is_active` | boolean | Soft on/off flag |
 | `valid_from` | timestamptz \| null | Start of validity window |
 | `valid_until` | timestamptz \| null | End of validity window (used by `LIMITED_OFFER`) |
 
