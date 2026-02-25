@@ -33,6 +33,18 @@ export const generateTempNumericId = () => {
   return Date.now() * 1000 + mathRandom;
 };
 
+/** Returns bqe with null/undefined treated as 1 (no conversion). */
+export const bqeOrOne = (bqe: number | null | undefined): number => bqe ?? 1;
+
+/** Converts a base-unit quantity to presentation units (floors result). */
+export const toPresentation = (baseQty: number, bqe: number | null | undefined): number =>
+  Math.floor(baseQty / bqeOrOne(bqe));
+
+/** Converts a presentation-unit quantity to base units. */
+export const toBase = (presQty: number, bqe: number | null | undefined): number =>
+  presQty * bqeOrOne(bqe);
+
+
 export const getLotsAndStockFromFirtsToLast = ({
   lots,
   quantity,
@@ -50,6 +62,7 @@ export const getLotsAndStockFromFirtsToLast = ({
   status,
   location_id,
   lot_id,
+  bulk_quantity_equivalence,
   allowOverSelling = false,
 }: {
   lots: Lot[];
@@ -68,6 +81,7 @@ export const getLotsAndStockFromFirtsToLast = ({
   created_at: string;
   location_id: number;
   lot_id: number | null;
+  bulk_quantity_equivalence: number | null;
   allowOverSelling?: boolean;
 }): OrderItem[] => {
 
@@ -90,12 +104,12 @@ export const getLotsAndStockFromFirtsToLast = ({
         logic_type,
         quantity: 0,
         over_sell_quantity: quantity,
+        qty_in_base_units: toBase(quantity, bulk_quantity_equivalence),
         subtotal,
         total,
         created_at,
         order_id,
         is_deleted,
-        // FIXME VER ESTO QUE LO COMPLETE DE ONDA
         status: "COMPLETED",
       },
     ];
@@ -129,6 +143,7 @@ export const getLotsAndStockFromFirtsToLast = ({
         logic_type,
         quantity,
         over_sell_quantity: 0,
+        qty_in_base_units: toBase(quantity, bulk_quantity_equivalence),
         subtotal,
         total,
         created_at: new Date().toISOString(),
@@ -147,10 +162,11 @@ export const getLotsAndStockFromFirtsToLast = ({
   for (const lot of sortedLots) {
     if (remainingQty <= 0) break;
 
-    const availableQty = lot.stock?.[0]?.quantity ?? 0;
-    if (availableQty <= 0) continue;
+    const availableBaseQty = lot.stock?.[0]?.quantity ?? 0;
+    const availablePresQty = toPresentation(availableBaseQty, bulk_quantity_equivalence);
+    if (availablePresQty <= 0) continue;
 
-    const qtyToTake = Math.min(availableQty, remainingQty);
+    const qtyToTake = Math.min(availablePresQty, remainingQty);
 
     const calculatedSubTotal = (subtotal * qtyToTake) / quantity;
     const calculatedTotal = (total * qtyToTake) / quantity;
@@ -167,6 +183,7 @@ export const getLotsAndStockFromFirtsToLast = ({
       logic_type,
       quantity: qtyToTake,
       over_sell_quantity: 0,
+      qty_in_base_units: toBase(qtyToTake, bulk_quantity_equivalence),
       subtotal: calculatedSubTotal,
       total: calculatedTotal,
       created_at,
@@ -195,6 +212,7 @@ export const getLotsAndStockFromFirtsToLast = ({
     const lastItem = result[lastItemIndex];
 
     lastItem.over_sell_quantity = remainingQty;
+    lastItem.qty_in_base_units = (lastItem.qty_in_base_units ?? 0) + toBase(remainingQty, bulk_quantity_equivalence);
     lastItem.subtotal += oversellSubtotal;
     lastItem.total += oversellTotal;
   }

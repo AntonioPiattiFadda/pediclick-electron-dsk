@@ -13,7 +13,7 @@ import { OrderT } from "@/types/orders";
 import { OrderItem } from "@/types/orderItems";
 import type { PriceLogicType } from "@/types/prices";
 import type { Product } from "@/types/products";
-import { getLotsAndStockFromFirtsToLast } from "@/utils";
+import { getLotsAndStockFromFirtsToLast, toPresentation } from "@/utils";
 import { formatCurrency, resolveEffectivePrice } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from "../../../components/ui/input-group";
@@ -78,6 +78,7 @@ const PricingPanel = ({ order }: {
         return selectedLot.stock.find(stock => stock.location_id === locationId) ?? null;
     }, [selectedLot, locationId]);
 
+    // unifyedStock.quantity is raw base units (for StockData/breakdown dialogs)
     const unifyedStock = useMemo(() => {
         if (!selectedProductPresentation?.lots) return null;
         return selectedProductPresentation.lots.reduce((acc, lot) => {
@@ -126,7 +127,8 @@ const PricingPanel = ({ order }: {
             .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
     }, [orderItems, selectedProduct, selectedLotId, selectedProductPresentation]);
 
-    const remainingStock = (selectedStock?.quantity || 0) - allocatedQty;
+    // remainingStock in presentation units (stock is base units, allocatedQty is pres units)
+    const remainingStock = toPresentation(selectedStock?.quantity || 0, selectedProductPresentation?.bulk_quantity_equivalence) - allocatedQty;
 
     const allocatedQtyUnified = useMemo(() => {
         if (!hasProduct(selectedProduct)) return 0;
@@ -138,11 +140,12 @@ const PricingPanel = ({ order }: {
 
     const totalUnifyedAvailable = useMemo(() => {
         if (!selectedProductPresentation?.lots) return 0;
-        return selectedProductPresentation.lots.reduce((acc, lot) => {
+        const totalBase = selectedProductPresentation.lots.reduce((acc, lot) => {
             const stock = lot?.stock?.find((s) => s.location_id === locationId);
             if (stock) acc += stock?.quantity ?? 0;
             return acc;
         }, 0);
+        return toPresentation(totalBase, selectedProductPresentation?.bulk_quantity_equivalence);
     }, [selectedProductPresentation, locationId]);
 
     const remainingUnifyedStock = totalUnifyedAvailable - allocatedQtyUnified;
@@ -181,6 +184,7 @@ const PricingPanel = ({ order }: {
             status: 'COMPLETED',
             location_id: locationId,
             lot_id: unifyLots ? null : selectedLotId,
+            bulk_quantity_equivalence: selectedProductPresentation?.bulk_quantity_equivalence ?? null,
             allowOverSelling: allowedToOverSelling,
         });
 
@@ -307,8 +311,17 @@ const PricingPanel = ({ order }: {
                         </div>
 
                         {unifyLots
-                            ? <StockAvailabilityUnified unifyedStock={unifyedStock!} remainingUnifyedStock={remainingUnifyedStock} />
-                            : <StockAvailability selectedStock={selectedStock!} remainingStock={remainingStock} />}
+                            ? <StockAvailabilityUnified
+                                unifyedStock={unifyedStock!}
+                                remainingInPresentationUnits={remainingUnifyedStock}
+                                productId={selectedProduct.product_id as number}
+                              />
+                            : <StockAvailability
+                                selectedStock={selectedStock!}
+                                remainingStock={remainingStock}
+                                bulk_quantity_equivalence={selectedProductPresentation?.bulk_quantity_equivalence ?? null}
+                                productId={selectedProduct.product_id as number}
+                              />}
                     </div>
 
                     {/* Total */}

@@ -40,7 +40,6 @@ export type Lot = {
     purchasing_agent_commision_type: CommissionType;
     purchasing_agent_commision_percentage: number | null;
     purchasing_agent_commision_unit_value: number | null;
-    product_presentation_id: number | null;
     extra_cost_total: number | null;
     is_finished: boolean | null;
 

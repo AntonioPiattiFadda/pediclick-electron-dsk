@@ -18,6 +18,7 @@ export interface OrderItem {
   //Se calculaara price en base a esto
 
   quantity: number;
+  qty_in_base_units: number;
   over_sell_quantity: number;
   price: number;
 

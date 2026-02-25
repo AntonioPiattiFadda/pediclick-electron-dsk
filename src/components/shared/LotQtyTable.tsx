@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Lot } from "@/types/lots";
 import { OrderItem } from "@/types/orderItems";
 import { formatDate } from "@/utils";
+import { toPresentation, toBase } from "@/utils";
 import {
     Table,
     TableBody,
@@ -17,17 +18,17 @@ export function LotQtyTable({
     locationId,
     lotQtyMap,
     onChangeLotQty,
-    isWeight = false,
+    bulk_quantity_equivalence,
+    presentationName,
 }: {
     lots: Lot[];
     orderItems: OrderItem[];
     locationId: number;
     lotQtyMap: Record<number, number>;
     onChangeLotQty: (lotId: number, qty: number) => void;
-    isWeight?: boolean;
+    bulk_quantity_equivalence: number | null;
+    presentationName: string;
 }) {
-    const unit = isWeight ? "kg" : "un.";
-
     const sortedLots = useMemo(
         () =>
             [...lots].sort(
@@ -39,7 +40,7 @@ export function LotQtyTable({
     );
 
     return (
-        <Table className="text-sm">
+        <Table className="text-sm ">
             <TableHeader>
                 <TableRow>
                     <TableHead>Lote</TableHead>
@@ -47,31 +48,36 @@ export function LotQtyTable({
                         Disponible
                     </TableHead>
                     <TableHead className="text-center w-32">
-                        Cantidad ({unit})
+                        Cantidad ({presentationName})
                     </TableHead>
                 </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody >
                 {sortedLots.map((lot) => {
                     const stock = lot.stock?.find(
                         (s) => s.location_id === locationId
                     );
-                    const stockQty = stock?.quantity ?? 0;
-                    const initial = lot.initial_stock_quantity ?? stockQty;
+                    const stockBaseQty = stock?.quantity ?? 0;
+                    const stockPresQty = toPresentation(stockBaseQty, bulk_quantity_equivalence);
 
                     const cartAllocated = orderItems
                         .filter((oi) => oi.lot_id === lot.lot_id)
                         .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
 
                     const typedQty = lotQtyMap[lot.lot_id] ?? 0;
-                    const liveRemaining = stockQty - cartAllocated - typedQty;
+
+                    // remaining in pres units; base is derived for Option C display
+                    const liveRemainingPres = stockPresQty - cartAllocated - typedQty;
+                    const liveRemainingBase = stockBaseQty
+                        - toBase(cartAllocated, bulk_quantity_equivalence)
+                        - toBase(typedQty, bulk_quantity_equivalence);
 
                     const remainingColor =
-                        liveRemaining > 0
+                        liveRemainingPres > 0
                             ? "text-green-600"
-                            : liveRemaining === 0
-                            ? "text-amber-600"
-                            : "text-red-600";
+                            : liveRemainingPres === 0
+                                ? "text-amber-600"
+                                : "text-red-600";
 
                     return (
                         <TableRow key={lot.lot_id}>
@@ -80,10 +86,10 @@ export function LotQtyTable({
                             </TableCell>
                             <TableCell className="text-center">
                                 <span className={`font-semibold ${remainingColor}`}>
-                                    {liveRemaining}
+                                    {liveRemainingPres}
                                 </span>
                                 <span className="text-slate-400 text-xs">
-                                    {" "}/ {initial}
+                                    {" "}({liveRemainingBase} u.base)
                                 </span>
                             </TableCell>
                             <TableCell className="text-center">

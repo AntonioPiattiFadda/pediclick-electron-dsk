@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getProductPresentations } from "@/service/productPresentations";
 import { resolveEffectivePrice } from "@/utils/prices";
+import { toPresentation } from "@/utils";
 import type { Price } from "@/types/prices";
 import type { Lot } from "@/types/lots";
 
@@ -10,6 +11,7 @@ export interface UseProductItemEditorOptions {
   productPresentationId: number | null;
   locationId: number;
   clientId?: number | null;
+  bulk_quantity_equivalence?: number | null;
 
   // Optional data override — when provided, skips internal fetch
   prices?: Price[];
@@ -54,6 +56,7 @@ export function useProductItemEditor({
   productPresentationId,
   locationId,
   clientId,
+  bulk_quantity_equivalence,
   prices: externalPrices,
   lots: externalLots,
   unifyLots = false,
@@ -152,18 +155,19 @@ export function useProductItemEditor({
     setSelectedStockId(firstStock?.stock_id ?? null);
   }, [allLots, unifyLots]);
 
-  // Computed available stock
+  // Computed available stock in presentation units
   const availableStock = useMemo(() => {
     if (unifyLots) {
-      return allLots.reduce((sum, lot) => {
+      const totalBase = allLots.reduce((sum, lot) => {
         const lotStock = lot.stock?.reduce((s, stk) => s + (stk.quantity ?? 0), 0) ?? 0;
         return sum + lotStock;
       }, 0);
+      return toPresentation(totalBase, bulk_quantity_equivalence);
     }
     const lot = allLots.find((l) => l.lot_id === selectedLotId);
     const stock = lot?.stock?.find((s) => s.stock_id === selectedStockId);
-    return stock?.quantity ?? 0;
-  }, [allLots, unifyLots, selectedLotId, selectedStockId]);
+    return toPresentation(stock?.quantity ?? 0, bulk_quantity_equivalence);
+  }, [allLots, unifyLots, selectedLotId, selectedStockId, bulk_quantity_equivalence]);
 
   const handleQuantityChange = (newQty: number) => {
     setQuantity(newQty);

@@ -11,7 +11,7 @@ import type { PriceLogicType } from "@/types/prices";
 import type { Product } from "@/types/products";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Lot } from "@/types/lots";
-import { getLotsAndStockFromFirtsToLast } from "@/utils";
+import { getLotsAndStockFromFirtsToLast, toPresentation, toBase } from "@/utils";
 import { formatCurrency } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { InputGroup, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
@@ -62,6 +62,7 @@ const PricingPanel = ({
         productPresentationId: productPresentation.product_presentation_id ?? null,
         locationId,
         clientId: order.client_id,
+        bulk_quantity_equivalence: productPresentation.bulk_quantity_equivalence,
         prices: productPresentation.prices,
         lots: productPresentation.lots as Lot[] | undefined,
         unifyLots,
@@ -74,6 +75,7 @@ const PricingPanel = ({
 
     // ── Unified mode ────────────────────────────────────────────────────────
 
+    // unifyedStock.quantity is raw base units (for StockData dialog)
     const unifyedStock = useMemo(() => {
         if (!editor.lots.length) return null;
         return editor.lots.reduce(
@@ -90,6 +92,7 @@ const PricingPanel = ({
         );
     }, [editor.lots, locationId]);
 
+    // allocatedQtyUnified: presentation units (oi.quantity is always in pres units)
     const allocatedQtyUnified = useMemo(() => {
         if (!hasProduct(selectedProduct)) return 0;
         const pid = selectedProduct.product_id as number;
@@ -101,13 +104,15 @@ const PricingPanel = ({
             .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
     }, [orderItems, selectedProduct, productPresentation.product_presentation_id]);
 
+    // totalUnifyedAvailable: base units summed, then converted to pres units
     const totalUnifyedAvailable = useMemo(() => {
-        return editor.lots.reduce((acc, lot) => {
+        const totalBase = editor.lots.reduce((acc, lot) => {
             const stock = lot?.stock?.find((s) => s.location_id === locationId);
             if (stock) acc += stock.quantity ?? 0;
             return acc;
         }, 0);
-    }, [editor.lots, locationId]);
+        return toPresentation(totalBase, productPresentation.bulk_quantity_equivalence);
+    }, [editor.lots, locationId, productPresentation.bulk_quantity_equivalence]);
 
     const remainingUnifyedStock = totalUnifyedAvailable - allocatedQtyUnified;
 
@@ -129,13 +134,13 @@ const PricingPanel = ({
 
     const canAdd = unifyLots
         ? hasProduct(selectedProduct) &&
-          Number(editor.price) > 0 &&
-          Number(unifiedQty) > 0 &&
-          (allowedToOverSelling || remainingUnifyedStock > 0) &&
-          (allowedToOverSelling || unifiedQty <= remainingUnifyedStock)
+        Number(editor.price) > 0 &&
+        Number(unifiedQty) > 0 &&
+        (allowedToOverSelling || remainingUnifyedStock > 0) &&
+        (allowedToOverSelling || unifiedQty <= remainingUnifyedStock)
         : hasProduct(selectedProduct) &&
-          Number(editor.price) > 0 &&
-          totalSelectedQty > 0;
+        Number(editor.price) > 0 &&
+        totalSelectedQty > 0;
 
     // ── Add handlers ─────────────────────────────────────────────────────────
 
@@ -157,6 +162,7 @@ const PricingPanel = ({
             status: "COMPLETED",
             location_id: locationId,
             lot_id: null,
+            bulk_quantity_equivalence: productPresentation.bulk_quantity_equivalence ?? null,
             allowOverSelling: allowedToOverSelling,
         });
         await onAddItems(itemsCalculated);
@@ -182,6 +188,7 @@ const PricingPanel = ({
                     logic_type: selectedPrice?.logic_type as PriceLogicType,
                     quantity: lotQty,
                     over_sell_quantity: 0,
+                    qty_in_base_units: toBase(lotQty, productPresentation.bulk_quantity_equivalence),
                     subtotal,
                     total: subtotal,
                     created_at: new Date().toISOString(),
@@ -312,7 +319,8 @@ const PricingPanel = ({
                         {unifyLots && (
                             <StockAvailabilityUnified
                                 unifyedStock={unifyedStock!}
-                                remainingUnifyedStock={remainingUnifyedStock}
+                                remainingInPresentationUnits={remainingUnifyedStock}
+                                productId={selectedProduct.product_id as number}
                             />
                         )}
                     </div>
@@ -328,7 +336,7 @@ const PricingPanel = ({
 
                 {/* ── Per-lot table ── */}
                 {!unifyLots && (
-                    <div className="mt-3 border-t pt-3">
+                    <div className="mt-3 border-t pt-3 max-h-50  overflow-auto">
                         <LotQtyTable
                             lots={editor.lots}
                             orderItems={orderItems}
@@ -337,7 +345,8 @@ const PricingPanel = ({
                             onChangeLotQty={(lotId, qty) =>
                                 setLotQtyMap((prev) => ({ ...prev, [lotId]: qty }))
                             }
-                            isWeight={isWeight}
+                            bulk_quantity_equivalence={productPresentation.bulk_quantity_equivalence ?? null}
+                            presentationName={productPresentation.product_presentation_name || "un."}
                         />
                     </div>
                 )}

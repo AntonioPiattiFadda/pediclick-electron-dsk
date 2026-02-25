@@ -38,6 +38,7 @@ export const PricingPanel = ({ order }: { order: OrderT }) => {
                 product_presentation_id: item.product_presentation_id,
                 product_presentation_name: item.product_presentation_name,
                 quantity: item.quantity,
+                qty_in_base_units: item.qty_in_base_units,
                 over_sell_quantity: item.over_sell_quantity || 0,
                 price: item.price,
                 subtotal: item.subtotal,

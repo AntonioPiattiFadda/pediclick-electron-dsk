@@ -212,7 +212,6 @@ CREATE TABLE public.lots (
   purchase_cost_per_bulk numeric,
   download_cost_per_bulk numeric,
   final_cost_per_bulk numeric,
-  bulk_quantity_equivalence numeric,
   delivery_cost_total numeric,
   delivery_cost_per_unit numeric,
   delivery_cost_per_bulk numeric,
@@ -223,11 +222,9 @@ CREATE TABLE public.lots (
   purchasing_agent_commision_type USER-DEFINED NOT NULL DEFAULT 'NONE'::commission_type,
   purchasing_agent_commision_percentage numeric,
   purchasing_agent_commision_unit_value numeric,
-  product_presentation_id bigint,
   extra_cost_total numeric,
   is_finished boolean,
   CONSTRAINT lots_pkey PRIMARY KEY (lot_id),
-  CONSTRAINT lots_product_presentation_id_fkey FOREIGN KEY (product_presentation_id) REFERENCES public.product_presentations(product_presentation_id),
   CONSTRAINT lots_load_order_id_fkey FOREIGN KEY (load_order_id) REFERENCES public.load_orders(load_order_id),
   CONSTRAINT lots_product_id_fkey FOREIGN KEY (product_id) REFERENCES public.products(product_id)
 );
@@ -269,6 +266,7 @@ CREATE TABLE public.order_items (
   lot_id smallint,
   over_sell_quantity numeric,
   updated_at timestamp with time zone,
+  qty_in_base_units numeric,
   CONSTRAINT order_items_pkey PRIMARY KEY (order_item_id),
   CONSTRAINT order_items_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(location_id),
   CONSTRAINT order_items_lot_id_fkey FOREIGN KEY (lot_id) REFERENCES public.lots(lot_id),
