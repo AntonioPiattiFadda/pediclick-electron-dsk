@@ -37,7 +37,6 @@ export function SignIn() {
 
       //FIXME CORREGIR ESTO
       const response = await getUserDataByUid();
-      //Buscar al usuario en base de datos para ponerlo en la app
       dispatch(setUser(response.data));
 
       navigate("/setup-session");
@@ -54,67 +53,13 @@ export function SignIn() {
 
   const loading = loginMutation.isPending;
 
-  // const { handlePrintTest } = usePrinter();
-
-  // const { handlePrintTicket } = usePrinter();
-
-  // const vendorData = {
-  //   razonSocial: 'Razon Social',
-  //   direccion: 'PUNTO DE VENTA 1 - AV. EJEMPLO 1234',
-  //   cuit: '20-12345678-9'
-  // };
-
-  // const orderItems = [{
-  //   name: 'string',
-  //   quantity: 4,
-  //   price: 45,
-  //   iva: 11,
-  // }];
-
-  // const order = {
-  //   invoiceType: "FACTURA A",
-  //   items: orderItems,
-  //   total: 45
-  // };
-
-  // const { handleConnectScale } = useScale();
-
-
-
   return (
     // <AuthLayout
     //   title="Iniciar Sesión"
     //   description="Ingresa tus credenciales para acceder a tu cuenta"
     // >
     <div className="w-screen flex items-center justify-center relative">
-      <div className="absolute top-14 right-14 text-black">V: 0.1.0</div>
-      {/* <div className="absolute top-24 right-14 text-black hover:bg-gray-200"><button onClick={handlePrintTest}>Print Test</button></div> */}
-      {/* <div className="absolute -top-40 right-[50%] text-black">
 
-        <ScaleFetcher></ScaleFetcher>
-        PESO: {weightKg} 
-    </div> */}
-
-
-
-      {/* <div className="absolute top-20 right-[50%] text-black">
-        <PrinterFetcher></PrinterFetcher>
-        Printer:
-      </div> */}
-
-      {/* <div className="absolute top-[50%] left-4">
-
-        <ScaleFetcher />
-        <Button onClick={() => handleConnectScale()}>Scale</Button>
-      </div> */}
-      {/* <div className="absolute top-[50%] left-4">
-
-        <PrinterFetcher />
-        <Button onClick={() => handlePrintTicket({
-          vendorData,
-          order
-        })}>Imprimir</Button>
-      </div> */}
       <form onSubmit={handleSubmit} className="space-y-4 max-w-[400px] w-full">
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-md text-sm">
