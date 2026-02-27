@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "@/stores/store";
 import { setTerminalSessionClosure as setTerminalSessionClosureAction } from "@/stores/modalsSlice";
 import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
+import { signOut } from "@/service/auth";
 import { getTerminalSessionClosureData } from "@/service/terminalSessions";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Spinner } from "../../ui/spinner";
@@ -21,13 +22,13 @@ import { CheckCircle2, AlertCircle, Eye, Printer } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/service";
 import { formatCurrency } from "@/utils/prices";
-import { paymentMethodOpt } from "@/constants";
+
 
 const TerminalSessionClosure = () => {
     const dispatch = useDispatch<AppDispatch>();
     const terminalSessionClosure = useSelector((state: RootState) => state.modals.terminalSessionClosure);
     const setTerminalSessionClosure = (v: boolean) => dispatch(setTerminalSessionClosureAction(v));
-    const { handleGetTerminalSessionId } = useTerminalSessionData();
+    const { handleGetTerminalSessionId, handleRemoveTerminalSession } = useTerminalSessionData();
     const queryClient = useQueryClient();
 
     const [closingBalance, setClosingBalance] = useState<number | null>(null);
@@ -128,11 +129,13 @@ const TerminalSessionClosure = () => {
 
             if (error) throw error;
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Sesión de caja cerrada exitosamente");
             setTerminalSessionClosure(false);
             queryClient.invalidateQueries({ queryKey: ["terminalSessionClosureData"] });
             setClosingBalance(null);
+            handleRemoveTerminalSession();
+            await signOut();
         },
         onError: (error) => {
             toast.error("Error al cerrar la sesión");
@@ -246,7 +249,7 @@ const TerminalSessionClosure = () => {
                         </div>
 
                         {/* Other Payment Methods */}
-                        <div className="border rounded-lg p-4 space-y-3">
+                        {/* <div className="border rounded-lg p-4 space-y-3">
                             <h3 className="font-semibold text-lg">💳 OTROS MÉTODOS DE PAGO</h3>
                             <div className="space-y-2 text-sm">
                                 {Object.entries(financialData.paymentMethodTotals)
@@ -260,10 +263,10 @@ const TerminalSessionClosure = () => {
                                         </div>
                                     ))}
                             </div>
-                        </div>
+                        </div> */}
 
                         {/* Summary */}
-                        <div className="border rounded-lg p-4 space-y-3">
+                        {/* <div className="border rounded-lg p-4 space-y-3">
                             <h3 className="font-semibold text-lg">📊 RESUMEN</h3>
                             <div className="space-y-2 text-sm">
                                 <div className="flex justify-between">
@@ -279,7 +282,7 @@ const TerminalSessionClosure = () => {
                                     <span className="font-medium">{formatCurrency(financialData.averageTicket)}</span>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
                     </div>
                 ) : null}
 

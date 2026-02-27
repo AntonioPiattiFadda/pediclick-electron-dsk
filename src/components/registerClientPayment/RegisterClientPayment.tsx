@@ -200,13 +200,6 @@ const RegisterClientPayment = ({ client }: {
                         </DialogDescription>
                     </div>
                     <div className="space-y-1.5 mr-4">
-
-                        {/* <Input
-                            id="date"
-                            type="date"
-                            value={order.created_at ? order.created_at.split("T")[0] : ""}
-                            onChange={(e) => onChangeOrder({ ...order, created_at: e.target.value })}
-                        /> */}
                     </div>
 
 

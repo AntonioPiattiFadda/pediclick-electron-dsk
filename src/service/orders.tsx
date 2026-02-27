@@ -2,6 +2,7 @@ import { NotificationsType } from "@/types/notifications";
 import { OrderItem } from "@/types/orderItems";
 import { Payment } from "@/types/payments";
 import { OrderT } from "@/types/orders";
+
 import { getUserId, supabase } from ".";
 import { getOrganizationId } from "./profiles";
 
@@ -209,6 +210,29 @@ export async function generateOrderNumber(locationId: number) {
   }
   // 4) Devolver número correlativo
   return nextNumber;
+}
+
+export async function getOrdersByTerminalSession(terminalSessionId: number) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("order_id, order_number, total_amount, order_status, payment_status, created_at")
+    .eq("terminal_session_id", terminalSessionId)
+    .eq("order_type", "DIRECT_SALE")
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data as { order_id: number; order_number: string; total_amount: number; order_status: string; payment_status: string; created_at: string }[];
+}
+
+export async function getOrderDetail(orderId: number) {
+  const { data, error } = await supabase
+    .from("orders")
+    .select("*, client:clients(*), order_items(*), payments(*)")
+    .eq("order_id", orderId)
+    .single();
+
+  if (error) throw error;
+  return data as OrderT & { order_items: OrderItem[]; payments: Payment[] };
 }
 
 export async function startEmptyOrder(locationId: number, terminalSessionId: number) {

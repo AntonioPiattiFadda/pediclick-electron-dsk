@@ -1,19 +1,19 @@
-import { Stock } from "@/types/stocks";
 import { StockBreakdownDialog } from "@/components/shared/StockBreakdownDialog";
 import { toPresentation } from "@/utils";
+import type { UseProductStockReturn } from "@/hooks/useProductStock";
 
 const StockAvailability = ({
-    selectedStock,
-    remainingStock,
-    bulk_quantity_equivalence,
     productId,
+    remainingBaseUnitsForLot,
+    bulk_quantity_equivalence,
+    stockData,
 }: {
-    selectedStock: Stock;
-    remainingStock: number;
-    bulk_quantity_equivalence: number | null;
     productId: number;
+    remainingBaseUnitsForLot: number;
+    bulk_quantity_equivalence: number | null;
+    stockData: UseProductStockReturn;
 }) => {
-    const remainingInPres = toPresentation(remainingStock, bulk_quantity_equivalence);
+    const remainingInPres = toPresentation(remainingBaseUnitsForLot, bulk_quantity_equivalence);
 
     return (
         <div className="flex flex-col gap-1 mt-1">
@@ -21,9 +21,7 @@ const StockAvailability = ({
                 <span className="text-xs text-slate-500">Stock disponible</span>
                 <StockBreakdownDialog
                     productId={productId}
-                    totalBaseUnits={selectedStock?.quantity ?? 0}
-                    reservedForSelling={selectedStock?.reserved_for_selling_quantity ?? 0}
-                    reservedForTransferring={selectedStock?.reserved_for_transferring_quantity ?? 0}
+                    stockData={stockData}
                 />
             </div>
             <span

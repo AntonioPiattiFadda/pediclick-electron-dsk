@@ -12,6 +12,7 @@ import type { Product } from "@/types/products";
 import type { ProductPresentation } from "@/types/productPresentation";
 import type { Lot } from "@/types/lots";
 import { getLotsAndStockFromFirtsToLast, toPresentation, toBase } from "@/utils";
+import { useProductStock } from "@/hooks/useProductStock";
 import { formatCurrency } from "@/utils/prices";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { InputGroup, InputGroupAddon, InputGroupButton } from "@/components/ui/input-group";
@@ -75,46 +76,18 @@ const PricingPanel = ({
 
     // ── Unified mode ────────────────────────────────────────────────────────
 
-    // unifyedStock.quantity is raw base units (for StockData dialog)
-    const unifyedStock = useMemo(() => {
-        if (!editor.lots.length) return null;
-        return editor.lots.reduce(
-            (acc, lot) => {
-                const stock = lot?.stock?.find((s) => s.location_id === locationId);
-                if (stock) {
-                    acc.quantity += stock.quantity ?? 0;
-                    acc.reserved_for_selling_quantity += stock.reserved_for_selling_quantity ?? 0;
-                    acc.reserved_for_transferring_quantity += stock.reserved_for_transferring_quantity ?? 0;
-                }
-                return acc;
-            },
-            { quantity: 0, reserved_for_selling_quantity: 0, reserved_for_transferring_quantity: 0 }
-        );
-    }, [editor.lots, locationId]);
+    const stockData = useProductStock({
+        lots: editor.lots,
+        locationId,
+        productId: selectedProduct.product_id ?? null,
+        allOrderItems: orderItems,
+        currentOrderId: order.order_id ?? null,
+    });
 
-    // allocatedQtyUnified: presentation units (oi.quantity is always in pres units)
-    const allocatedQtyUnified = useMemo(() => {
-        if (!hasProduct(selectedProduct)) return 0;
-        const pid = selectedProduct.product_id as number;
-        return orderItems
-            .filter((oi) =>
-                Number(oi.product_id) === Number(pid) &&
-                oi.product_presentation_id === productPresentation.product_presentation_id
-            )
-            .reduce((s, oi) => s + Number(oi.quantity ?? 0), 0);
-    }, [orderItems, selectedProduct, productPresentation.product_presentation_id]);
-
-    // totalUnifyedAvailable: base units summed, then converted to pres units
-    const totalUnifyedAvailable = useMemo(() => {
-        const totalBase = editor.lots.reduce((acc, lot) => {
-            const stock = lot?.stock?.find((s) => s.location_id === locationId);
-            if (stock) acc += stock.quantity ?? 0;
-            return acc;
-        }, 0);
-        return toPresentation(totalBase, productPresentation.bulk_quantity_equivalence);
-    }, [editor.lots, locationId, productPresentation.bulk_quantity_equivalence]);
-
-    const remainingUnifyedStock = totalUnifyedAvailable - allocatedQtyUnified;
+    const remainingUnifyedStock = toPresentation(
+        stockData.availableBaseUnits,
+        productPresentation.bulk_quantity_equivalence
+    );
 
     const unifiedQty = isWeight ? weightKg ?? 0 : unitsCount ?? 0;
 
@@ -318,9 +291,9 @@ const PricingPanel = ({
 
                         {unifyLots && (
                             <StockAvailabilityUnified
-                                unifyedStock={unifyedStock!}
-                                remainingInPresentationUnits={remainingUnifyedStock}
                                 productId={selectedProduct.product_id as number}
+                                availablePresentationUnits={remainingUnifyedStock}
+                                stockData={stockData}
                             />
                         )}
                     </div>

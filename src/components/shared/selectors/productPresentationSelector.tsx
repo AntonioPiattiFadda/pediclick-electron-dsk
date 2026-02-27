@@ -256,13 +256,12 @@ const SelectProductPresentation = ({ children, focusRef }: {
                         <SelectGroup>
                             <SelectLabel>Presentaciones</SelectLabel>
                             {presentations?.map((p) => {
-                                const hasStock = p.lots?.some(lot => lot.stock && lot.stock.length > 0);
                                 return <SelectItem
                                     key={p.product_presentation_id}
                                     value={String(p.product_presentation_id)}
                                 >
 
-                                    {`${p.short_code ? `${p.short_code} - ` : ''}`} {sliceLongNames(15, p.product_presentation_name)}   {`${p.bulk_quantity_equivalence && `X${p.bulk_quantity_equivalence}`}`} {hasStock ? '' : '(S/S)'}
+                                    {`${p.short_code ? `${p.short_code} - ` : ''}`} {sliceLongNames(15, p.product_presentation_name)}   {`${p.bulk_quantity_equivalence && `X${p.bulk_quantity_equivalence}`}`}
                                 </SelectItem>
                             })}
                         </SelectGroup>

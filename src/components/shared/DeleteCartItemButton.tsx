@@ -14,42 +14,35 @@ import { OrderItem } from "@/types/orderItems"
 import { Trash2 } from "lucide-react"
 import React from "react"
 
-export function DeleteCartItemButton({ itemData, orderItems, setOrderItems }: {
-    itemData: OrderItem
+export function DeleteCartItemButton({ items, orderItems, setOrderItems }: {
+    items: OrderItem[]
     orderItems: OrderItem[]
     setOrderItems: React.Dispatch<React.SetStateAction<OrderItem[]>>
 }) {
 
     const handleDelete = () => {
-        const itemToDeleteIndex = orderItems.findIndex(it => it === itemData);
+        const newOrderItems = [...orderItems];
 
-        if (itemToDeleteIndex > -1) {
-            // Clonamos el array para no mutar el original
-            const newOrderItems = [...orderItems];
+        for (const itemData of items) {
+            const idx = newOrderItems.findIndex(it => it === itemData);
+            if (idx === -1) continue;
 
-
-
-            // Insertamos después del índice encontrado
-            newOrderItems.splice(itemToDeleteIndex + 1, 0, {
-                ...itemData,
-                quantity: itemData.quantity * -1,
-                price: itemData.price * -1,
-                subtotal: itemData.subtotal * -1,
-                total: itemData.total * -1,
+            newOrderItems.splice(idx + 1, 0, {
+                ...newOrderItems[idx],
+                quantity: newOrderItems[idx].quantity * -1,
+                price: newOrderItems[idx].price * -1,
+                subtotal: newOrderItems[idx].subtotal * -1,
+                total: newOrderItems[idx].total * -1,
                 status: 'CANCELLED'
             });
 
-            newOrderItems[itemToDeleteIndex] = {
-                ...itemData,
+            newOrderItems[idx] = {
+                ...newOrderItems[idx],
                 status: 'CANCELLED'
             };
-
-            console.log("New order items after insertion:", newOrderItems);
-
-            setOrderItems(newOrderItems);
-
         }
 
+        setOrderItems(newOrderItems);
     }
 
     return (
@@ -67,7 +60,7 @@ export function DeleteCartItemButton({ itemData, orderItems, setOrderItems }: {
                 <AlertDialogHeader>
                     <AlertDialogTitle>Eliminar?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        Eliminar {itemData.product_name} de la orden.
+                        Eliminar {items[0]?.product_name} de la orden.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

@@ -1,4 +1,6 @@
 
+import PrinterStatusPopover from "@/components/hardware/printer/PrinterStatusPopover";
+import ScaleStatusPopover from "@/components/hardware/scales/ScaleStatusPopover";
 import {
     Menubar,
     MenubarContent,
@@ -7,26 +9,31 @@ import {
     MenubarSeparator,
     MenubarTrigger
 } from "@/components/ui/menubar";
-import { useDispatch } from "react-redux";
-import type { AppDispatch } from "@/stores/store";
+import { useTerminalSessionData } from "@/hooks/useTerminalSessionData";
+import OrderHistoryDialog from "@/pages/inSiteOrders/components/OrderHistoryDialog";
+import RegisterWasteModal from "../registerWaste/RegisterWasteModal";
 import { setClientPaymentModalOpen, setTerminalSessionClosure } from "@/stores/modalsSlice";
+import type { AppDispatch } from "@/stores/store";
 import { Menu, Sparkle } from "lucide-react";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import MarketStoreIcon from '../../assets/icons/MarketStoreIcon.png';
 import RegisterClientPayment from "../registerClientPayment/RegisterClientPayment";
-import TerminalSessionClosure from "../teminalSessions/terminalSessionClosure/TerminalSessionClosure";
 import OpenSessionsManager from "../teminalSessions/openSessionsManager/OpenSessionsManager";
+import TerminalSessionClosure from "../teminalSessions/terminalSessionClosure/TerminalSessionClosure";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import UserData from "./UserData";
-import PrinterStatusPopover from "@/components/hardware/printer/PrinterStatusPopover";
-import ScaleStatusPopover from "@/components/hardware/scales/ScaleStatusPopover";
-import { useState } from "react";
 
 
 const Header = () => {
     const dispatch = useDispatch<AppDispatch>();
     const navigate = useNavigate();
     const [openSessionsManagerOpen, setOpenSessionsManagerOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isWasteModalOpen, setIsWasteModalOpen] = useState(false);
+    const { handleGetTerminalSession } = useTerminalSessionData();
+    const terminalSessionId = handleGetTerminalSession()?.terminal_session_id ?? 0;
 
     const handleOpenClientPaymentModal = () => {
         dispatch(setClientPaymentModalOpen(true));
@@ -65,6 +72,7 @@ const Header = () => {
                     </div>
                     <ScaleStatusPopover />
                     <PrinterStatusPopover />
+
                     <Menubar>
                         <MenubarMenu>
                             <MenubarTrigger>
@@ -92,7 +100,19 @@ const Header = () => {
                                     Registrar pago de cliente
                                     {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
                                 </MenubarItem>
+                                <MenubarSeparator />
 
+                                <MenubarItem onClick={() => setIsHistoryOpen(true)}>
+                                    Historial de órdenes
+                                    {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
+                                </MenubarItem>
+
+                                <MenubarSeparator />
+
+                                <MenubarItem onClick={() => setIsWasteModalOpen(true)}>
+                                    Registrar merma
+                                    {/* <MenubarShortcut>⌘T</MenubarShortcut> */}
+                                </MenubarItem>
 
                                 {/* <MenubarItem disabled>New Incognito Window</MenubarItem>
                                 <MenubarSeparator />
@@ -116,6 +136,15 @@ const Header = () => {
                     <OpenSessionsManager
                         open={openSessionsManagerOpen}
                         onOpenChange={setOpenSessionsManagerOpen}
+                    />
+                    <OrderHistoryDialog
+                        open={isHistoryOpen}
+                        onOpenChange={setIsHistoryOpen}
+                        terminalSessionId={terminalSessionId}
+                    />
+                    <RegisterWasteModal
+                        open={isWasteModalOpen}
+                        onOpenChange={setIsWasteModalOpen}
                     />
                 </div >
             </div >

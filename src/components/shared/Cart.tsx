@@ -149,6 +149,38 @@ const Cart = ({
         });
     });
 
+    type CartGroup = {
+        key: string
+        product_name: string
+        product_presentation_name: string
+        is_ai_assisted?: boolean
+        activeItems: OrderItem[]
+        cancelledItems: OrderItem[]
+    }
+
+    const cartGroups = filteredOrderItems.reduce<CartGroup[]>((groups, item) => {
+        const key = `${item.product_id}__${item.product_presentation_id}`;
+        let group = groups.find(g => g.key === key);
+        if (!group) {
+            group = {
+                key,
+                product_name: item.product_name,
+                product_presentation_name: item.product_presentation_name,
+                is_ai_assisted: item.is_ai_assisted,
+                activeItems: [],
+                cancelledItems: [],
+            };
+            groups.push(group);
+        }
+        if (item.status !== 'CANCELLED') {
+            group.activeItems.push(item);
+        } else if (item.quantity > 0) {
+            // quantity > 0 excludes negative accounting twins
+            group.cancelledItems.push(item);
+        }
+        return groups;
+    }, []);
+
     const orderTotal = filteredOrderItems.reduce((sum, it) => sum + Number(it.total || it.subtotal || 0), 0)
 
     return (
@@ -158,28 +190,45 @@ const Cart = ({
                 <EmptyCart />
             ) : (
                 <ul className="space-y-1  overflow-auto max-h-[calc(100vh-330px)]">
-                    {filteredOrderItems.map((it, idx) => (
-                        <li key={idx} className="flex items-center justify-between  text-sm h-9">
-                            <div className="flex items-center gap-1.5">
-                                <span className={`${it.status !== 'CANCELLED' ? '' : 'line-through'}`}>
-                                    {it.product_name} {it.product_presentation_name} x {it.quantity + it.over_sell_quantity}
-                                </span>
-                                {it.is_ai_assisted && (
-                                    <Badge variant="secondary" className="h-5 px-1.5 text-xs">
-                                        <Sparkles className="w-3 h-3" />
-                                    </Badge>
-                                )}
-                            </div>
-                            <span className={`ml-auto  ${it.status !== 'CANCELLED' ? 'mr-1' : 'mr-3'}`}>${Number(it.total ?? it.subtotal ?? 0).toFixed(2)}</span>
-                            {it.status !== 'CANCELLED' && (
-                                <DeleteCartItemButton
-                                    itemData={it}
-                                    orderItems={orderItems}
-                                    setOrderItems={setOrderItems}
-                                />
-                            )}
-                        </li>
-                    ))}
+                    {cartGroups.flatMap((group) => {
+                        const rows = [];
+
+                        if (group.activeItems.length > 0) {
+                            const totalQty = group.activeItems.reduce((s, it) => s + it.quantity + it.over_sell_quantity, 0);
+                            const totalAmount = group.activeItems.reduce((s, it) => s + Number(it.total ?? it.subtotal ?? 0), 0);
+                            rows.push(
+                                <li key={`${group.key}-active`} className="flex items-center justify-between text-sm h-9">
+                                    <div className="flex items-center gap-1.5">
+                                        <span>{group.product_name} {group.product_presentation_name} x {totalQty}</span>
+                                        {group.is_ai_assisted && (
+                                            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+                                                <Sparkles className="w-3 h-3" />
+                                            </Badge>
+                                        )}
+                                    </div>
+                                    <span className="ml-auto mr-1">${totalAmount.toFixed(2)}</span>
+                                    <DeleteCartItemButton
+                                        items={group.activeItems}
+                                        orderItems={orderItems}
+                                        setOrderItems={setOrderItems}
+                                    />
+                                </li>
+                            );
+                        }
+
+                        if (group.cancelledItems.length > 0) {
+                            const totalQty = group.cancelledItems.reduce((s, it) => s + it.quantity + it.over_sell_quantity, 0);
+                            const totalAmount = group.cancelledItems.reduce((s, it) => s + Number(it.total ?? it.subtotal ?? 0), 0);
+                            rows.push(
+                                <li key={`${group.key}-cancelled`} className="flex items-center justify-between text-sm h-9">
+                                    <span className="line-through">{group.product_name} {group.product_presentation_name} x {totalQty}</span>
+                                    <span className="ml-auto mr-3">${totalAmount.toFixed(2)}</span>
+                                </li>
+                            );
+                        }
+
+                        return rows;
+                    })}
                 </ul>
             )}
             <div className="mt-auto flex justify-between border-t pt-2 text-sm text-foreground">

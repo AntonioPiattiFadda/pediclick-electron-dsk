@@ -22,25 +22,6 @@ export async function addDeliveryOrderItem(
 }
 
 /**
- * Update order item
- * Later: Convert to RPC call
- */
-export async function updateDeliveryOrderItem(
-  orderItemId: number,
-  updates: Partial<OrderItem>
-): Promise<OrderItem> {
-  const { data, error } = await supabase
-    .from("order_items")
-    .update(updates)
-    .eq("order_item_id", orderItemId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data as OrderItem;
-}
-
-/**
  * Remove item from delivery order (soft delete via status update)
  * Later: Convert to RPC call
  */
@@ -48,6 +29,7 @@ export async function removeDeliveryOrderItem(
   orderItemId: number,
   stockId: number,
 ): Promise<void> {
+  console.log("Removing item with ID:", orderItemId, "and stock ID:", stockId);
   const { error } = await supabase.rpc("delete_delivery_order_item", {
     p_order_item_id: orderItemId,
     p_stock_id: stockId,
